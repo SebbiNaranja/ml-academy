@@ -728,13 +728,12 @@ const sbFetch=async(path,opts={})=>{const r=await fetch(`${SB_URL}/rest/v1/${pat
 const AUTHOR_COLORS={"Sebbi":"#c47a2a","Lukas":"#5a8a5e","Achim":"#5a7a9a"};
 
 const MIdea = () => {
-  const t=useT();const {ak,setAk,prov,setProv}=useApp();
+  const t=useT();const {ak,setAk,prov,setProv,author}=useApp();
   const [idea,setIdea]=useState("");
   const [ss,setSs]=useState(true);
   const [ld,setLd]=useState(false);
   const [result,setResult]=useState(null);
   const [history,setHistory]=useState([]);
-  const [author,setAuthor]=useState(()=>{try{return localStorage.getItem("ml_author")||"";}catch(e){return "";}});
   const [dbReady,setDbReady]=useState(false);
 
   // Lade alle Ideen aus Supabase beim Start
@@ -751,8 +750,6 @@ const MIdea = () => {
     return ()=>clearInterval(iv);
   },[]);
 
-  // Autor speichern
-  const pickAuthor=(name)=>{setAuthor(name);try{localStorage.setItem("ml_author",name);}catch(e){}};
 
   const sysPrompt=`Du bist ein ML-Projektberater fuer eine Uni-Projektarbeit (Angewandtes Machine Learning, SS2026, Prof. Bugra Turan).
 Bewerte die folgende Projektidee. Antworte IMMER exakt in diesem JSON-Format (kein Markdown, kein Text drumherum):
@@ -801,21 +798,8 @@ Bewerte die folgende Projektidee. Antworte IMMER exakt in diesem JSON-Format (ke
   const Tag=({children,color})=><span style={{fontSize:11,padding:"2px 8px",borderRadius:10,background:(color||t.ac)+"18",color:color||t.ac,fontWeight:600,whiteSpace:"nowrap"}}>{children}</span>;
   const AuthorBadge=({name})=><span style={{fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:10,background:authorColor(name)+"20",color:authorColor(name),border:`1px solid ${authorColor(name)}40`}}>{name}</span>;
 
-  // Autor-Auswahl wenn noch nicht gesetzt
-  if(!author)return <div>
-    <ST>Wer bist du?</ST>
-    <P>Waehle deinen Namen, damit dein Team sieht, welche Ideen von dir kommen.</P>
-    <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
-      {Object.keys(AUTHOR_COLORS).map(name=><button key={name} onClick={()=>pickAuthor(name)} style={{padding:"14px 28px",borderRadius:t.term?6:12,border:`2px solid ${authorColor(name)}`,background:authorColor(name)+"12",color:authorColor(name),fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:t.hf,transition:"all .15s"}}>{name}</button>)}
-    </div>
-  </div>;
-
   return <div>
-    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
-      <div style={{display:"flex",alignItems:"center",gap:8}}>
-        <AuthorBadge name={author}/>
-        <button onClick={()=>{setAuthor("");try{localStorage.removeItem("ml_author");}catch(e){}}} style={{fontSize:11,color:t.txF,background:"none",border:"none",cursor:"pointer",fontFamily:t.sf}}>wechseln</button>
-      </div>
+    <div style={{display:"flex",alignItems:"center",justifyContent:"flex-end",marginBottom:16}}>
       {dbReady&&<span style={{fontSize:11,color:t.ok}}>● Supabase verbunden</span>}
       {!dbReady&&<span style={{fontSize:11,color:t.err}}>● Offline (lokal)</span>}
     </div>
@@ -998,18 +982,38 @@ const SBFooter = ({themeKey,setThemeKey,open}) => {
 
 // ── MAIN APP ──
 export default function MLLernApp(){
+  const [author,setAuthor]=useState(()=>{try{return localStorage.getItem("ml_author")||"";}catch(e){return "";}});
   const [active,setActive]=useState("welcome");
-  const [completed,setCompleted]=useState({});
+  const [completed,setCompleted]=useState(()=>{try{const s=localStorage.getItem("ml_completed_"+author);return s?JSON.parse(s):{};}catch(e){return {};}});
   const [sbOpen,setSbOpen]=useState(true);
   const [themeKey,setThemeKey]=useState("paper-light");
   const [ak,setAk]=useState(()=>{try{return typeof import.meta!=="undefined"&&import.meta.env?.VITE_API_KEY||"";}catch(e){return "";}});
   const [prov,setProv]=useState(()=>{try{return typeof import.meta!=="undefined"&&import.meta.env?.VITE_API_PROVIDER||"anthropic";}catch(e){return "anthropic";}});
   const t=THEMES[themeKey]||THEMES["paper-light"];
+
+  // Lernstand pro Person speichern
+  useEffect(()=>{if(author){try{localStorage.setItem("ml_completed_"+author,JSON.stringify(completed));}catch(e){}};},[completed,author]);
+
+  const pickAuthor=(name)=>{setAuthor(name);try{localStorage.setItem("ml_author",name);const s=localStorage.getItem("ml_completed_"+name);setCompleted(s?JSON.parse(s):{});}catch(e){setCompleted({});}};
+  const switchAuthor=()=>{setAuthor("");try{localStorage.removeItem("ml_author");}catch(e){}};
+
   const handleNav=(id)=>{setActive(id);};
   const markComplete=(id)=>setCompleted(p=>({...p,[id]:true}));
   const unmarkComplete=(id)=>setCompleted(p=>{const n={...p};delete n[id];return n;});
   const cCount=MODS_LEARN.filter(m=>completed[m.id]).length;
   const progress=Math.round(cCount/MODS_LEARN.length*100);
+  const authorColor=AUTHOR_COLORS[author]||t.ac;
+
+  // Namensauswahl als Startscreen
+  if(!author)return <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:t.bg,fontFamily:t.sf}}>
+    <div style={{textAlign:"center",maxWidth:400,padding:40}}>
+      <div style={{fontFamily:t.hf,fontSize:28,fontWeight:700,color:t.tx,marginBottom:8}}>ML Academy</div>
+      <div style={{fontSize:14,color:t.txM,marginBottom:32}}>Wer bist du?</div>
+      <div style={{display:"flex",gap:12,justifyContent:"center",flexWrap:"wrap"}}>
+        {Object.entries(AUTHOR_COLORS).map(([name,color])=><button key={name} onClick={()=>pickAuthor(name)} style={{padding:"16px 32px",borderRadius:t.term?6:14,border:`2px solid ${color}`,background:color+"12",color:color,fontSize:17,fontWeight:700,cursor:"pointer",fontFamily:t.hf,transition:"all .2s"}}>{name}</button>)}
+      </div>
+    </div>
+  </div>;
   const aidx=ALL_MODS.findIndex(m=>m.id===active);
   const render=()=>{switch(active){
     case"welcome":return <M1/>;case"data":return <M2/>;case"supervised":return <M3/>;
@@ -1029,7 +1033,7 @@ export default function MLLernApp(){
     </button>;
   };
 
-  return <Ctx.Provider value={{theme:t,completed,markComplete,unmarkComplete,ak,setAk,prov,setProv}}>
+  return <Ctx.Provider value={{theme:t,completed,markComplete,unmarkComplete,ak,setAk,prov,setProv,author}}>
     <div style={{minHeight:"100vh",display:"flex",background:t.bg,fontFamily:t.sf}}>
       {/* Sidebar — fixed height, no scroll */}
       <div style={{width:sbOpen?232:56,flexShrink:0,background:t.bgS,borderRight:`1px solid ${t.bd}`,display:"flex",flexDirection:"column",transition:"width .3s",height:"100vh",position:"sticky",top:0}}>
@@ -1037,7 +1041,11 @@ export default function MLLernApp(){
           {sbOpen?<div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
             <div>
               <div style={{fontFamily:t.hf,fontSize:t.term?14:17,fontWeight:700,color:t.tx}}>{t.st}{t.term&&<span style={{animation:"blink 1s step-end infinite",color:t.ac}}>_</span>}</div>
-              <div style={{fontSize:11,color:t.txM,marginTop:3}}>{progress}% {t.term?"complete":"abgeschlossen"}</div>
+              <div style={{display:"flex",alignItems:"center",gap:6,marginTop:3}}>
+                <span style={{fontSize:10,fontWeight:700,padding:"1px 6px",borderRadius:8,background:authorColor+"20",color:authorColor,border:`1px solid ${authorColor}40`}}>{author}</span>
+                <span style={{fontSize:11,color:t.txM}}>{progress}%</span>
+                <button onClick={switchAuthor} style={{fontSize:10,color:t.txF,background:"none",border:"none",cursor:"pointer",padding:0}}>wechseln</button>
+              </div>
             </div>
             <button onClick={()=>setSbOpen(false)} style={{background:"none",border:"none",cursor:"pointer",color:t.txM,fontSize:16,padding:"4px 6px"}}>◂</button>
           </div>:<div style={{display:"flex",justifyContent:"center"}}><button onClick={()=>setSbOpen(true)} style={{background:"none",border:"none",cursor:"pointer",color:t.txM,fontSize:16,padding:"4px 6px"}}>▸</button></div>}

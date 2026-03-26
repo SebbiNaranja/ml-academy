@@ -62,6 +62,7 @@ const MODS_LEARN = [
 const MODS_PROJ = [
   {id:"dashboard",title:"Dashboard",n:"P1",tt:"p1_dashboard"},
   {id:"guide",title:"Projektbegleiter",n:"P2",tt:"p2_guide"},
+  {id:"ideas",title:"Ideenbewertung",n:"P3",tt:"p3_ideen"},
 ];
 const ALL_MODS = [...MODS_LEARN,...MODS_PROJ];
 
@@ -974,7 +975,7 @@ Antworte IMMER exakt in diesem JSON-Format (kein Markdown, kein Text drumherum):
 // ── MODULE: Projektbegleiter ──
 const MGuide = () => {
   const t=useT();
-  const [tab,setTab]=useState("steps");
+
   const [as,setAs]=useState(0);
   const [expT,setExpT]=useState({});
   const [checks,setChecks]=useState(()=>{const o={};STEPS.forEach(s=>{o[s.id]={};});return o;});
@@ -982,15 +983,10 @@ const MGuide = () => {
   const stepProg=step?Math.round(Object.keys(checks[step.id]||{}).filter(k=>checks[step.id][k]).length/step.checks.length*100):0;
   const toggleT=(term)=>setExpT(p=>({...p,[term]:!p[term]}));
   const toggleC=(sid,idx)=>setChecks(p=>{const s={...p[sid]};s[idx]=!s[idx];return{...p,[sid]:s};});
-  const tabs=[["steps","Schritte"],["ideas","Ideenbewertung"]];
   return <div>
     <CL num="P2"/><H1>Projektbegleiter</H1>
-    <P>Dein Guide durch die Projektarbeit: Schritt-fuer-Schritt-Anleitung oder Projektideen bewerten lassen.</P>
-    <div style={{display:"flex",borderRadius:t.term?5:8,overflow:"hidden",border:`1px solid ${t.bd}`,marginBottom:24}}>
-      {tabs.map(([id,label])=><button key={id} onClick={()=>setTab(id)} style={{flex:1,padding:"10px 0",fontSize:13,fontWeight:600,border:"none",cursor:"pointer",fontFamily:t.sf,background:tab===id?t.ac:t.bgC,color:tab===id?t.w:t.txM,transition:"all .2s"}}>{label}</button>)}
-    </div>
-    {tab==="ideas"&&<MIdea/>}
-    {tab==="steps"&&<>
+    <P>Dein 9-Schritte-Guide durch die Projektarbeit — von der Idee bis zur Praesentation.</P>
+    <
     <div style={{display:"flex",gap:4,marginBottom:24,flexWrap:"wrap"}}>
       {STEPS.map((s,i)=>{const active=as===i;const done=Object.keys(checks[s.id]||{}).filter(k=>checks[s.id][k]).length===s.checks.length;
         return <button key={s.id} onClick={()=>setAs(i)} style={{padding:"6px 12px",borderRadius:t.term?4:20,border:`1px solid ${active?t.ac:done?t.ok+"40":t.bd}`,background:active?t.ac:done?t.okBg:t.bgC,color:active?t.w:done?t.ok:t.txM,fontSize:11,fontWeight:active?700:500,cursor:"pointer",fontFamily:t.sf,whiteSpace:"nowrap"}}>
@@ -1041,7 +1037,6 @@ const MGuide = () => {
         {as<STEPS.length-1?<Bt primary onClick={()=>setAs(a=>a+1)}>{"Schritt "+(step.n+1)+" →"}</Bt>:<div/>}
       </div>
     </div>}
-    </>}
   </div>;
 };
 
@@ -1086,6 +1081,20 @@ export default function MLLernApp(){
 
   const pickAuthor=(name)=>{setAuthor(name);try{localStorage.setItem("ml_author",name);const s=localStorage.getItem("ml_completed_"+name);setCompleted(s?JSON.parse(s):{});}catch(e){setCompleted({});}};
   const switchAuthor=()=>{setAuthor("");try{localStorage.removeItem("ml_author");}catch(e){}};
+  const [showTour,setShowTour]=useState(()=>{try{return !localStorage.getItem("ml_tour_done_"+author);}catch(e){return true;}});
+  const [tourStep,setTourStep]=useState(0);
+  const [showHelp,setShowHelp]=useState(false);
+  const closeTour=()=>{setShowTour(false);try{localStorage.setItem("ml_tour_done_"+author,"1");}catch(e){}};
+  const resetTour=()=>{setShowTour(true);setTourStep(0);setShowHelp(false);};
+
+  const TOUR_STEPS=[
+    {title:"Willkommen bei ML Academy!",text:"Diese App begleitet dich durch Machine Learning -- von den Grundlagen bis zum Uni-Projekt. Hier lernst du alles Schritt fuer Schritt.",icon:"🧠"},
+    {title:"6 Lernmodule",text:"Links in der Sidebar findest du 6 Kapitel: Was ist KI, Daten, Supervised Learning, Gradient Descent, Neuronale Netze und Deep Learning. Arbeite sie der Reihe nach durch.",icon:"📚"},
+    {title:"Verstanden-Button",text:"Am Ende jedes Kapitels klickst du 'Verstanden'. Dann wird es in der Sidebar gruen markiert und dein Fortschritt steigt. Du kannst es jederzeit zuruecksetzen.",icon:"✓"},
+    {title:"Quiz & AI Tutor",text:"Nach den Lernmodulen testest du dein Wissen im Quiz (Modul 7). Der AI Tutor (Modul 8) beantwortet jede Frage -- du brauchst dafuer einen API-Key.",icon:"🤖"},
+    {title:"Projektarbeit",text:"Im Projektbegleiter findest du den 9-Schritte-Leitfaden fuer eure Uni-Arbeit. In der Ideenbewertung (eigener Menue-Punkt) koennt ihr als Team Projektideen bewerten und vergleichen.",icon:"🎓"},
+    {title:"Euer Fortschritt ist getrennt",text:"Jeder im Team (Sebbi, Lukas, Achim) hat seinen eigenen Lernstand. Nur die Ideenbewertungen werden geteilt -- per Supabase, in Echtzeit.",icon:"👥"},
+  ];
 
   const handleNav=(id)=>{setActive(id);};
   const markComplete=(id)=>setCompleted(p=>({...p,[id]:true}));
@@ -1109,7 +1118,7 @@ export default function MLLernApp(){
     case"welcome":return <M1/>;case"data":return <M2/>;case"supervised":return <M3/>;
     case"gradient":return <M4/>;case"neural":return <M5/>;case"deep":return <M6/>;
     case"quiz":return <M7/>;case"tutor":return <M8/>;
-    case"dashboard":return <MDash/>;case"guide":return <MGuide/>;
+    case"dashboard":return <MDash/>;case"guide":return <MGuide/>;case"ideas":return <MIdea/>;
     default:return <M1/>;
   }};
 
@@ -1160,6 +1169,51 @@ export default function MLLernApp(){
           </div>
         </div>
       </div>
+      {/* Hilfe-Button */}
+      <button onClick={()=>setShowHelp(true)} style={{position:"fixed",bottom:20,right:20,width:44,height:44,borderRadius:"50%",background:t.ac,color:t.w,fontSize:20,fontWeight:700,border:"none",cursor:"pointer",boxShadow:`0 2px 12px ${t.ac}40`,zIndex:100,display:"flex",alignItems:"center",justifyContent:"center"}}>?</button>
+      {/* Willkommens-Tour */}
+      {showTour&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.55)",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",animation:"fadeIn .3s"}}>
+        <div style={{background:t.bg,borderRadius:t.term?8:16,padding:"36px 32px 28px",maxWidth:440,width:"90%",boxShadow:"0 8px 40px rgba(0,0,0,.3)"}}>
+          <div style={{fontSize:40,textAlign:"center",marginBottom:12}}>{TOUR_STEPS[tourStep].icon}</div>
+          <div style={{fontFamily:t.hf,fontSize:20,fontWeight:700,color:t.tx,textAlign:"center",marginBottom:10}}>{TOUR_STEPS[tourStep].title}</div>
+          <div style={{fontSize:14,color:t.txB,lineHeight:1.7,textAlign:"center",marginBottom:24}}>{TOUR_STEPS[tourStep].text}</div>
+          <div style={{display:"flex",justifyContent:"center",gap:4,marginBottom:20}}>
+            {TOUR_STEPS.map((_,i)=><div key={i} style={{width:i===tourStep?20:8,height:8,borderRadius:4,background:i===tourStep?t.ac:`${t.bd}`,transition:"all .2s"}}/>)}
+          </div>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <button onClick={closeTour} style={{fontSize:12,color:t.txM,background:"none",border:"none",cursor:"pointer",fontFamily:t.sf}}>Ueberspringen</button>
+            <div style={{display:"flex",gap:8}}>
+              {tourStep>0&&<Bt onClick={()=>setTourStep(p=>p-1)}>Zurueck</Bt>}
+              {tourStep<TOUR_STEPS.length-1?<Bt primary onClick={()=>setTourStep(p=>p+1)}>Weiter</Bt>
+              :<Bt primary onClick={closeTour}>Los geht's!</Bt>}
+            </div>
+          </div>
+        </div>
+      </div>}
+      {/* Hilfe-Seite */}
+      {showHelp&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.55)",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",animation:"fadeIn .3s"}} onClick={()=>setShowHelp(false)}>
+        <div style={{background:t.bg,borderRadius:t.term?8:16,padding:"28px 28px 20px",maxWidth:520,width:"90%",maxHeight:"80vh",overflowY:"auto",boxShadow:"0 8px 40px rgba(0,0,0,.3)"}} onClick={e=>e.stopPropagation()}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
+            <div style={{fontFamily:t.hf,fontSize:20,fontWeight:700,color:t.tx}}>Hilfe</div>
+            <button onClick={()=>setShowHelp(false)} style={{background:"none",border:"none",cursor:"pointer",fontSize:18,color:t.txM}}>x</button>
+          </div>
+          {[
+            {q:"Wie funktioniert die App?",a:"Arbeite die 6 Lernmodule der Reihe nach durch. Am Ende jedes Kapitels klickst du 'Verstanden'. Der Fortschritt wird in der Sidebar und als Prozentzahl angezeigt."},
+            {q:"Was bedeuten die Farben in der Sidebar?",a:"Gruen = Kapitel verstanden. Orange/Blau = aktuelles Kapitel. Grau = noch nicht bearbeitet. Die Projekt-Module (P1, P2) haben keine Haken -- die sind Werkzeuge, die du immer wieder nutzt."},
+            {q:"Was ist der AI Tutor?",a:"Ein KI-Chat, der dir ML-Fragen beantwortet. Du brauchst einen API-Key von OpenAI oder Anthropic. Den Key gibst du einmal ein, er bleibt gespeichert."},
+            {q:"Wie funktioniert die Ideenbewertung?",a:"Beschreibe deine Projektidee in 1-3 Saetzen. Optional: Lade CSV-Dateien hoch, damit die KI die echten Daten analysiert. Die Bewertung wird fuer das ganze Team in Supabase gespeichert."},
+            {q:"Sieht mein Team meinen Fortschritt?",a:"Nein! Dein Lernstand ist nur auf deinem Geraet gespeichert. Nur die Ideenbewertungen werden geteilt."},
+            {q:"Kann ich den Fortschritt zuruecksetzen?",a:"Ja. Am Ende jedes Kapitels gibt es unter dem gruenen Badge einen 'Zuruecksetzen'-Link."},
+            {q:"Was sind Paper und Terminal?",a:"Zwei Design-Themes. Paper = warm, akademisch, Serif-Schrift. Terminal = technisch, Monospace-Schrift, Hacker-Vibes. Beide haben Tag- und Nachtmodus."},
+          ].map((item,i)=><div key={i} style={{marginBottom:16,paddingBottom:16,borderBottom:i<6?`1px solid ${t.bd}`:"none"}}>
+            <div style={{fontSize:13,fontWeight:700,color:t.tx,marginBottom:6}}>{item.q}</div>
+            <div style={{fontSize:13,color:t.txB,lineHeight:1.6}}>{item.a}</div>
+          </div>)}
+          <div style={{textAlign:"center",marginTop:8}}>
+            <Bt onClick={resetTour}>Tour nochmal ansehen</Bt>
+          </div>
+        </div>
+      </div>}
       <style>{`@keyframes blink{50%{opacity:0}}@keyframes fadeIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}`}</style>
     </div>
   </Ctx.Provider>;

@@ -1,0 +1,1005 @@
+import { useState, useEffect, useRef, useMemo, createContext, useContext } from "react";
+
+/* ═══════════════════════════════════════════════════
+   ML LERNAPP — Paper/Terminal Theme, Tag/Nacht
+   ═══════════════════════════════════════════════════ */
+
+// ── THEMES ──
+const THEMES = {
+  "paper-light": {
+    bg:"#faf8f5",bgS:"#f3f0eb",bgC:"#f3f0eb",bgCA:"#ede8e0",bgAS:"#fdf4e8",bgASS:"#fef9f2",bgI:"#faf8f5",
+    bd:"#e5e0d8",bdA:"#f0dfc4",ac:"#c47a2a",acL:"#d4943a",
+    tx:"#2c2416",txB:"#6b5d4f",txM:"#a09585",txF:"#c4b8a8",w:"#fff",
+    ok:"#5a8a5e",okBg:"#f0f7f0",err:"#b85450",errBg:"#fdf2f1",
+    inf:"#5a7a9a",infBg:"#f0f4f8",math:"#7a5a8a",mathBg:"#f8f2fa",
+    hf:"Georgia,'Times New Roman',serif",sf:"'Inter',system-ui,sans-serif",mf:"inherit",
+    st:"ML Academy",term:false,
+  },
+  "paper-dark": {
+    bg:"#1a1714",bgS:"#15120f",bgC:"#1f1c17",bgCA:"#252118",bgAS:"#2a2215",bgASS:"#1f1c17",bgI:"#15120f",
+    bd:"#2e2920",bdA:"#3a3225",ac:"#d4943a",acL:"#e4b44a",
+    tx:"#e8e0d4",txB:"#a89880",txM:"#7a6e5e",txF:"#4a4238",w:"#fff",
+    ok:"#6a9a6e",okBg:"#1a261a",err:"#c86460",errBg:"#2a1a18",
+    inf:"#6a8aaa",infBg:"#1a2028",math:"#9a7aaa",mathBg:"#221a28",
+    hf:"Georgia,'Times New Roman',serif",sf:"'Inter',system-ui,sans-serif",mf:"inherit",
+    st:"ML Academy",term:false,
+  },
+  "terminal-light": {
+    bg:"#f4f6f8",bgS:"#ebeef2",bgC:"#ebeef2",bgCA:"#e2e6ea",bgAS:"#e8f4f8",bgASS:"#f0f8fc",bgI:"#f4f6f8",
+    bd:"#d0d6de",bdA:"#b8d8e8",ac:"#0a7ea4",acL:"#12a4d0",
+    tx:"#1a2028",txB:"#4a5568",txM:"#8896a6",txF:"#b8c4d0",w:"#fff",
+    ok:"#0a8a4a",okBg:"#e8f8f0",err:"#d03030",errBg:"#fdf0f0",
+    inf:"#0a7ea4",infBg:"#e8f4f8",math:"#6a4a9a",mathBg:"#f4f0fa",
+    hf:"'Inter',system-ui,sans-serif",sf:"'Inter',system-ui,sans-serif",
+    mf:"'JetBrains Mono','Fira Code',monospace",st:"> ml_academy",term:true,
+  },
+  "terminal-dark": {
+    bg:"#0a0e14",bgS:"#0d1117",bgC:"#111820",bgCA:"#161d28",bgAS:"#0a1a24",bgASS:"#0d1520",bgI:"#0d1117",
+    bd:"#1b2530",bdA:"#0ea5e930",ac:"#0ea5e9",acL:"#38bdf8",
+    tx:"#e2e8f0",txB:"#8896a8",txM:"#4a5a6a",txF:"#2a3540",w:"#fff",
+    ok:"#10b981",okBg:"#0a1f18",err:"#ef4444",errBg:"#1f0a0a",
+    inf:"#0ea5e9",infBg:"#0a1520",math:"#a78bfa",mathBg:"#140f20",
+    hf:"'Inter',system-ui,sans-serif",sf:"'Inter',system-ui,sans-serif",
+    mf:"'JetBrains Mono','Fira Code',monospace",st:"> ml_academy_",term:true,
+  },
+};
+
+const Ctx = createContext({theme:THEMES["paper-light"],completed:{},markComplete:()=>{},unmarkComplete:()=>{}});
+const useT = () => useContext(Ctx).theme;
+const useApp = () => useContext(Ctx);
+
+// ── MODULE DEFS ──
+const MODS_LEARN = [
+  {id:"welcome",title:"Was ist KI?",n:"01",tt:"01_ki_intro"},
+  {id:"data",title:"Daten & Muster",n:"02",tt:"02_daten"},
+  {id:"supervised",title:"Supervised Learning",n:"03",tt:"03_supervised"},
+  {id:"gradient",title:"Gradient Descent",n:"04",tt:"04_gradient"},
+  {id:"neural",title:"Neuronale Netze",n:"05",tt:"05_neural_nets"},
+  {id:"deep",title:"Deep Learning",n:"06",tt:"06_deep_learning"},
+  {id:"quiz",title:"Wissenstest",n:"07",tt:"07_quiz"},
+  {id:"tutor",title:"AI Tutor",n:"08",tt:"08_ai_tutor"},
+];
+const MODS_PROJ = [
+  {id:"dashboard",title:"Dashboard",n:"P1",tt:"p1_dashboard"},
+  {id:"guide",title:"Projektbegleiter",n:"P2",tt:"p2_guide"},
+];
+const ALL_MODS = [...MODS_LEARN,...MODS_PROJ];
+
+// ── SHARED UI ──
+const Bar = ({p}) => {
+  const t=useT();
+  return <div style={{width:"100%",height:4,borderRadius:2,background:t.bd}}>
+    <div style={{height:4,borderRadius:2,width:`${p}%`,background:`linear-gradient(90deg,${t.ac},${t.acL})`,transition:"width .5s"}}/>
+  </div>;
+};
+
+const Info = ({title,children,type="info"}) => {
+  const t=useT();
+  const m={info:{b:t.inf,bg:t.infBg,l:"Hinweis"},tip:{b:t.ok,bg:t.okBg,l:"Merke"},math:{b:t.math,bg:t.mathBg,l:"Mathematik"},warning:{b:t.ac,bg:t.bgAS,l:"Achtung"}};
+  const s=m[type];
+  return <div style={{borderLeft:`3px solid ${s.b}`,background:s.bg,borderRadius:"0 8px 8px 0",padding:"16px 20px",margin:"20px 0"}}>
+    <div style={{fontFamily:t.hf,fontSize:13,fontWeight:700,color:s.b,marginBottom:6}}>{s.l}{title?` — ${title}`:""}</div>
+    <div style={{fontFamily:t.sf,fontSize:13.5,lineHeight:1.7,color:t.txB}}>{children}</div>
+  </div>;
+};
+
+const ST = ({children}) => {const t=useT();return <h2 style={{fontFamily:t.hf,fontSize:20,fontWeight:700,color:t.tx,marginTop:36,marginBottom:14}}>{children}</h2>;};
+const P = ({children}) => {const t=useT();return <p style={{fontFamily:t.sf,fontSize:14.5,lineHeight:1.75,color:t.txB,marginBottom:16}}>{children}</p>;};
+const Cd = ({children,style={}}) => {const t=useT();return <div style={{background:t.bgC,border:`1px solid ${t.bd}`,borderRadius:t.term?8:12,padding:20,...style}}>{children}</div>;};
+
+const Bt = ({children,primary,onClick,disabled,style={}}) => {
+  const t=useT();
+  return <button onClick={onClick} disabled={disabled} style={{
+    fontFamily:t.term?t.mf:t.sf,fontSize:13,fontWeight:500,padding:"8px 20px",
+    borderRadius:t.term?6:8,border:"none",cursor:disabled?"not-allowed":"pointer",
+    background:primary?t.ac:t.bgCA,color:primary?t.w:t.txB,opacity:disabled?.5:1,
+    transition:"all .2s",...style,
+  }}>{children}</button>;
+};
+
+const CL = ({num}) => {const t=useT();return <div style={{fontFamily:t.term?t.mf:t.sf,fontSize:11,fontWeight:600,letterSpacing:".1em",color:t.ac,marginBottom:12,textTransform:"uppercase"}}>{t.term?`module[${parseInt(num)||0}]`:`Kapitel ${num}`}</div>;};
+const H1 = ({children}) => {const t=useT();return <h1 style={{fontFamily:t.hf,fontSize:t.term?24:28,fontWeight:700,color:t.tx,lineHeight:1.25,marginBottom:12}}>{children}</h1>;};
+
+const Verstanden = ({moduleId}) => {
+  const t=useT();const {completed,markComplete,unmarkComplete}=useApp();
+  const done=completed[moduleId];
+  return <div style={{marginTop:40,paddingTop:24,borderTop:`1px solid ${t.bd}`,textAlign:"center"}}>
+    {done?<div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:8}}>
+      <div style={{display:"inline-flex",alignItems:"center",gap:8,padding:"12px 28px",borderRadius:t.term?6:24,background:t.okBg,border:`1px solid ${t.ok}40`}}>
+        <span style={{color:t.ok,fontSize:18}}>✓</span>
+        <span style={{fontSize:14,fontWeight:600,color:t.ok}}>Kapitel verstanden</span>
+      </div>
+      <button onClick={()=>unmarkComplete(moduleId)} style={{background:"none",border:"none",cursor:"pointer",fontSize:12,color:t.txF,fontFamily:t.sf,padding:4}}>Zuruecksetzen</button>
+    </div>
+    :<button onClick={()=>markComplete(moduleId)} style={{padding:"14px 36px",borderRadius:t.term?6:24,border:`2px solid ${t.ac}`,background:t.ac,color:t.w,fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:t.sf,transition:"all .15s"}}>
+      Verstanden
+    </button>}
+  </div>;
+};
+
+const TW = ({title,children}) => {
+  const t=useT();
+  if(!t.term) return <Cd>{children}</Cd>;
+  return <div style={{background:t.bgC,border:`1px solid ${t.bd}`,borderRadius:8,overflow:"hidden"}}>
+    <div style={{display:"flex",alignItems:"center",gap:6,padding:"8px 12px",borderBottom:`1px solid ${t.bd}`}}>
+      <div style={{width:10,height:10,borderRadius:"50%",background:t.err}}/>
+      <div style={{width:10,height:10,borderRadius:"50%",background:"#eab308"}}/>
+      <div style={{width:10,height:10,borderRadius:"50%",background:t.ok}}/>
+      <span style={{marginLeft:8,fontSize:11,color:t.txM,fontFamily:t.mf}}>{title||"viz"}</span>
+    </div>
+    <div style={{padding:16}}>{children}</div>
+  </div>;
+};
+
+// ── MODULE 1: Was ist KI? ──
+const M1 = () => {
+  const t=useT();
+  const [sl,setSl]=useState(0);
+  const [buzzEx,setBuzzEx]=useState(null);
+  const buzzes=[
+    {label:"Waschmaschine mit KI",real:false,why:"Nutzt feste Sensoren und Regeln (Gewicht, Wasserstand). Kein Lernen aus Daten, kein Modell. Klassische Steuerungstechnik."},
+    {label:"Spotify-Empfehlungen",real:true,why:"Collaborative Filtering und Content-based Filtering. Echte ML-Modelle, die aus dem Verhalten von Millionen Nutzern lernen."},
+    {label:"Staubsaugerroboter mit KI",real:false,why:"Die meisten nutzen SLAM-Algorithmen (Simultaneous Localization and Mapping) -- clevere Informatik, aber keine lernenden Modelle."},
+    {label:"ChatGPT / Claude",real:true,why:"Large Language Models, trainiert auf Textdaten mit Deep Learning (Transformer-Architektur). Echtes maschinelles Lernen."},
+    {label:"Smarter Kuehlschrank",real:false,why:"Temperaturregelung und Timer sind klassische Regelungstechnik. Das Label 'KI' ist hier reines Marketing."},
+    {label:"Google Fotos: Gesichtserkennung",real:true,why:"Convolutional Neural Networks (CNNs), trainiert auf Millionen Bildern. Echtes Deep Learning."},
+    {label:"E-Mail Spamfilter",real:true,why:"Naive Bayes oder andere Klassifikationsmodelle, die aus markierten E-Mails lernen. Eines der aeltesten ML-Anwendungsgebiete."},
+    {label:"Autopilot (Tesla)",real:true,why:"Nutzt neuronale Netze fuer Objekterkennung und Pfadplanung, trainiert auf Videodaten. Echtes Deep Learning -- aber 'Autopilot' ist ein uebertriebener Name."},
+  ];
+  return <div>
+    <CL num="01"/><H1>Was ist Kuenstliche Intelligenz?</H1>
+    <P>Der Begriff KI ist ueberall: auf Waschmaschinen, in Kuehlschraenken, auf jeder zweiten Webseite. Aber was davon ist wirklich KI -- und was ist Marketing? Lass uns das aufraumen.</P>
+
+    <ST>KI als Modebegriff</ST>
+    <P>Seit dem Hype um ChatGPT (Ende 2022) wird das Label 'KI' an fast alles geklebt, was irgendwie digital ist. Das Problem: Es verwischt die Grenze zwischen echtem maschinellem Lernen und einfacher Programmierung. Klicke auf die Beispiele -- ist das wirklich KI?</P>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:20}}>
+      {buzzes.map((b,i)=><button key={i} onClick={()=>setBuzzEx(buzzEx===i?null:i)} style={{textAlign:"left",padding:"12px 14px",borderRadius:t.term?6:8,border:`1px solid ${buzzEx===i?(b.real?t.ok:t.err)+"60":t.bd}`,background:buzzEx===i?(b.real?t.okBg:t.errBg):t.bgC,cursor:"pointer",transition:"all .15s"}}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+          <span style={{fontSize:13,fontWeight:buzzEx===i?600:400,color:t.tx}}>{b.label}</span>
+          {buzzEx===i&&<span style={{fontSize:11,padding:"2px 8px",borderRadius:10,background:b.real?t.ok:t.err,color:t.w,fontWeight:600}}>{b.real?"Echte KI":"Marketing"}</span>}
+        </div>
+        {buzzEx===i&&<div style={{fontSize:12,color:t.txB,marginTop:8,lineHeight:1.6,borderTop:`1px solid ${t.bd}`,paddingTop:8}}>{b.why}</div>}
+      </button>)}
+    </div>
+    <Info title="Die Faustregel" type="tip">Echte KI/ML liegt vor, wenn ein System aus Daten lernt und sich dabei verbessert. Wenn nur feste Regeln abgearbeitet werden (if/else), ist es klassische Programmierung -- egal was auf der Verpackung steht.</Info>
+
+    <ST>Die drei Schichten der KI</ST>
+    <P>KI ist ein Oberbegriff. Machine Learning ist ein Teilgebiet davon, und Deep Learning ein Teilgebiet von ML. Klicke, um die Schichten aufzudecken.</P>
+    <TW title="ki_layers.viz">
+      <svg viewBox="0 0 500 460" style={{width:"100%",maxWidth:480,display:"block",margin:"0 auto"}}>
+        <ellipse cx="250" cy="240" rx="235" ry="210" fill={sl>=1?`${t.ac}0d`:`${t.ac}05`} stroke={sl>=1?t.ac:t.bd} strokeWidth="2"/>
+        <ellipse cx="250" cy="275" rx="170" ry="155" fill={sl>=2?`${t.ok}0d`:`${t.ok}05`} stroke={sl>=2?t.ok:t.bd} strokeWidth="2" opacity={sl>=2?1:.3}/>
+        <ellipse cx="250" cy="315" rx="105" ry="100" fill={sl>=3?`${t.inf}0d`:`${t.inf}05`} stroke={sl>=3?t.inf:t.bd} strokeWidth="2" opacity={sl>=3?1:.15}/>
+        {sl>=1&&<><text x="250" y="68" textAnchor="middle" fill={t.ac} fontSize="18" fontWeight="700" fontFamily={t.hf}>{"K\u00FCnstliche Intelligenz"}</text><text x="250" y="88" textAnchor="middle" fill={t.txM} fontSize="11" fontFamily={t.sf}>{"Alles, was Maschinen intelligent erscheinen l\u00E4sst"}</text></>}
+        {sl>=2&&<><text x="250" y="158" textAnchor="middle" fill={t.ok} fontSize="16" fontWeight="700" fontFamily={t.hf}>Machine Learning</text><text x="250" y="178" textAnchor="middle" fill={t.txM} fontSize="11" fontFamily={t.sf}>Lernen aus Daten statt fester Regeln</text></>}
+        {sl>=3&&<><text x="250" y="305" textAnchor="middle" fill={t.inf} fontSize="15" fontWeight="700" fontFamily={t.hf}>Deep Learning</text><text x="250" y="327" textAnchor="middle" fill={t.txM} fontSize="11" fontFamily={t.sf}>Neuronale Netze mit vielen Schichten</text></>}
+      </svg>
+      <div style={{textAlign:"center",marginTop:16}}>
+        <Bt primary onClick={()=>setSl(p=>p<3?p+1:0)}>{sl<3?`Nächste Schicht (${sl}/3)`:"Zurücksetzen"}</Bt>
+      </div>
+    </TW>
+    {sl>=1&&<Info title="KI (der grosse Rahmen)" type="info">Der Begriff geht zurueck auf die Dartmouth Conference 1956. Heute unterscheidet man: Narrow AI (kann eine Aufgabe, z.B. Schach) und General AI (kann alles -- existiert bisher nicht). Alles, was wir heute nutzen, ist Narrow AI.</Info>}
+    {sl>=2&&<Info title="Machine Learning (der Paradigmenwechsel)" type="tip">Statt einem Computer Regeln vorzugeben, zeigst du ihm Beispiele. Er findet die Regeln selbst. Arthur Samuel praegte den Begriff 1959 bei IBM, als er ein Programm schrieb, das Checkers (Dame) spielen lernte.</Info>}
+    {sl>=3&&<Info title="Deep Learning (die Tiefe)" type="math">Deep Learning nutzt neuronale Netze mit vielen Schichten. Der Durchbruch kam 2012, als AlexNet (ein CNN mit 8 Schichten) den ImageNet-Wettbewerb mit grossem Abstand gewann. Seitdem: Spracherkennung, Uebersetzung, Bilderkennung.</Info>}
+
+    <ST>Klassische Programmierung vs. Machine Learning</ST>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:20}}>
+      <Cd><div style={{fontSize:12,fontWeight:700,color:t.err,marginBottom:8}}>KLASSISCH</div><P>Der Mensch schreibt Regeln. Der Computer fuehrt sie aus.</P><div style={{fontFamily:"monospace",fontSize:12,color:t.txB,background:t.bgASS,padding:10,borderRadius:6}}>if wort in spam_liste:<br/>{"  "}return "Spam"</div></Cd>
+      <Cd><div style={{fontSize:12,fontWeight:700,color:t.ok,marginBottom:8}}>MACHINE LEARNING</div><P>Der Mensch gibt Daten + Antworten. Der Computer findet die Regeln.</P><div style={{fontFamily:"monospace",fontSize:12,color:t.txB,background:t.bgASS,padding:10,borderRadius:6}}>model.fit(emails, labels)<br/>model.predict(neue_email)</div></Cd>
+    </div>
+
+    <ST>Die Kernidee</ST>
+    <div style={{background:t.bgAS,border:`1px solid ${t.bdA}`,borderRadius:t.term?8:12,padding:24,textAlign:"center"}}>
+      <p style={{fontFamily:t.hf,fontSize:18,fontStyle:"italic",color:t.tx,lineHeight:1.5,margin:0}}>Machine Learning: Ein Computer lernt aus Erfahrung (Daten), statt explizit programmiert zu werden.</p>
+      <p style={{fontFamily:t.sf,fontSize:12,color:t.txM,marginTop:10}}>Basierend auf Arthur Samuel, 1959</p>
+    </div>
+    <Info title="Warum das fuer eure PA wichtig ist" type="warning">Prof. Turan erwartet klassisches ML (Scikit-learn), kein Deep Learning. Ihr muesst erklaeren koennen, warum euer Ansatz ML ist und nicht einfach Regelwerk.</Info>
+    <Verstanden moduleId="welcome"/>
+  </div>;
+};
+
+// ── MODULE 2: Daten & Muster ──
+const M2 = () => {
+  const t=useT();
+  const [pts,setPts]=useState([{x:80,y:300,l:1},{x:150,y:280,l:1},{x:100,y:320,l:1},{x:130,y:350,l:1},{x:300,y:100,l:0},{x:350,y:80,l:0},{x:320,y:130,l:0},{x:280,y:150,l:0}]);
+  const [nl,setNl]=useState(1);
+  const ref=useRef(null);
+  const click=(e)=>{const r=ref.current.getBoundingClientRect();const x=((e.clientX-r.left)/r.width)*420;const y=((e.clientY-r.top)/r.height)*420;if(x>10&&x<410&&y>10&&y<410)setPts(p=>[...p,{x,y,l:nl}]);};
+  return <div>
+    <CL num="02"/><H1>Daten & Muster erkennen</H1>
+    <P>Ohne Daten kein Machine Learning. In diesem Modul lernst du, was Daten im ML-Kontext bedeuten, was Features sind und warum die Qualitaet deiner Daten wichtiger ist als dein Algorithmus.</P>
+
+    <ST>Was sind Daten im ML-Kontext?</ST>
+    <P>ML arbeitet mit tabellarischen Daten: Jede Zeile ist ein Datenpunkt (z.B. ein Patient, ein Haus, eine E-Mail). Jede Spalte ist ein Feature -- eine messbare Eigenschaft. Die letzte Spalte ist oft die Zielvariable (das, was du vorhersagen willst).</P>
+    <Cd>
+      <div style={{overflowX:"auto"}}>
+        <table style={{width:"100%",borderCollapse:"collapse",fontSize:12,fontFamily:t.term?t.mf:t.sf}}>
+          <thead><tr style={{borderBottom:`2px solid ${t.bd}`}}>
+            {["Alter","Blutdruck","Cholesterin","Raucher","Herzkrank?"].map((h,i)=><th key={i} style={{padding:"8px 12px",textAlign:"left",color:i===4?t.ac:t.txM,fontWeight:600,background:i===4?`${t.ac}10`:"transparent"}}>{h}</th>)}
+          </tr></thead>
+          <tbody>{[[52,130,250,"Ja","Ja"],[37,120,190,"Nein","Nein"],[61,140,280,"Ja","Ja"],[45,125,210,"Nein","Nein"]].map((r,i)=><tr key={i} style={{borderBottom:`1px solid ${t.bd}`}}>
+            {r.map((c,j)=><td key={j} style={{padding:"8px 12px",color:j===4?t.ac:t.txB,fontWeight:j===4?600:400,background:j===4?`${t.ac}08`:"transparent"}}>{c}</td>)}
+          </tr>)}</tbody>
+        </table>
+      </div>
+      <div style={{marginTop:10,fontSize:11,color:t.txM}}>4 Features (Alter bis Raucher) → 1 Zielvariable (Herzkrank?). Das ist die Grundstruktur jedes ML-Datensatzes.</div>
+    </Cd>
+
+    <ST>Feature-Typen</ST>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:20}}>
+      <Cd><div style={{fontSize:12,fontWeight:700,color:t.ac,marginBottom:6}}>NUMERISCH</div><P>Zahlen mit Ordnung und Abstand. Alter (52), Temperatur (37.2), Preis (350000).</P></Cd>
+      <Cd><div style={{fontSize:12,fontWeight:700,color:t.ok,marginBottom:6}}>KATEGORISCH</div><P>Klassen ohne Rangfolge. Farbe (rot/blau), Geschlecht, Postleitzahl.</P></Cd>
+      <Cd><div style={{fontSize:12,fontWeight:700,color:t.inf,marginBottom:6}}>ORDINAL</div><P>Klassen mit Rangfolge. Schulnote (1-6), T-Shirt-Groesse (S/M/L/XL).</P></Cd>
+    </div>
+    <Info title="Warum das wichtig ist" type="warning">ML-Algorithmen koennen nur mit Zahlen rechnen. Kategorische Features muessen in Zahlen umgewandelt werden (One-Hot Encoding). Bei ordinalen Features bleibt die Reihenfolge erhalten (Label Encoding).</Info>
+
+    <ST>Interaktiv: Muster erkennen</ST>
+    <P>Klicke ins Diagramm, um Datenpunkte zu setzen. Siehst du, wie sich zwei Gruppen bilden? Genau das muss ein ML-Algorithmus automatisch erkennen.</P>
+    <div style={{display:"flex",gap:10,marginBottom:16,alignItems:"center",flexWrap:"wrap"}}>
+      <span style={{fontSize:12,color:t.txM}}>Neuer Punkt:</span>
+      {[{v:1,n:"Spam"},{v:0,n:"Kein Spam"}].map(({v,n})=><Bt key={v} primary={nl===v} onClick={()=>setNl(v)} style={{background:nl===v?(v?t.err:t.inf):t.bgCA,color:nl===v?t.w:t.txB,fontSize:12,padding:"6px 14px"}}>{"● "+n}</Bt>)}
+      <Bt onClick={()=>setPts([])} style={{marginLeft:"auto",fontSize:12,padding:"6px 14px"}}>Reset</Bt>
+    </div>
+    <TW title="data_clusters.viz">
+      <svg ref={ref} viewBox="0 0 420 420" style={{width:"100%",maxWidth:420,display:"block",margin:"0 auto",cursor:"crosshair"}} onClick={click}>
+        <rect x="10" y="10" width="400" height="400" fill={t.bgASS} rx="6" stroke={t.bd} strokeWidth="1"/>
+        {[0,1,2,3,4].map(i=><g key={i}><line x1={10+i*100} y1="10" x2={10+i*100} y2="410" stroke={t.bd} strokeWidth=".5"/><line x1="10" y1={10+i*100} x2="410" y2={10+i*100} stroke={t.bd} strokeWidth=".5"/></g>)}
+        <text x="210" y="406" textAnchor="middle" fill={t.txM} fontSize="10" fontFamily={t.sf}>Feature 1: Verdaechtige Woerter →</text>
+        <text x="15" y="210" fill={t.txM} fontSize="10" fontFamily={t.sf} transform="rotate(-90,15,210)">Feature 2: Link-Anzahl →</text>
+        {pts.map((p,i)=><circle key={i} cx={p.x} cy={p.y} r="7" fill={p.l?`${t.err}cc`:`${t.inf}cc`} stroke={p.l?t.err:t.inf} strokeWidth="1.5"/>)}
+      </svg>
+    </TW>
+    <Info title="Entscheidungsgrenzen" type="tip">Ein ML-Algorithmus findet automatisch eine Grenze (Decision Boundary) zwischen den Gruppen. Bei 2 Features ist das eine Linie, bei 3 eine Flaeche, bei mehr eine Hyperebene.</Info>
+
+    <ST>Labelling: Woher kommen die Antworten?</ST>
+    <P>Supervised Learning braucht Daten MIT richtigen Antworten (Labels). Aber die fallen nicht vom Himmel -- jemand muss sie erstellen. Das nennt man Labelling, und es ist oft der teuerste und zeitaufwaendigste Schritt im gesamten ML-Workflow.</P>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:16}}>
+      <Cd><div style={{fontSize:12,fontWeight:700,color:t.ac,marginBottom:6}}>LABELLING BEI KLASSIFIKATION</div><P>Ein Mensch ordnet jeden Datenpunkt einer Klasse zu: 'Spam' oder 'Kein Spam', 'Krank' oder 'Gesund'. Bei 10.000 E-Mails muss jede einzelne gelesen und markiert werden.</P></Cd>
+      <Cd><div style={{fontSize:12,fontWeight:700,color:t.ok,marginBottom:6}}>LABELLING BEI REGRESSION</div><P>Der Zielwert muss bekannt sein: der tatsaechliche Hauspreis, die gemessene Temperatur, der echte Energieverbrauch. Oft kommen diese aus historischen Aufzeichnungen oder Sensordaten.</P></Cd>
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:16}}>
+      {[["Manuell","Menschen labeln per Hand. Teuer, aber oft am genauesten. Tools: Label Studio, Prodigy."],
+        ["Crowdsourcing","Viele Menschen labeln ueber Plattformen wie Amazon Mechanical Turk. Billiger, aber fehleranfaelliger -- deshalb labeln mehrere Personen denselben Datenpunkt."],
+        ["Automatisch / Schwach","Heuristiken oder vortrainierte Modelle erzeugen Labels. Schnell, aber ungenau. Gut als Startpunkt, danach manuell nachkorrigieren."]
+      ].map(([title,desc],i)=><Cd key={i}><div style={{fontSize:12,fontWeight:700,color:t.inf,marginBottom:4}}>{title}</div><div style={{fontSize:11,color:t.txB,lineHeight:1.5}}>{desc}</div></Cd>)}
+    </div>
+    <Info title="Fuer eure PA" type="tip">Bei eurer Projektarbeit nutzt ihr fertig gelabelte Datensaetze (z.B. von Kaggle). Trotzdem solltet ihr in der Dokumentation erwaehnen, woher die Labels stammen und wie vertrauenswuerdig sie sind -- das zeigt Verstaendnis.</Info>
+
+    <ST>Datenqualitaet: Garbage In, Garbage Out</ST>
+    <P>Die wichtigste Regel im ML: Dein Modell ist nur so gut wie deine Daten. Typische Probleme, die ihr in eurer PA adressieren muesst:</P>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+      {[["Fehlende Werte (NaN)","Zellen ohne Inhalt. Loesungen: Zeile loeschen, Mittelwert einsetzen, oder Median verwenden."],
+        ["Ausreisser","Extremwerte, die das Modell verzerren. Ein Patient mit Alter 999 ist offensichtlich ein Datenfehler."],
+        ["Class Imbalance","95% gesund, 5% krank -- das Modell lernt einfach immer 'gesund' zu sagen und hat 95% Accuracy."],
+        ["Bias in Daten","Wenn der Datensatz nicht repraesentativ ist, lernt das Modell verzerrte Muster."]
+      ].map(([title,desc],i)=><Cd key={i}><div style={{fontSize:12,fontWeight:700,color:t.err,marginBottom:4}}>{title}</div><div style={{fontSize:12,color:t.txB,lineHeight:1.5}}>{desc}</div></Cd>)}
+    </div>
+    <Verstanden moduleId="data"/>
+  </div>;
+};
+
+// ── MODULE 3: Supervised Learning ──
+const M3 = () => {
+  const t=useT();
+  const [pts,setPts]=useState([{x:30,y:250},{x:60,y:310},{x:100,y:200},{x:150,y:170},{x:200,y:150},{x:250,y:100},{x:300,y:80},{x:350,y:60}]);
+  const [sl,setSl]=useState(-0.6);const [ic,setIc]=useState(300);const [sbf,setSbf]=useState(false);
+  const ref=useRef(null);
+  const mse=useMemo(()=>pts.length?Math.round(pts.map(p=>Math.pow(p.y-(sl*p.x+ic),2)).reduce((a,b)=>a+b,0)/pts.length):0,[pts,sl,ic]);
+  const bf=useMemo(()=>{if(pts.length<2)return{s:0,i:200};const n=pts.length,sx=pts.reduce((a,p)=>a+p.x,0),sy=pts.reduce((a,p)=>a+p.y,0),sxy=pts.reduce((a,p)=>a+p.x*p.y,0),sx2=pts.reduce((a,p)=>a+p.x*p.x,0);const s2=(n*sxy-sx*sy)/(n*sx2-sx*sx);return{s:s2,i:(sy-s2*sx)/n};},[pts]);
+  const hBf=()=>{setSl(Math.round(bf.s*100)/100);setIc(Math.round(bf.i));setSbf(true);};
+  const hClick=(e)=>{const r=ref.current.getBoundingClientRect();const x=Math.round(((e.clientX-r.left)/r.width)*400);const y=Math.round(((e.clientY-r.top)/r.height)*400);if(x>5&&x<395&&y>5&&y<395){setPts(p=>[...p,{x,y}]);setSbf(false);}};
+  return <div>
+    <CL num="03"/><H1>Supervised Learning</H1>
+    <P>Supervised Learning (ueberwachtes Lernen) ist das gaengigste ML-Paradigma und die Basis eurer Projektarbeit. Der Algorithmus bekommt Beispiele mit richtigen Antworten (Labels) und lernt daraus, Vorhersagen fuer neue Daten zu treffen.</P>
+
+    <ST>Die drei Lernparadigmen</ST>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:20}}>
+      <Cd style={{borderColor:t.ac,borderWidth:2}}><div style={{fontSize:12,fontWeight:700,color:t.ac,marginBottom:6}}>SUPERVISED</div><P>Daten + richtige Antworten. Wie Lernen mit Loesungsbuch. Fuer eure PA relevant!</P><div style={{fontSize:11,color:t.txM}}>Beispiel: 1000 E-Mails, markiert als Spam/kein Spam</div></Cd>
+      <Cd><div style={{fontSize:12,fontWeight:700,color:t.ok,marginBottom:6}}>UNSUPERVISED</div><P>Nur Daten, keine Antworten. Das Modell findet selbst Gruppen und Muster.</P><div style={{fontSize:11,color:t.txM}}>Beispiel: Kundensegmentierung (wer kauft aehnlich?)</div></Cd>
+      <Cd><div style={{fontSize:12,fontWeight:700,color:t.inf,marginBottom:6}}>REINFORCEMENT</div><P>Lernen durch Belohnung/Bestrafung. Trial and Error in einer Umgebung.</P><div style={{fontSize:11,color:t.txM}}>Beispiel: AlphaGo lernt Go spielen durch Millionen Partien</div></Cd>
+    </div>
+
+    <ST>Klassifikation vs. Regression</ST>
+    <P>Supervised Learning hat zwei Hauptformen, je nachdem was vorhergesagt wird:</P>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:20}}>
+      <Cd><div style={{fontSize:12,fontWeight:700,color:t.inf,marginBottom:6}}>KLASSIFIKATION</div><P>Vorhersage einer Kategorie. Die Ausgabe ist eine Klasse.</P><div style={{fontSize:12,color:t.txB,lineHeight:1.6}}>Krank / Gesund<br/>Spam / Kein Spam<br/>Katze / Hund / Vogel</div><div style={{marginTop:8,fontSize:11,color:t.txM}}>Metriken: Accuracy, Precision, Recall, F1-Score</div></Cd>
+      <Cd><div style={{fontSize:12,fontWeight:700,color:"#7c3aed",marginBottom:6}}>REGRESSION</div><P>Vorhersage einer Zahl. Die Ausgabe ist ein kontinuierlicher Wert.</P><div style={{fontSize:12,color:t.txB,lineHeight:1.6}}>Hauspreis: 350.000 EUR<br/>Temperatur morgen: 22.3 C<br/>Umsatz naechsten Monat</div><div style={{marginTop:8,fontSize:11,color:t.txM}}>Metriken: MSE, RMSE, MAE, R2-Score</div></Cd>
+    </div>
+
+    <ST>Interaktiv: Lineare Regression</ST>
+    <P>Das einfachste Regressionsmodell: Eine Linie durch Punkte legen. Verschiebe Steigung und Y-Abschnitt -- oder klicke auf 'Optimale Linie' fuer die mathematisch beste Loesung.</P>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:20}}>
+      <TW title="regression.viz">
+        <svg ref={ref} viewBox="0 0 400 400" style={{width:"100%",cursor:"crosshair"}} onClick={hClick}>
+          <rect width="400" height="400" fill={t.bgASS} rx="6" stroke={t.bd} strokeWidth="1"/>
+          {[0,1,2,3,4].map(i=><g key={i}><line x1={i*100} y1="0" x2={i*100} y2="400" stroke={t.bd} strokeWidth=".5"/><line x1="0" y1={i*100} x2="400" y2={i*100} stroke={t.bd} strokeWidth=".5"/></g>)}
+          {pts.map((p,i)=><line key={"e"+i} x1={p.x} y1={p.y} x2={p.x} y2={sl*p.x+ic} stroke={`${t.ac}50`} strokeWidth="1.5" strokeDasharray="3"/>)}
+          <line x1="0" y1={ic} x2="400" y2={sl*400+ic} stroke={t.ok} strokeWidth="2.5"/>
+          {pts.map((p,i)=><circle key={i} cx={p.x} cy={p.y} r="5.5" fill={`${t.inf}cc`} stroke={t.inf} strokeWidth="1.5"/>)}
+        </svg>
+      </TW>
+      <div>
+        <div style={{textAlign:"center",padding:16,borderRadius:t.term?8:12,marginBottom:16,background:mse<500?t.okBg:mse<2000?t.bgAS:t.errBg,border:`1px solid ${(mse<500?t.ok:mse<2000?t.ac:t.err)}40`}}>
+          <div style={{fontSize:12,color:t.txM}}>MSE (Mean Squared Error)</div>
+          <div style={{fontSize:32,fontWeight:700,color:t.tx,fontFamily:t.hf}}>{mse.toLocaleString()}</div>
+          <div style={{fontSize:11,color:t.txM,marginTop:4}}>{mse<500?"Hervorragend!":mse<2000?"Geht besser.":"Zu hoch!"}</div>
+        </div>
+        <div style={{marginBottom:12}}>
+          <div style={{display:"flex",justifyContent:"space-between",fontSize:12,color:t.txM,marginBottom:4}}><span>Steigung (m)</span><span style={{color:t.ac,fontWeight:600}}>{sl}</span></div>
+          <input type="range" min="-2" max="2" step="0.01" value={sl} onChange={e=>{setSl(parseFloat(e.target.value));setSbf(false);}} style={{width:"100%",accentColor:t.ac}}/>
+        </div>
+        <div style={{marginBottom:12}}>
+          <div style={{display:"flex",justifyContent:"space-between",fontSize:12,color:t.txM,marginBottom:4}}><span>Y-Abschnitt (b)</span><span style={{color:t.ac,fontWeight:600}}>{ic}</span></div>
+          <input type="range" min="0" max="400" step="1" value={ic} onChange={e=>{setIc(parseInt(e.target.value));setSbf(false);}} style={{width:"100%",accentColor:t.ac}}/>
+        </div>
+        <div style={{display:"flex",gap:8}}><Bt primary onClick={hBf}>Optimale Linie</Bt><Bt onClick={()=>{setPts([]);setSbf(false);}}>Reset</Bt></div>
+        {sbf&&<Info type="math">Beste Linie: <strong>y = {bf.s.toFixed(2)}x + {bf.i.toFixed(0)}</strong></Info>}
+      </div>
+    </div>
+    <Info title="MSE-Formel" type="math"><strong>MSE = (1/n) * Summe( (y_real - y_predicted)^2 )</strong>. Quadrieren hat zwei Gruende: Positive und negative Fehler heben sich nicht auf, und grosse Fehler werden staerker bestraft.</Info>
+
+    <ST>Overfitting vs. Underfitting</ST>
+    <P>Zwei zentrale Gefahren, die ihr in eurer PA verstehen und diskutieren muesst:</P>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+      <Cd><div style={{fontSize:12,fontWeight:700,color:t.err,marginBottom:6}}>OVERFITTING</div><P>Das Modell lernt die Trainingsdaten auswendig -- inklusive Rauschen und Zufall. Es funktioniert perfekt auf Trainingsdaten, versagt aber bei neuen Daten.</P><div style={{fontSize:11,color:t.txM}}>Abhilfe: Mehr Daten, einfacheres Modell, Regularisierung, Cross-Validation</div></Cd>
+      <Cd><div style={{fontSize:12,fontWeight:700,color:t.ac,marginBottom:6}}>UNDERFITTING</div><P>Das Modell ist zu einfach fuer die Daten. Es erkennt nicht mal die offensichtlichen Muster. Schlecht auf Trainings- UND Testdaten.</P><div style={{fontSize:11,color:t.txM}}>Abhilfe: Komplexeres Modell, mehr Features, Feature Engineering</div></Cd>
+    </div>
+    <Info title="Train/Test-Split" type="warning">NIEMALS mit den Testdaten trainieren! Standardmaessig: 80% Training, 20% Test. In Scikit-learn: train_test_split(X, y, test_size=0.2, random_state=42). Der random_state sorgt fuer Reproduzierbarkeit.</Info>
+    <Verstanden moduleId="supervised"/>
+  </div>;
+};
+
+// ── MODULE 4: Gradient Descent ──
+const M4 = () => {
+  const t=useT();
+  const [bp,setBp]=useState(350);const [rolling,setRolling]=useState(false);const [lr,setLr]=useState(0.03);const [hist,setHist]=useState([]);
+  const aRef=useRef(null);
+  const loss=x=>0.0008*(x-200)**2+30;
+  const grad=x=>0.0016*(x-200);
+  const start=()=>{
+    setRolling(true);setHist([]);
+    let pos=bp;let h=[pos];let step=0;
+    const go=()=>{pos=Math.max(20,Math.min(380,pos-lr*grad(pos)*300));h=[...h,pos];setBp(pos);setHist([...h]);step++;
+      if(Math.abs(grad(pos))>0.001&&step<200){aRef.current=requestAnimationFrame(go);}else{setRolling(false);}};
+    aRef.current=requestAnimationFrame(go);
+  };
+  useEffect(()=>()=>{if(aRef.current)cancelAnimationFrame(aRef.current);},[]);
+  const curve=[];for(let x=20;x<=380;x+=2)curve.push(`${x},${370-loss(x)*1.3}`);
+  return <div>
+    <CL num="04"/><H1>Gradient Descent</H1>
+    <P>Wie findet ein ML-Modell die besten Parameter? Durch Optimierung. Gradient Descent ist der wichtigste Optimierungsalgorithmus im ML -- er steckt hinter fast jedem trainierten Modell.</P>
+
+    <ST>Die Intuition</ST>
+    <P>Stell dir vor, du stehst im Nebel auf einem Huegel und willst ins Tal (das Minimum). Du kannst nichts sehen, aber du spuerst die Neigung unter deinen Fuessen. Also gehst du immer in die Richtung, in der es am steilsten bergab geht. Genau das macht Gradient Descent -- der Gradient (die Ableitung) zeigt die Richtung des steilsten Anstiegs, und wir gehen in die entgegengesetzte Richtung.</P>
+
+    <ST>Interaktiv: Den Berg hinab</ST>
+    <P>Setze eine Startposition und Learning Rate, dann klicke 'Starten'. Beobachte, wie der rote Ball ins Minimum rollt.</P>
+    <TW title="gradient_descent.viz">
+      <svg viewBox="0 0 400 340" style={{width:"100%",maxWidth:480,display:"block",margin:"0 auto"}}>
+        <defs><linearGradient id="hg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={`${t.ac}30`}/><stop offset="100%" stopColor={`${t.ac}05`}/></linearGradient></defs>
+        <polygon points={`20,320 ${curve.join(" ")} 380,320`} fill="url(#hg)"/>
+        <polyline points={curve.join(" ")} fill="none" stroke={t.ac} strokeWidth="2.5"/>
+        <line x1="200" y1={370-loss(200)*1.3} x2="200" y2="320" stroke={`${t.ok}40`} strokeDasharray="4"/>
+        <text x="200" y="335" textAnchor="middle" fill={t.ok} fontSize="11">Minimum</text>
+        {hist.length>1&&hist.map((h,i)=>{if(!i)return null;return <line key={i} x1={hist[i-1]} y1={370-loss(hist[i-1])*1.3} x2={h} y2={370-loss(h)*1.3} stroke={`${t.ac}50`} strokeWidth="1"/>;})}
+        <circle cx={bp} cy={370-loss(bp)*1.3} r="10" fill={t.err} stroke={`${t.err}80`} strokeWidth="2"/>
+        <text x={bp} y={370-loss(bp)*1.3-16} textAnchor="middle" fill={t.txB} fontSize="10">Loss: {loss(bp).toFixed(1)}</text>
+      </svg>
+    </TW>
+    <div style={{display:"flex",gap:16,marginTop:16,flexWrap:"wrap",alignItems:"end"}}>
+      <div style={{flex:1,minWidth:180}}>
+        <div style={{display:"flex",justifyContent:"space-between",fontSize:12,color:t.txM,marginBottom:4}}><span>Startposition</span><span style={{color:t.ac,fontWeight:600}}>{Math.round(bp)}</span></div>
+        <input type="range" min="20" max="380" value={bp} disabled={rolling} onChange={e=>setBp(parseInt(e.target.value))} style={{width:"100%",accentColor:t.ac}}/>
+      </div>
+      <div style={{flex:1,minWidth:180}}>
+        <div style={{display:"flex",justifyContent:"space-between",fontSize:12,color:t.txM,marginBottom:4}}><span>Learning Rate</span><span style={{color:t.ac,fontWeight:600}}>{lr}</span></div>
+        <input type="range" min="0.005" max="0.15" step="0.005" value={lr} disabled={rolling} onChange={e=>setLr(parseFloat(e.target.value))} style={{width:"100%",accentColor:t.ac}}/>
+      </div>
+      <Bt primary onClick={rolling?undefined:start} disabled={rolling}>{rolling?"Laeuft ...":"Starten"}</Bt>
+    </div>
+
+    <ST>Die Formel</ST>
+    <Cd style={{textAlign:"center",padding:20}}>
+      <div style={{fontFamily:"monospace",fontSize:16,fontWeight:700,color:t.tx,marginBottom:8}}>w_neu = w_alt - LR * dL/dw</div>
+      <div style={{fontSize:12,color:t.txB,lineHeight:1.6}}>w = Gewicht (Parameter) | LR = Learning Rate (Schrittgroesse) | dL/dw = Gradient (Ableitung der Loss-Funktion nach w). Das Minus sorgt dafuer, dass wir bergab gehen.</div>
+    </Cd>
+
+    <ST>Learning Rate: Der wichtigste Hyperparameter</ST>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:20}}>
+      <Cd><div style={{fontSize:12,fontWeight:700,color:t.err,marginBottom:6}}>ZU GROSS</div><P>Springt uebers Minimum hinweg, kann sogar divergieren (Loss wird immer groesser).</P></Cd>
+      <Cd style={{borderColor:t.ok}}><div style={{fontSize:12,fontWeight:700,color:t.ok,marginBottom:6}}>GENAU RICHTIG</div><P>Konvergiert zuegig zum Minimum. In der Praxis: Ausprobieren oder adaptive Verfahren nutzen.</P></Cd>
+      <Cd><div style={{fontSize:12,fontWeight:700,color:t.ac,marginBottom:6}}>ZU KLEIN</div><P>Konvergiert, aber extrem langsam. Training dauert ewig und kann in lokalen Minima stecken bleiben.</P></Cd>
+    </div>
+
+    <Info title="Varianten in der Praxis" type="info">Batch GD: Nutzt alle Daten pro Schritt (stabil, langsam). Stochastic GD (SGD): Nutzt einen Datenpunkt (schnell, rauschig). Mini-Batch GD: Nutzt kleine Gruppen (32-256 Datenpunkte) -- der Standard in der Praxis.</Info>
+    <Info title="Fuer eure PA" type="warning">Bei Scikit-learn muesst ihr Gradient Descent nicht selbst implementieren -- die Algorithmen machen das intern. Aber ihr muesst erklaeren koennen, was passiert, wenn jemand fragt.</Info>
+    <Verstanden moduleId="gradient"/>
+  </div>;
+};
+
+// ── MODULE 5: Neuronale Netze ──
+const M5 = () => {
+  const t=useT();
+  const [iv,setIv]=useState([0.8,0.3,0.6]);const [an,setAn]=useState(null);
+  const w=[[0.5,-0.3,0.8],[0.2,0.7,-0.4]];
+  const sig=x=>1/(1+Math.exp(-x));
+  const hid=w.map(ww=>sig(ww.reduce((s,wi,i)=>s+wi*iv[i],0)));
+  const out=sig(hid[0]*0.6+hid[1]*0.4);
+  const neurons=[...iv.map((v,i)=>({x:70,y:100+i*80,v,l:0,n:`Input ${i+1}`})),...hid.map((v,i)=>({x:200,y:140+i*80,v,l:1,n:`Hidden ${i+1}`})),{x:330,y:180,v:out,l:2,n:out>0.5?"Klasse A":"Klasse B"}];
+  const lc=[t.ac,t.ok,t.inf];
+  return <div>
+    <CL num="05"/><H1>Neuronale Netze</H1>
+    <P>Neuronale Netze sind mathematische Modelle, die lose vom Gehirn inspiriert sind. Sie bestehen aus Schichten von Recheneinheiten (Neuronen), die Eingaben gewichtet verarbeiten. Der Name klingt biologisch, aber die Funktionsweise ist reine lineare Algebra + nichtlineare Funktionen.</P>
+
+    <ST>Aufbau: Schichten und Neuronen</ST>
+    <P>Ein neuronales Netz hat mindestens 3 Schichten: Input (Daten rein), Hidden (Berechnungen), Output (Ergebnis raus). Veraendere die Eingabewerte und beobachte, wie sich die Werte durch das Netz bewegen.</P>
+    <TW title="neural_network.viz">
+      <svg viewBox="0 0 400 340" style={{width:"100%",maxWidth:440,display:"block",margin:"0 auto"}}>
+        {neurons.filter(nn=>nn.l===0).map((inp,i)=>neurons.filter(nn=>nn.l===1).map((h,j)=><line key={`${i}-${j}`} x1={inp.x} y1={inp.y} x2={h.x} y2={h.y} stroke={w[j][i]>0?`${t.ok}55`:`${t.err}55`} strokeWidth={Math.abs(w[j][i])*2.5+.5}/>))}
+        {neurons.filter(nn=>nn.l===1).map((h,i)=>neurons.filter(nn=>nn.l===2).map((o,j)=><line key={`o${i}${j}`} x1={h.x} y1={h.y} x2={o.x} y2={o.y} stroke={`${t.inf}55`} strokeWidth="2"/>))}
+        {["Input","Hidden","Output"].map((l,i)=><text key={i} x={[70,200,330][i]} y="30" textAnchor="middle" fill={t.txM} fontSize="11" fontFamily={t.hf} fontWeight="600">{l}</text>)}
+        {neurons.map((nn,i)=><g key={i} style={{cursor:"pointer"}} onMouseEnter={()=>setAn(i)} onMouseLeave={()=>setAn(null)}>
+          <circle cx={nn.x} cy={nn.y} r={an===i?24:20} fill={t.bgASS} stroke={lc[nn.l]} strokeWidth={an===i?2.5:1.5} opacity={.5+nn.v*.5} style={{transition:"all .2s"}}/>
+          <text x={nn.x} y={nn.y+4} textAnchor="middle" fill={t.tx} fontSize="11" fontWeight="600">{nn.v.toFixed(2)}</text>
+          <text x={nn.x} y={nn.y+38} textAnchor="middle" fill={t.txM} fontSize="9">{nn.n}</text>
+        </g>)}
+      </svg>
+    </TW>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:16,marginTop:16}}>
+      {["Input 1","Input 2","Input 3"].map((l,i)=><div key={i}>
+        <div style={{display:"flex",justifyContent:"space-between",fontSize:12,color:t.txM,marginBottom:4}}><span>{l}</span><span style={{color:t.ac,fontWeight:600}}>{iv[i].toFixed(2)}</span></div>
+        <input type="range" min="0" max="1" step="0.01" value={iv[i]} onChange={e=>{const v=[...iv];v[i]=parseFloat(e.target.value);setIv(v);}} style={{width:"100%",accentColor:t.ac}}/>
+      </div>)}
+    </div>
+
+    <ST>Was passiert in einem Neuron?</ST>
+    <P>Jedes Neuron macht genau zwei Dinge:</P>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:20}}>
+      <Cd><div style={{fontSize:12,fontWeight:700,color:t.ac,marginBottom:6}}>1. GEWICHTETE SUMME</div><div style={{fontFamily:"monospace",fontSize:13,color:t.tx,marginBottom:6}}>z = w1*x1 + w2*x2 + ... + b</div><P>Jeder Input wird mit einem Gewicht (w) multipliziert und aufsummiert. b ist der Bias (Schwellwert).</P></Cd>
+      <Cd><div style={{fontSize:12,fontWeight:700,color:t.ok,marginBottom:6}}>2. AKTIVIERUNGSFUNKTION</div><div style={{fontFamily:"monospace",fontSize:13,color:t.tx,marginBottom:6}}>a = f(z)</div><P>Die Summe wird durch eine nichtlineare Funktion geschickt. Ohne sie koennte das Netz nur lineare Zusammenhaenge lernen.</P></Cd>
+    </div>
+
+    <ST>Aktivierungsfunktionen</ST>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:20}}>
+      <Cd><div style={{fontSize:12,fontWeight:700,color:t.ac,marginBottom:4}}>Sigmoid</div><div style={{fontFamily:"monospace",fontSize:11,marginBottom:4}}>1 / (1 + e^(-z))</div><div style={{fontSize:11,color:t.txB}}>Ausgabe: 0 bis 1. Fuer Wahrscheinlichkeiten. Problem: Gradient wird bei extremen Werten sehr klein (Vanishing Gradient).</div></Cd>
+      <Cd><div style={{fontSize:12,fontWeight:700,color:t.ok,marginBottom:4}}>ReLU</div><div style={{fontFamily:"monospace",fontSize:11,marginBottom:4}}>max(0, z)</div><div style={{fontSize:11,color:t.txB}}>Ausgabe: 0 oder z. Standard in modernen Netzen. Schnell, einfach, loest Vanishing Gradient teilweise.</div></Cd>
+      <Cd><div style={{fontSize:12,fontWeight:700,color:t.inf,marginBottom:4}}>Softmax</div><div style={{fontFamily:"monospace",fontSize:11,marginBottom:4}}>e^(zi) / sum(e^(zj))</div><div style={{fontSize:11,color:t.txB}}>Ausgabe: Wahrscheinlichkeiten die sich zu 1 aufaddieren. Fuer Multi-Class-Klassifikation im Output-Layer.</div></Cd>
+    </div>
+
+    <Info title="Backpropagation" type="math">So lernt das Netz: Der Fehler am Output wird zurueckpropagiert (Kettenregel der Ableitung), und jedes Gewicht wird per Gradient Descent angepasst. Vorwaerts: Vorhersage. Rueckwaerts: Lernen.</Info>
+    <Info title="Fuer eure PA" type="warning">Prof. Turan bevorzugt klassisches ML. Neuronale Netze hier nur zum Verstaendnis -- in der PA nutzt ihr Scikit-learn-Algorithmen wie Random Forest oder SVM, die intern anders funktionieren.</Info>
+    <Verstanden moduleId="neural"/>
+  </div>;
+};
+
+// ── MODULE 6: Deep Learning ──
+const M6 = () => {
+  const t=useT();const [al,setAl]=useState(null);
+  const layers=[{n:"Eingabe",d:"Rohe Pixel (z.B. 224x224x3 = 150.528 Werte)",cnt:8,c:t.ac},{n:"Conv 1",d:"Erkennt einfache Muster: Kanten, Linien, Ecken",cnt:12,c:t.acL},{n:"Conv 2",d:"Kombiniert Kanten zu Texturen und Formen",cnt:10,c:t.ok},{n:"Conv 3",d:"Erkennt Objekt-Teile: Augen, Ohren, Raeder",cnt:8,c:t.inf},{n:"Dense",d:"Verknuepft Teile zu Konzepten: 'Gesicht', 'Auto'",cnt:6,c:t.math},{n:"Output",d:"Wahrscheinlichkeiten pro Klasse (Softmax)",cnt:2,c:t.err}];
+  return <div>
+    <CL num="06"/><H1>Deep Learning</H1>
+    <P>Deep Learning ist ein Teilgebiet von ML, das neuronale Netze mit vielen Schichten (daher 'deep') nutzt. Der Durchbruch kam 2012 mit AlexNet im ImageNet-Wettbewerb. Seitdem dominiert Deep Learning bei Bilderkennung, Sprachverarbeitung und Textgenerierung.</P>
+
+    <ST>Warum Tiefe wichtig ist</ST>
+    <P>Jede Schicht lernt abstraktere Merkmale. Schicht 1 erkennt Kanten, Schicht 2 kombiniert Kanten zu Formen, Schicht 3 erkennt Objekt-Teile, und die letzte Schicht trifft die Entscheidung. Hover ueber die Schichten:</P>
+    <TW title="cnn_architecture.viz">
+      <div style={{display:"flex",alignItems:"flex-end",justifyContent:"space-between",gap:8,height:220}}>
+        {layers.map((l,i)=><div key={i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"flex-end",height:"100%",cursor:"pointer"}} onMouseEnter={()=>setAl(i)} onMouseLeave={()=>setAl(null)}>
+          <div style={{fontSize:10,textAlign:"center",color:al===i?t.tx:t.txF,fontWeight:al===i?600:400,marginBottom:8,transition:"all .2s"}}>{l.n}</div>
+          <div style={{display:"flex",flexDirection:"column",gap:3,alignItems:"center"}}>
+            {Array.from({length:l.cnt}).map((_,j)=><div key={j} style={{width:al===i?14:10,height:al===i?14:10,borderRadius:"50%",transition:"all .2s",background:al===i?l.c:`${l.c}44`,boxShadow:al===i?`0 0 8px ${l.c}40`:"none"}}/>)}
+          </div>
+        </div>)}
+      </div>
+      {al!==null&&<div style={{marginTop:16,textAlign:"center",padding:12,borderRadius:8,background:`${layers[al].c}10`,border:`1px solid ${layers[al].c}25`}}>
+        <div style={{fontFamily:t.hf,fontWeight:700,color:t.tx,fontSize:14}}>{layers[al].n}</div>
+        <div style={{fontSize:12,color:t.txB,marginTop:4}}>{layers[al].d}</div>
+      </div>}
+    </TW>
+
+    <ST>Die wichtigsten Architekturen</ST>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:20}}>
+      <Cd><div style={{fontSize:12,fontWeight:700,color:t.ac,marginBottom:6}}>CNN (Convolutional Neural Network)</div><P>Fuer Bilder. Nutzt Filter (Kernels), die ueber das Bild gleiten und lokale Muster erkennen. AlexNet, VGG, ResNet sind bekannte Vertreter.</P><div style={{fontSize:11,color:t.txM}}>Anwendung: Bilderkennung, medizinische Bildanalyse, autonomes Fahren</div></Cd>
+      <Cd><div style={{fontSize:12,fontWeight:700,color:t.ok,marginBottom:6}}>RNN (Recurrent Neural Network)</div><P>Fuer Sequenzen (Text, Zeitreihen). Hat ein 'Gedaechtnis' durch Rueckkopplungen. LSTM und GRU sind verbesserte Varianten.</P><div style={{fontSize:11,color:t.txM}}>Anwendung: Spracherkennung, Zeitreihen-Vorhersage, Maschinenuebersetzung</div></Cd>
+      <Cd><div style={{fontSize:12,fontWeight:700,color:t.inf,marginBottom:6}}>Transformer</div><P>Die Architektur hinter ChatGPT, Claude, BERT. Nutzt Attention-Mechanismus statt Rekurrenz. Seit 2017 (Paper: 'Attention Is All You Need') der Standard in NLP.</P><div style={{fontSize:11,color:t.txM}}>Anwendung: Textgenerierung, Uebersetzung, Code-Generierung, auch Bilder (ViT)</div></Cd>
+      <Cd><div style={{fontSize:12,fontWeight:700,color:t.math,marginBottom:6}}>GAN (Generative Adversarial Network)</div><P>Zwei Netze spielen gegeneinander: Generator erzeugt Fakes, Diskriminator erkennt sie. Beide werden besser. Eingefuehrt 2014 von Ian Goodfellow.</P><div style={{fontSize:11,color:t.txM}}>Anwendung: Bildgenerierung, Style Transfer, Deepfakes</div></Cd>
+    </div>
+
+    <ST>Praxisbeispiel: YOLO (You Only Look Once)</ST>
+    <P>YOLO ist eines der bekanntesten Deep-Learning-Modelle fuer Echtzeit-Objekterkennung. Es zeigt perfekt, wie Deep Learning in der Praxis funktioniert -- und warum Labelling so aufwaendig ist.</P>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:16}}>
+      <Cd><div style={{fontSize:12,fontWeight:700,color:t.ac,marginBottom:6}}>WAS YOLO MACHT</div><P>Ein Bild einmal anschauen und gleichzeitig alle Objekte erkennen: Position (Bounding Box) + Klasse (Auto, Person, Hund). Schnell genug fuer Echtzeit-Video (30+ FPS).</P><div style={{fontSize:11,color:t.txM}}>Erstmals 2016 von Joseph Redmon veroeffentlicht, aktuell bei v8+ (Ultralytics).</div></Cd>
+      <Cd><div style={{fontSize:12,fontWeight:700,color:t.ok,marginBottom:6}}>WIE YOLO FUNKTIONIERT</div><P>Das Bild wird in ein Raster aufgeteilt. Jede Zelle sagt vorher: 'Ist hier ein Objekt? Wenn ja, wo genau (Box) und was (Klasse)?' Alles in einem einzigen Forward Pass durch ein CNN.</P><div style={{fontSize:11,color:t.txM}}>Daher der Name: You Only Look Once -- ein Durchlauf statt vieler.</div></Cd>
+    </div>
+    <Cd style={{marginBottom:20}}>
+      <div style={{fontSize:12,fontWeight:700,color:t.err,marginBottom:6}}>DAS LABELLING-PROBLEM BEI YOLO</div>
+      <P>Um YOLO zu trainieren, muss jedes Bild von Hand gelabelt werden: Fuer jedes Objekt zeichnet ein Mensch eine Bounding Box und weist eine Klasse zu. Der COCO-Datensatz (328.000 Bilder, 2.5 Millionen gelabelte Objekte) hat Jahre und tausende Arbeitsstunden gekostet.</P>
+      <div style={{fontSize:12,color:t.txB,lineHeight:1.6}}>Das zeigt ein Grundproblem von Supervised Learning: Die Qualitaet der Labels bestimmt die Qualitaet des Modells. Falsch gesetzte Boxes oder falsche Klassen fuehren direkt zu falschen Vorhersagen.</div>
+    </Cd>
+
+    <Info title="Selbstorganisation" type="tip">Niemand sagt dem Netz, wonach es suchen soll. Die Hierarchie (Kanten → Formen → Objekte) entsteht automatisch durch das Training. Das ist der zentrale Unterschied zu handgemachtem Feature Engineering.</Info>
+    <Info title="Deep Learning vs. Klassisches ML" type="warning">Deep Learning braucht viele Daten und Rechenpower (GPUs). Bei kleinen Datensaetzen (unter 10.000 Beispiele) sind klassische Algorithmen wie Random Forest oft besser. Genau deshalb bevorzugt Prof. Turan klassisches ML fuer eure PA -- ihr arbeitet mit ueberschaubaren Datensaetzen.</Info>
+    <Verstanden moduleId="deep"/>
+  </div>;
+};
+
+// ── MODULE 7: Quiz ──
+const QD=[
+  {q:"Hauptunterschied klassische Programmierung vs. ML?",o:["ML ist schneller","ML lernt aus Daten statt Regeln","ML braucht keinen Strom","ML ist immer besser"],c:1,e:"Bei ML gibst du Daten, der Algorithmus findet die Regeln selbst."},
+  {q:"Was beschreibt der MSE?",o:["Geschwindigkeit","Datenpunktanzahl","Durchschn. quadrierter Fehler","Steigung"],c:2,e:"MSE misst die durchschnittliche quadrierte Abweichung."},
+  {q:"Learning Rate zu groß?",o:["Besseres Lernen","Springt übers Minimum","Daten gelöscht","Nichts"],c:1,e:"Zu große Schritte lassen das Modell übers Optimum springen."},
+  {q:"Was macht eine Aktivierungsfunktion?",o:["Löscht Daten","Nichtlineare Transformation","Speichert Gewichte","Verbindet Schichten"],c:1,e:"Ohne Nichtlinearität könnte das Netz nur lineare Zusammenhänge lernen."},
+  {q:"Wofür steht ‚Deep' in Deep Learning?",o:["Tiefes Denken","Viele Schichten","Tiefe Analyse","Deep Web"],c:1,e:"Tiefe = Anzahl der Schichten im Netz."},
+  {q:"Was ist Supervised Learning?",o:["Ohne Daten","Mit Labels","Durch Belohnung","Supervisor-Prozess"],c:1,e:"Der Algorithmus bekommt Beispiele MIT richtigen Antworten."},
+];
+const M7 = () => {
+  const t=useT();
+  const [cur,setCur]=useState(0);const [sel,setSel]=useState(null);const [score,setScore]=useState(0);const [ans,setAns]=useState({});const [done,setDone]=useState(false);
+  const q=QD[cur];const isA=ans[cur]!==undefined;
+  const answer=(i)=>{if(isA)return;setSel(i);setAns(p=>({...p,[cur]:i}));if(i===q.c)setScore(s=>s+1);};
+  const next=()=>{if(cur<QD.length-1){setCur(cur+1);setSel(null);}else{setDone(true);}};
+  if(done){const pct=Math.round(score/QD.length*100);return <div><CL num="07"/><H1>Ergebnis</H1><div style={{textAlign:"center",padding:40}}>
+    <div style={{fontSize:56,fontFamily:t.hf,fontWeight:700,color:t.tx}}>{score}/{QD.length}</div>
+    <div style={{fontSize:16,color:t.txM,marginTop:8}}>{pct}% richtig</div>
+    <div style={{marginTop:24}}><Bt primary onClick={()=>{setCur(0);setSel(null);setScore(0);setAns({});setDone(false);}}>Nochmal</Bt></div>
+  </div></div>;}
+  return <div>
+    <CL num="07"/><H1>Wissenstest</H1>
+    <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:20}}>
+      <span style={{fontSize:13,color:t.txM}}>Frage {cur+1}/{QD.length}</span>
+      <div style={{flex:1}}><Bar p={cur/QD.length*100}/></div>
+      <span style={{fontSize:13,fontWeight:600,color:t.ac}}>{score} Pkt.</span>
+    </div>
+    <Cd>
+      <div style={{fontFamily:t.hf,fontSize:17,fontWeight:600,color:t.tx,lineHeight:1.4,marginBottom:20}}>{q.q}</div>
+      <div style={{display:"flex",flexDirection:"column",gap:8}}>
+        {q.o.map((opt,i)=>{
+          let bg=t.bgASS,bd=t.bd,cl=t.tx;
+          if(isA&&i===q.c){bg=t.okBg;bd=t.ok;cl=t.ok;}
+          else if(isA&&i===sel&&i!==q.c){bg=t.errBg;bd=t.err;cl=t.err;}
+          return <button key={i} onClick={()=>answer(i)} disabled={isA} style={{width:"100%",textAlign:"left",padding:"12px 16px",borderRadius:t.term?6:8,border:`1.5px solid ${bd}`,background:bg,cursor:isA?"default":"pointer",fontFamily:t.sf,fontSize:13.5,color:cl,transition:"all .15s"}}>
+            <span style={{fontWeight:600,marginRight:8}}>{String.fromCharCode(65+i)}.</span>{opt}
+          </button>;
+        })}
+      </div>
+      {isA&&<div style={{marginTop:16,padding:14,borderRadius:8,background:t.infBg,border:`1px solid ${t.inf}30`}}>
+        <div style={{fontSize:12,fontWeight:600,color:t.inf,fontFamily:t.hf,marginBottom:4}}>Erklärung</div>
+        <div style={{fontSize:13,color:t.txB,lineHeight:1.6}}>{q.e}</div>
+      </div>}
+      {isA&&<div style={{marginTop:16}}><Bt primary onClick={next}>{cur<QD.length-1?"Nächste Frage →":"Ergebnis"}</Bt></div>}
+    </Cd>
+  </div>;
+};
+
+// ── MODULE 8: AI Tutor ──
+const M8 = () => {
+  const t=useT();
+  const [ak,setAk]=useState("");const [prov,setProv]=useState("openai");
+  const [msgs,setMsgs]=useState([{role:"assistant",content:"Willkommen! Ich bin dein ML-Tutor. Gib deinen API-Key ein und stell mir jede Frage."}]);
+  const [inp,setInp]=useState("");const [ld,setLd]=useState(false);const [ss,setSs]=useState(true);
+  const endRef=useRef(null);
+  useEffect(()=>{endRef.current?.scrollIntoView({behavior:"smooth"});},[msgs]);
+  const sys="Du bist ein freundlicher ML-Tutor. Erkläre auf Deutsch, didaktisch, mit Analogien. Max 200 Wörter.";
+  const send=async()=>{
+    if(!inp.trim()||!ak||ld)return;
+    const um={role:"user",content:inp};const nm=[...msgs,um];setMsgs(nm);setInp("");setLd(true);
+    try{
+      const am=nm.filter(m=>m.role!=="system").map(m=>({role:m.role,content:m.content}));
+      if(prov==="openai"){
+        const r=await fetch("https://api.openai.com/v1/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":`Bearer ${ak}`},body:JSON.stringify({model:"gpt-4o-mini",messages:[{role:"system",content:sys},...am],max_tokens:800})});
+        const d=await r.json();if(d.error)throw new Error(d.error.message);setMsgs([...nm,{role:"assistant",content:d.choices[0].message.content}]);
+      } else {
+        const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":ak,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:800,system:sys,messages:am})});
+        const d=await r.json();if(d.error)throw new Error(d.error.message);setMsgs([...nm,{role:"assistant",content:d.content[0].text}]);
+      }
+    }catch(err){setMsgs([...nm,{role:"assistant",content:`Fehler: ${err.message}`}]);}finally{setLd(false);}
+  };
+  return <div>
+    <CL num="08"/><H1>AI Tutor</H1>
+    <button onClick={()=>setSs(!ss)} style={{fontFamily:t.sf,fontSize:12,color:t.txM,background:"none",border:"none",cursor:"pointer",marginBottom:12}}>API-Einstellungen {ss?"▴":"▾"}</button>
+    {ss&&<Cd style={{marginBottom:16}}>
+      <div style={{display:"flex",gap:8,marginBottom:12}}>{[["openai","OpenAI"],["anthropic","Anthropic"]].map(([id,l])=><Bt key={id} primary={prov===id} onClick={()=>setProv(id)} style={{fontSize:12,padding:"6px 14px"}}>{l}</Bt>)}</div>
+      <input type="password" value={ak} onChange={e=>setAk(e.target.value)} placeholder={prov==="openai"?"sk-...":"sk-ant-..."} style={{width:"100%",boxSizing:"border-box",padding:"8px 12px",borderRadius:t.term?6:8,border:`1px solid ${t.bd}`,background:t.bgI,fontFamily:t.term?t.mf:t.sf,fontSize:13,color:t.tx,outline:"none"}}/>
+      <div style={{fontSize:11,color:t.txF,marginTop:6}}>Wird nur lokal verwendet.</div>
+    </Cd>}
+    <Cd style={{padding:0,overflow:"hidden"}}>
+      <div style={{maxHeight:340,minHeight:200,overflowY:"auto",padding:16}}>
+        {msgs.map((m,i)=><div key={i} style={{display:"flex",justifyContent:m.role==="user"?"flex-end":"flex-start",marginBottom:10}}>
+          <div style={{maxWidth:"75%",padding:"10px 14px",borderRadius:12,fontSize:13,lineHeight:1.65,fontFamily:t.sf,background:m.role==="user"?t.ac:t.bgC,color:m.role==="user"?t.w:t.txB,border:m.role==="user"?"none":`1px solid ${t.bd}`,borderBottomRightRadius:m.role==="user"?4:12,borderBottomLeftRadius:m.role==="user"?12:4,whiteSpace:"pre-wrap"}}>{m.content}</div>
+        </div>)}
+        {ld&&<div style={{padding:"10px 14px",borderRadius:12,background:t.bgC,border:`1px solid ${t.bd}`,fontSize:13,color:t.txM,display:"inline-block"}}>{t.term?"processing...":"Denkt nach ..."}</div>}
+        <div ref={endRef}/>
+      </div>
+      {msgs.length<=1&&<div style={{padding:"0 16px 12px",display:"flex",flexWrap:"wrap",gap:6}}>
+        {["Was ist Overfitting?","Erkläre Backpropagation","CNN vs. RNN?","Wie funktioniert ein Transformer?"].map((s,i)=><button key={i} onClick={()=>setInp(s)} style={{fontSize:11,padding:"5px 10px",borderRadius:20,border:`1px solid ${t.bd}`,background:t.bg,color:t.txM,cursor:"pointer",fontFamily:t.sf}}>{s}</button>)}
+      </div>}
+      <div style={{padding:12,borderTop:`1px solid ${t.bd}`,display:"flex",gap:8}}>
+        <input value={inp} onChange={e=>setInp(e.target.value)} onKeyDown={e=>e.key==="Enter"&&send()} placeholder={ak?"Stelle eine Frage ...":"API-Key eingeben ..."} disabled={!ak||ld} style={{flex:1,padding:"10px 14px",borderRadius:t.term?6:8,border:`1px solid ${t.bd}`,background:t.bgI,fontFamily:t.term?t.mf:t.sf,fontSize:13,color:t.tx,outline:"none"}}/>
+        <Bt primary onClick={send} disabled={!ak||ld||!inp.trim()}>Senden</Bt>
+      </div>
+    </Cd>
+  </div>;
+};
+
+// ── PROJECT STEPS DATA ──
+const STEPS=[
+  {id:"problem",n:1,t:"Problembeschreibung",s:"Was willst du vorhersagen?",
+    ex:"Hier definierst du klar, welches Problem dein ML-System lösen soll. Formuliere eine konkrete Frage, z.B.: Kann man anhand von Patientendaten vorhersagen, ob eine Herzerkrankung vorliegt?",
+    prof:"Klare Definition (Klassifikation oder Regression), Relevanz, konkrete Zielsetzung, Herausforderungen.",
+    terms:[{t:"Klassifikation",d:"Vorhersage einer Kategorie (Spam/kein Spam, krank/gesund)."},{t:"Regression",d:"Vorhersage einer Zahl (Hauspreis, Temperatur)."},{t:"Zielvariable",d:"Die Spalte, die du vorhersagen willst. Alles andere sind Features."}],
+    code:"# Klassifikation: \"Ist der Patient herzkrank?\"\n# Regression: \"Wie hoch wird der Hauspreis?\"",
+    checks:["Problemtyp festgelegt","Zielfrage formuliert","Relevanz begründet","Herausforderungen benannt"]},
+  {id:"datasrc",n:2,t:"Datenquelle",s:"Woher kommen deine Daten?",
+    ex:"Du brauchst einen Datensatz — eine Tabelle mit Zeilen (Beispiele) und Spalten (Features). Gute Quellen: Kaggle, UCI Repository, NASA Data Portal.",
+    prof:"Link zum Dataset, Lizenz, Anzahl Datenpunkte/Features, Beschreibung der wichtigsten Features.",
+    terms:[{t:"Dataset",d:"Deine Datentabelle. Jede Zeile = ein Beispiel, jede Spalte = ein Merkmal."},{t:"Feature",d:"Eine messbare Eigenschaft: Alter, Gewicht, Quadratmeter."},{t:"Kaggle",d:"Größte Plattform für ML-Datasets. Kostenlos."}],
+    code:"import pandas as pd\ndf = pd.read_csv(\"dataset.csv\")\nprint(f\"Zeilen: {len(df)}, Spalten: {len(df.columns)}\")\ndf.head()",
+    checks:["Dataset gefunden","Quelle dokumentiert","Größe beschrieben","Features aufgelistet"]},
+  {id:"eda",n:3,t:"Explorative Datenanalyse",s:"Daten verstehen, bevor du loslegst",
+    ex:"Bevor du ein Modell trainierst: Wie sind die Werte verteilt? Gibt es Zusammenhänge? Auffälligkeiten? Das ist wie eine Diagnose vor der Behandlung.",
+    prof:"Histogramme, Boxplots, Korrelationsanalyse, Muster, Class Imbalance prüfen.",
+    terms:[{t:"Histogramm",d:"Zeigt, wie oft Werte in bestimmten Bereichen vorkommen."},{t:"Korrelation",d:"Zusammenhang zwischen Werten. Nahe 1 = stark, nahe 0 = kein Zusammenhang."},{t:"Class Imbalance",d:"Wenn eine Kategorie viel häufiger ist (95% gesund, 5% krank)."}],
+    code:"import seaborn as sns\ndf[\"target\"].hist(bins=30)\nsns.heatmap(df.corr(), annot=True, cmap=\"coolwarm\")",
+    checks:["Verteilung visualisiert","Korrelationsmatrix erstellt","Auffälligkeiten dokumentiert","Class Imbalance geprüft"]},
+  {id:"preproc",n:4,t:"Datenvorverarbeitung",s:"Daten aufräumen",
+    ex:"Echte Daten sind immer etwas 'dreckig' — fehlende Werte, Ausreißer, verschiedene Skalen. Hier räumst du auf.",
+    prof:"Fehlende Werte, Ausreißer, Normalisierung, Feature Engineering, Encoding.",
+    terms:[{t:"NaN",d:"Fehlender Wert. Muss behandelt werden (löschen oder füllen)."},{t:"Normalisierung",d:"Features auf gleiche Skala bringen (z.B. 0-1)."},{t:"One-Hot Encoding",d:"Kategorien in Zahlen: aus rot/blau/grün werden 3 Spalten mit 0/1."}],
+    code:"from sklearn.preprocessing import StandardScaler\ndf.isnull().sum()  # Fehlende Werte\ndf.fillna(df.median(), inplace=True)\nscaler = StandardScaler()\ndf_scaled = scaler.fit_transform(df)",
+    checks:["Fehlende Werte behandelt","Ausreißer geprüft","Normalisierung durchgeführt","Kategorien codiert"]},
+  {id:"models",n:5,t:"Modellauswahl",s:"Welche Algorithmen testest du?",
+    ex:"Wähle 3-4 Algorithmen und begründe warum. Nimm bewährte Algorithmen aus Scikit-learn und vergleiche sauber.",
+    prof:"Begründung der Wahl, Beschreibung, Hyperparameter.",
+    terms:[{t:"Random Forest",d:"Viele Entscheidungsbäume stimmen gemeinsam ab. Robust."},{t:"Gradient Boosting",d:"Bäume korrigieren nacheinander Fehler. Oft Kaggle-Gewinner."},{t:"Hyperparameter",d:"Einstellungen, die DU festlegst (nicht das Modell lernt)."},{t:"Baseline",d:"Einfachstes Modell — der Maßstab für komplexere."}],
+    code:"from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier\nfrom sklearn.linear_model import LogisticRegression\nmodels = {\n  \"Logistic Regression\": LogisticRegression(),\n  \"Random Forest\": RandomForestClassifier(n_estimators=100),\n  \"Gradient Boosting\": GradientBoostingClassifier(),\n}",
+    checks:["3-4 Modelle ausgewählt","Auswahl begründet","Hyperparameter beschrieben","Baseline definiert"]},
+  {id:"training",n:6,t:"Training",s:"Modelle trainieren",
+    ex:"Daten aufteilen, Modelle trainieren, Trainingsfortschritt beobachten. NIEMALS mit Testdaten trainieren!",
+    prof:"Train/Test-Split, Konfiguration, Overfitting-Prävention, Trainingskurven.",
+    terms:[{t:"Train/Test-Split",d:"70-80% zum Lernen, 20-30% zum Testen."},{t:"Overfitting",d:"Modell lernt auswendig statt Muster. Wie Antworten memorieren statt verstehen."},{t:"Cross-Validation",d:"Daten mehrfach unterschiedlich aufteilen. Robustere Bewertung."}],
+    code:"from sklearn.model_selection import train_test_split, cross_val_score\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)\nmodel.fit(X_train, y_train)\nscores = cross_val_score(model, X_train, y_train, cv=5)",
+    checks:["Daten aufgeteilt","Modelle trainiert","Cross-Validation durchgeführt","Overfitting geprüft"]},
+  {id:"eval",n:7,t:"Evaluation",s:"Wie gut sind deine Modelle?",
+    ex:"Vergleichstabelle aller Modelle. Detaillierte Analyse des besten. Fehleranalyse: WO macht es Fehler?",
+    prof:"Metriken definieren, Vergleichstabelle, Confusion Matrix, Fehleranalyse.",
+    terms:[{t:"Accuracy",d:"Anteil korrekter Vorhersagen. Vorsicht bei Imbalance!"},{t:"F1-Score",d:"Kompromiss aus Precision und Recall. Gute Einzelzahl."},{t:"Confusion Matrix",d:"Zeigt True/False Positives/Negatives. Das vollständige Bild."}],
+    code:"from sklearn.metrics import classification_report, confusion_matrix\ny_pred = model.predict(X_test)\nprint(classification_report(y_test, y_pred))\nsns.heatmap(confusion_matrix(y_test, y_pred), annot=True)",
+    checks:["Metriken definiert","Modelle verglichen","Confusion Matrix erstellt","Fehleranalyse durchgeführt"]},
+  {id:"discuss",n:8,t:"Diskussion & Fazit",s:"Reflektieren und einordnen",
+    ex:"Der wichtigste Teil! Was hat funktioniert? Was nicht? Warum? Ehrliche Reflexion schlägt perfekte Ergebnisse.",
+    prof:"Zielerreichung, kritische Reflexion, Limitationen, Verbesserungsvorschläge.",
+    terms:[{t:"Limitation",d:"Einschränkungen deines Ansatzes (zu wenig Daten, Bias, ...)."},{t:"Generalisierung",d:"Kann dein Modell auch mit neuen Daten umgehen?"}],
+    code:"# Kein Code — reiner Text:\n# 1. Ziele erreicht?\n# 2. Bestes Modell und warum?\n# 3. Was hat NICHT funktioniert?\n# 4. Limitationen?\n# 5. Nächste Schritte?",
+    checks:["Ziele überprüft","Reflexion geschrieben","Limitationen benannt","Verbesserungen vorgeschlagen"]},
+];
+
+const MILES=[
+  {id:"topic",l:"Thema gewählt",e:"🎯"},{id:"data",l:"Daten gefunden",e:"📦"},
+  {id:"eda",l:"EDA abgeschlossen",e:"🔍"},{id:"clean",l:"Daten aufbereitet",e:"🧹"},
+  {id:"models",l:"Modelle trainiert",e:"🏋️"},{id:"results",l:"Ergebnisse da",e:"📊"},
+  {id:"doku",l:"Doku fertig",e:"📝"},{id:"pptx",l:"PPTX erstellt",e:"🎤"},
+  {id:"repo",l:"Git Repo ready",e:"🚀"},{id:"submit",l:"Abgabe",e:"🏆"},
+];
+
+// ── MODULE: Dashboard ──
+const MDash = () => {
+  const t=useT();
+  const [miles,setMiles]=useState(()=>{const o={};MILES.forEach(m=>{o[m.id]=false;});return o;});
+  const [justDone,setJustDone]=useState(null);
+  const toggle=(id)=>{const nv=!miles[id];setMiles(p=>({...p,[id]:nv}));if(nv){setJustDone(id);setTimeout(()=>setJustDone(null),2500);}};
+  const cnt=Object.values(miles).filter(Boolean).length;
+  const pct=Math.round(cnt/MILES.length*100);
+  const deadlines=[{d:"31. März 2026",task:"PPTX per E-Mail (1-2 Folien)",u:true},{d:"30. Juni 2026",task:"Git-Repository Abgabe"},{d:"7. Juli 2026",task:"10-Min-Präsentation (Vor Ort!)"}];
+  return <div>
+    <CL num="P1"/><H1>Projekt-Dashboard</H1>
+    <P>Dein Überblick über den Fortschritt der Projektarbeit.</P>
+    {justDone&&<div style={{background:`linear-gradient(135deg,${t.ok}15,${t.ac}15)`,border:`1px solid ${t.ok}40`,borderRadius:t.term?8:12,padding:"16px 20px",marginBottom:20,textAlign:"center",animation:"fadeIn .3s ease"}}>
+      <div style={{fontSize:32,marginBottom:4}}>{MILES.find(m=>m.id===justDone)?.e}</div>
+      <div style={{fontFamily:t.hf,fontWeight:700,color:t.tx,fontSize:16}}>Meilenstein erreicht!</div>
+      <div style={{fontSize:13,color:t.txB,marginTop:2}}>{MILES.find(m=>m.id===justDone)?.l}</div>
+    </div>}
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12,marginBottom:24}}>
+      <Cd style={{textAlign:"center"}}><div style={{fontSize:36,fontWeight:700,color:t.ac,fontFamily:t.hf}}>{pct}%</div><div style={{fontSize:12,color:t.txM,marginTop:4}}>Fortschritt</div><div style={{marginTop:8}}><Bar p={pct}/></div></Cd>
+      <Cd style={{textAlign:"center"}}><div style={{fontSize:36,fontWeight:700,color:t.ok,fontFamily:t.hf}}>{cnt}</div><div style={{fontSize:12,color:t.txM,marginTop:4}}>von {MILES.length} Meilensteinen</div></Cd>
+      <Cd style={{textAlign:"center"}}><div style={{fontSize:36,fontWeight:700,color:t.err,fontFamily:t.hf}}>5</div><div style={{fontSize:12,color:t.txM,marginTop:4}}>Tage bis PPTX</div></Cd>
+    </div>
+    <ST>Termine</ST>
+    <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:24}}>
+      {deadlines.map((d,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:14,padding:"12px 16px",background:t.bgC,border:`1px solid ${d.u?t.err+"40":t.bd}`,borderRadius:t.term?6:8}}>
+        <div style={{fontFamily:t.term?t.mf:t.sf,fontSize:12,fontWeight:700,color:d.u?t.err:t.ac,minWidth:110,flexShrink:0}}>{d.d}</div>
+        <div style={{fontSize:13,color:t.txB,flex:1}}>{d.task}</div>
+        {d.u&&<span style={{fontSize:11,padding:"2px 8px",borderRadius:10,background:t.errBg,color:t.err,fontWeight:600,whiteSpace:"nowrap"}}>bald fällig</span>}
+      </div>)}
+    </div>
+    <ST>Meilensteine</ST>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+      {MILES.map(m=>{const done=miles[m.id];return <button key={m.id} onClick={()=>toggle(m.id)} style={{display:"flex",alignItems:"center",gap:10,padding:"12px 14px",background:done?t.okBg:t.bgC,border:`1px solid ${done?t.ok+"40":t.bd}`,borderRadius:t.term?6:8,cursor:"pointer",textAlign:"left",transition:"all .2s"}}>
+        <span style={{width:24,height:24,borderRadius:t.term?4:6,border:`2px solid ${done?t.ok:t.bd}`,background:done?t.ok:"transparent",display:"flex",alignItems:"center",justifyContent:"center",color:t.w,fontSize:12,flexShrink:0}}>{done?"✓":""}</span>
+        <span style={{fontSize:13,fontWeight:done?600:400,color:done?t.ok:t.tx}}>{m.e} {m.l}</span>
+      </button>;})}
+    </div>
+  </div>;
+};
+
+// ── MODULE: Ideenbewertung ──
+const MIdea = () => {
+  const t=useT();
+  const [idea,setIdea]=useState("");
+  const [ak,setAk]=useState("");const [prov,setProv]=useState("openai");const [ss,setSs]=useState(true);
+  const [ld,setLd]=useState(false);
+  const [result,setResult]=useState(null);
+  const [history,setHistory]=useState([]);
+  const sysPrompt=`Du bist ein ML-Projektberater fuer eine Uni-Projektarbeit (Angewandtes Machine Learning, SS2026, Prof. Bugra Turan).
+Bewerte die folgende Projektidee. Antworte IMMER exakt in diesem JSON-Format (kein Markdown, kein Text drumherum):
+{
+  "titel": "Kurzer Projekttitel",
+  "typ": "Klassifikation" oder "Regression",
+  "score": Zahl 1-10,
+  "dataset": "Empfohlene Datenquelle mit Link-Hinweis",
+  "algorithmen": ["Algo1", "Algo2", "Algo3"],
+  "metriken": ["Metrik1", "Metrik2"],
+  "proGrund": "2-3 Saetze: Warum die Idee die Anforderungen gut erfuellt",
+  "woraufAchten": "2-3 Saetze: Moegliche Stolperfallen und worauf man aufpassen muss",
+  "machbarkeit": "Leicht" oder "Mittel" oder "Anspruchsvoll",
+  "praesentationsPotenzial": "2 Saetze: Wie gut laesst sich das Thema in 10 Min. praesentieren?",
+  "verbesserung": "1-2 Saetze: Wie koennte man die Idee noch schaerfer machen?"
+}`;
+  const evaluate=async()=>{
+    if(!idea.trim()||!ak||ld)return;
+    setLd(true);setResult(null);
+    try{
+      let text="";
+      if(prov==="openai"){
+        const r=await fetch("https://api.openai.com/v1/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":`Bearer ${ak}`},body:JSON.stringify({model:"gpt-4o-mini",messages:[{role:"system",content:sysPrompt},{role:"user",content:idea}],max_tokens:1000})});
+        const d=await r.json();if(d.error)throw new Error(d.error.message);text=d.choices[0].message.content;
+      } else {
+        const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":ak,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,system:sysPrompt,messages:[{role:"user",content:idea}]})});
+        const d=await r.json();if(d.error)throw new Error(d.error.message);text=d.content[0].text;
+      }
+      const json=JSON.parse(text);
+      setResult(json);setHistory(p=>[{idea,result:json,ts:new Date().toLocaleTimeString()},...p]);
+    }catch(err){setResult({error:err.message});}finally{setLd(false);}
+  };
+  const scoreColor=(s)=>s>=8?t.ok:s>=5?t.ac:t.err;
+  const Tag=({children,color})=><span style={{fontSize:11,padding:"2px 8px",borderRadius:10,background:(color||t.ac)+"18",color:color||t.ac,fontWeight:600,whiteSpace:"nowrap"}}>{children}</span>;
+  return <div>
+    <ST>Beschreibe deine Projektidee</ST>
+    <P>Schreib in 1-3 Saetzen, was du vorhersagen moechtest und womit. Die KI bewertet, ob das fuer die PA geeignet ist.</P>
+    <button onClick={()=>setSs(!ss)} style={{fontFamily:t.sf,fontSize:12,color:t.txM,background:"none",border:"none",cursor:"pointer",marginBottom:12}}>API-Einstellungen {ss?"▴":"▾"}</button>
+    {ss&&<Cd style={{marginBottom:16}}>
+      <div style={{display:"flex",gap:8,marginBottom:12}}>{[["openai","OpenAI"],["anthropic","Anthropic"]].map(([id,l])=><Bt key={id} primary={prov===id} onClick={()=>setProv(id)} style={{fontSize:12,padding:"6px 14px"}}>{l}</Bt>)}</div>
+      <input type="password" value={ak} onChange={e=>setAk(e.target.value)} placeholder={prov==="openai"?"sk-...":"sk-ant-..."} style={{width:"100%",boxSizing:"border-box",padding:"8px 12px",borderRadius:t.term?6:8,border:`1px solid ${t.bd}`,background:t.bgI,fontFamily:t.term?t.mf:t.sf,fontSize:13,color:t.tx,outline:"none"}}/>
+      <div style={{fontSize:11,color:t.txF,marginTop:6}}>Wird nur lokal verwendet.</div>
+    </Cd>}
+    <div style={{marginBottom:20}}>
+      <textarea value={idea} onChange={e=>setIdea(e.target.value)} placeholder={"z.B. Ich moechte anhand von Wetterdaten den Stromverbrauch einer Stadt vorhersagen."} rows={3} style={{width:"100%",boxSizing:"border-box",padding:"12px 14px",borderRadius:t.term?6:8,border:`1px solid ${t.bd}`,background:t.bgI,fontFamily:t.sf,fontSize:13,color:t.tx,outline:"none",resize:"vertical",lineHeight:1.6}}/>
+      <div style={{display:"flex",gap:8,marginTop:10,flexWrap:"wrap"}}>
+        <Bt primary onClick={evaluate} disabled={!ak||!idea.trim()||ld}>{ld?"Wird bewertet ...":"Idee bewerten"}</Bt>
+        {!ak&&<span style={{fontSize:12,color:t.txM,alignSelf:"center"}}>Zuerst API-Key eingeben</span>}
+      </div>
+    </div>
+    {result&&!result.error&&<Cd style={{marginBottom:20}}>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
+        <div style={{fontFamily:t.hf,fontSize:20,fontWeight:700,color:t.tx}}>{result.titel}</div>
+        <div style={{display:"flex",alignItems:"center",gap:6}}>
+          <div style={{width:44,height:44,borderRadius:"50%",background:scoreColor(result.score)+"18",border:`3px solid ${scoreColor(result.score)}`,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:800,fontSize:18,color:scoreColor(result.score),fontFamily:t.hf}}>{result.score}</div>
+          <span style={{fontSize:11,color:t.txM}}>/10</span>
+        </div>
+      </div>
+      <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:16}}>
+        <Tag color={result.typ==="Klassifikation"?t.inf:"#7c3aed"}>{result.typ}</Tag>
+        <Tag color={result.machbarkeit==="Leicht"?t.ok:result.machbarkeit==="Mittel"?t.ac:t.err}>{result.machbarkeit}</Tag>
+        {result.algorithmen.map((a,i)=><Tag key={i}>{a}</Tag>)}
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:16}}>
+        <div style={{padding:"12px 14px",background:t.bgAS,borderRadius:t.term?6:8,border:`1px solid ${t.bdA}`}}>
+          <div style={{fontSize:11,fontWeight:700,color:t.ac,marginBottom:6}}>DATENQUELLE</div>
+          <div style={{fontSize:13,color:t.txB,lineHeight:1.5}}>{result.dataset}</div>
+        </div>
+        <div style={{padding:"12px 14px",background:t.bgAS,borderRadius:t.term?6:8,border:`1px solid ${t.bdA}`}}>
+          <div style={{fontSize:11,fontWeight:700,color:t.ac,marginBottom:6}}>METRIKEN</div>
+          <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{result.metriken.map((m,i)=><Tag key={i}>{m}</Tag>)}</div>
+        </div>
+      </div>
+      <div style={{background:t.okBg,border:`1px solid ${t.ok}30`,borderRadius:t.term?6:8,padding:"12px 14px",marginBottom:10}}>
+        <div style={{fontSize:12,fontWeight:700,color:t.ok,marginBottom:4}}>Warum die Idee passt</div>
+        <div style={{fontSize:13,color:t.txB,lineHeight:1.6}}>{result.proGrund}</div>
+      </div>
+      <div style={{background:t.errBg,border:`1px solid ${t.err}30`,borderRadius:t.term?6:8,padding:"12px 14px",marginBottom:10}}>
+        <div style={{fontSize:12,fontWeight:700,color:t.err,marginBottom:4}}>Worauf achten</div>
+        <div style={{fontSize:13,color:t.txB,lineHeight:1.6}}>{result.woraufAchten}</div>
+      </div>
+      <div style={{background:t.infBg,border:`1px solid ${t.inf}30`,borderRadius:t.term?6:8,padding:"12px 14px",marginBottom:10}}>
+        <div style={{fontSize:12,fontWeight:700,color:t.inf,marginBottom:4}}>Potenzial in der Praesentation</div>
+        <div style={{fontSize:13,color:t.txB,lineHeight:1.6}}>{result.praesentationsPotenzial}</div>
+      </div>
+      <div style={{background:t.bgC,border:`1px solid ${t.bd}`,borderRadius:t.term?6:8,padding:"12px 14px"}}>
+        <div style={{fontSize:12,fontWeight:700,color:t.txB,marginBottom:4}}>So wird die Idee noch besser</div>
+        <div style={{fontSize:13,color:t.txB,lineHeight:1.6}}>{result.verbesserung}</div>
+      </div>
+    </Cd>}
+    {result&&result.error&&<Info title="Fehler" type="warning">{result.error}</Info>}
+    {history.length>1&&<><ST>Bisherige Bewertungen</ST>
+      <div style={{display:"flex",flexDirection:"column",gap:8}}>
+        {history.slice(1).map((h,i)=><button key={i} onClick={()=>setResult(h.result)} style={{textAlign:"left",padding:"10px 14px",background:t.bgC,border:`1px solid ${t.bd}`,borderRadius:t.term?6:8,cursor:"pointer"}}>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+            <span style={{fontSize:13,fontWeight:600,color:t.tx}}>{h.result.titel}</span>
+            <div style={{display:"flex",alignItems:"center",gap:8}}>
+              <Tag color={scoreColor(h.result.score)}>{h.result.score}/10</Tag>
+              <span style={{fontSize:11,color:t.txF}}>{h.ts}</span>
+            </div>
+          </div>
+          <div style={{fontSize:12,color:t.txM,marginTop:4}}>{h.idea.slice(0,80)}{h.idea.length>80?"...":""}</div>
+        </button>)}
+      </div>
+    </>}
+  </div>;
+};
+
+// ── MODULE: Projektbegleiter ──
+const MGuide = () => {
+  const t=useT();
+  const [tab,setTab]=useState("steps");
+  const [as,setAs]=useState(0);
+  const [expT,setExpT]=useState({});
+  const [checks,setChecks]=useState(()=>{const o={};STEPS.forEach(s=>{o[s.id]={};});return o;});
+  const step=STEPS[as];
+  const stepProg=step?Math.round(Object.keys(checks[step.id]||{}).filter(k=>checks[step.id][k]).length/step.checks.length*100):0;
+  const toggleT=(term)=>setExpT(p=>({...p,[term]:!p[term]}));
+  const toggleC=(sid,idx)=>setChecks(p=>{const s={...p[sid]};s[idx]=!s[idx];return{...p,[sid]:s};});
+  const tabs=[["steps","Schritte"],["ideas","Ideenbewertung"]];
+  return <div>
+    <CL num="P2"/><H1>Projektbegleiter</H1>
+    <P>Dein Guide durch die Projektarbeit: Schritt-fuer-Schritt-Anleitung oder Projektideen bewerten lassen.</P>
+    <div style={{display:"flex",borderRadius:t.term?5:8,overflow:"hidden",border:`1px solid ${t.bd}`,marginBottom:24}}>
+      {tabs.map(([id,label])=><button key={id} onClick={()=>setTab(id)} style={{flex:1,padding:"10px 0",fontSize:13,fontWeight:600,border:"none",cursor:"pointer",fontFamily:t.sf,background:tab===id?t.ac:t.bgC,color:tab===id?t.w:t.txM,transition:"all .2s"}}>{label}</button>)}
+    </div>
+    {tab==="ideas"&&<MIdea/>}
+    {tab==="steps"&&<>
+    <div style={{display:"flex",gap:4,marginBottom:24,flexWrap:"wrap"}}>
+      {STEPS.map((s,i)=>{const active=as===i;const done=Object.keys(checks[s.id]||{}).filter(k=>checks[s.id][k]).length===s.checks.length;
+        return <button key={s.id} onClick={()=>setAs(i)} style={{padding:"6px 12px",borderRadius:t.term?4:20,border:`1px solid ${active?t.ac:done?t.ok+"40":t.bd}`,background:active?t.ac:done?t.okBg:t.bgC,color:active?t.w:done?t.ok:t.txM,fontSize:11,fontWeight:active?700:500,cursor:"pointer",fontFamily:t.sf,whiteSpace:"nowrap"}}>
+          {done&&!active?"✓ ":""}{s.n}. {s.t.split(" ")[0]}
+        </button>;
+      })}
+    </div>
+    {step&&<div>
+      <div style={{background:t.bgAS,border:`1px solid ${t.bdA}`,borderRadius:t.term?8:12,padding:"20px 24px",marginBottom:20}}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
+          <div style={{fontSize:12,fontWeight:600,color:t.ac}}>SCHRITT {step.n} VON {STEPS.length}</div>
+          <div style={{fontSize:11,color:t.txM}}>{stepProg}% erledigt</div>
+        </div>
+        <div style={{fontFamily:t.hf,fontSize:22,fontWeight:700,color:t.tx,marginBottom:4}}>{step.t}</div>
+        <div style={{fontSize:14,color:t.txB}}>{step.s}</div>
+        <div style={{marginTop:10}}><Bar p={stepProg}/></div>
+      </div>
+      <ST>Was muss ich hier tun?</ST>
+      <P>{step.ex}</P>
+      <Info title="Das erwartet der Dozent" type="warning">{step.prof}</Info>
+      <ST>Wichtige Begriffe</ST>
+      <div style={{display:"flex",flexDirection:"column",gap:6,marginBottom:20}}>
+        {step.terms.map((tm,i)=><button key={i} onClick={()=>toggleT(tm.t)} style={{textAlign:"left",padding:"10px 14px",background:expT[tm.t]?t.bgAS:t.bgC,border:`1px solid ${expT[tm.t]?t.bdA:t.bd}`,borderRadius:t.term?6:8,cursor:"pointer"}}>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+            <span style={{fontFamily:t.term?t.mf:t.sf,fontSize:13,fontWeight:600,color:t.tx}}>{tm.t}</span>
+            <span style={{color:t.txM,fontSize:12,transform:expT[tm.t]?"rotate(90deg)":"none",transition:"transform .2s"}}>▸</span>
+          </div>
+          {expT[tm.t]&&<div style={{fontSize:13,color:t.txB,marginTop:8,lineHeight:1.6,borderTop:`1px solid ${t.bd}`,paddingTop:8}}>{tm.d}</div>}
+        </button>)}
+      </div>
+      <ST>Code-Beispiel</ST>
+      <div style={{background:t.term?t.bgC:"#1e1e2e",border:`1px solid ${t.bd}`,borderRadius:t.term?8:10,overflow:"hidden"}}>
+        <div style={{padding:"8px 14px",borderBottom:`1px solid ${t.bd}`,display:"flex",alignItems:"center",gap:6}}>
+          <div style={{width:8,height:8,borderRadius:"50%",background:t.err}}/><div style={{width:8,height:8,borderRadius:"50%",background:"#eab308"}}/><div style={{width:8,height:8,borderRadius:"50%",background:t.ok}}/>
+          <span style={{marginLeft:8,fontSize:11,color:t.txM,fontFamily:"monospace"}}>python</span>
+        </div>
+        <pre style={{padding:16,margin:0,overflowX:"auto",fontSize:12,lineHeight:1.6,fontFamily:"'JetBrains Mono','Fira Code',monospace",color:"#c9d1d9"}}>{step.code}</pre>
+      </div>
+      <ST>Checkliste</ST>
+      <div style={{display:"flex",flexDirection:"column",gap:6}}>
+        {step.checks.map((item,i)=>{const checked=checks[step.id]?.[i];return <button key={i} onClick={()=>toggleC(step.id,i)} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",background:checked?t.okBg:t.bgC,border:`1px solid ${checked?t.ok+"40":t.bd}`,borderRadius:t.term?6:8,cursor:"pointer",textAlign:"left"}}>
+          <span style={{width:20,height:20,borderRadius:t.term?3:4,border:`2px solid ${checked?t.ok:t.bd}`,background:checked?t.ok:"transparent",display:"flex",alignItems:"center",justifyContent:"center",color:t.w,fontSize:11,flexShrink:0}}>{checked?"✓":""}</span>
+          <span style={{fontSize:13,color:checked?t.ok:t.tx,textDecoration:checked?"line-through":"none",opacity:checked?.7:1}}>{item}</span>
+        </button>;})}
+      </div>
+      <div style={{display:"flex",justifyContent:"space-between",marginTop:28}}>
+        {as>0?<Bt onClick={()=>setAs(a=>a-1)}>{"← Schritt "+(step.n-1)}</Bt>:<div/>}
+        {as<STEPS.length-1?<Bt primary onClick={()=>setAs(a=>a+1)}>{"Schritt "+(step.n+1)+" →"}</Bt>:<div/>}
+      </div>
+    </div>}
+    </>}
+  </div>;
+};
+
+// ── SIDEBAR FOOTER ──
+const SBFooter = ({themeKey,setThemeKey,open}) => {
+  const t=useT();
+  const [theme,mode]=themeKey.split("-");
+  const setC=(th,mo)=>setThemeKey(`${th}-${mo}`);
+  const toggleMode=()=>setC(theme,mode==="light"?"dark":"light");
+  const toggleTheme=()=>setC(theme==="paper"?"terminal":"paper",mode);
+  if(!open)return <div style={{padding:"12px 0",borderTop:`1px solid ${t.bd}`,display:"flex",flexDirection:"column",alignItems:"center",gap:8}}>
+    <button onClick={toggleMode} title={mode==="light"?"Nachtmodus":"Tagmodus"} style={{background:"none",border:"none",cursor:"pointer",fontSize:15,color:t.txM,padding:4}}>
+      {mode==="light"?"☀":"☾"}
+    </button>
+  </div>;
+  return <div style={{padding:"14px 16px",borderTop:`1px solid ${t.bd}`}}>
+    <div style={{display:"flex",borderRadius:t.term?5:6,overflow:"hidden",border:`1px solid ${t.bd}`,marginBottom:10}}>
+      {[["paper","Paper"],["terminal","Terminal"]].map(([id,label])=><button key={id} onClick={()=>setC(id,mode)} style={{flex:1,padding:"6px 0",fontSize:11,fontWeight:600,border:"none",cursor:"pointer",fontFamily:id==="terminal"?"'JetBrains Mono',monospace":"Georgia,serif",background:theme===id?t.ac:t.bgC,color:theme===id?t.w:t.txM,transition:"all .2s"}}>{label}</button>)}
+    </div>
+    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+      <span style={{fontSize:11,color:t.txF}}>v1.0</span>
+      <button onClick={toggleMode} style={{display:"flex",alignItems:"center",gap:6,padding:"4px 10px",borderRadius:20,border:`1px solid ${t.bd}`,background:t.bgC,cursor:"pointer",fontSize:11,color:t.txM}}>
+        <span style={{fontSize:13}}>{mode==="light"?"☀":"☾"}</span><span>{mode==="light"?"Tag":"Nacht"}</span>
+      </button>
+    </div>
+  </div>;
+};
+
+// ── MAIN APP ──
+export default function MLLernApp(){
+  const [active,setActive]=useState("welcome");
+  const [completed,setCompleted]=useState({});
+  const [sbOpen,setSbOpen]=useState(true);
+  const [themeKey,setThemeKey]=useState("paper-light");
+  const t=THEMES[themeKey]||THEMES["paper-light"];
+  const handleNav=(id)=>{setActive(id);};
+  const markComplete=(id)=>setCompleted(p=>({...p,[id]:true}));
+  const unmarkComplete=(id)=>setCompleted(p=>{const n={...p};delete n[id];return n;});
+  const cCount=MODS_LEARN.filter(m=>completed[m.id]).length;
+  const progress=Math.round(cCount/MODS_LEARN.length*100);
+  const aidx=ALL_MODS.findIndex(m=>m.id===active);
+  const render=()=>{switch(active){
+    case"welcome":return <M1/>;case"data":return <M2/>;case"supervised":return <M3/>;
+    case"gradient":return <M4/>;case"neural":return <M5/>;case"deep":return <M6/>;
+    case"quiz":return <M7/>;case"tutor":return <M8/>;
+    case"dashboard":return <MDash/>;case"guide":return <MGuide/>;
+    default:return <M1/>;
+  }};
+
+  const NavItem=({mod,isProj})=>{
+    const isA=active===mod.id;const isDone=completed[mod.id];
+    return <button onClick={()=>handleNav(mod.id)} style={{width:"100%",textAlign:"left",display:"flex",alignItems:"center",gap:sbOpen?10:0,justifyContent:sbOpen?"flex-start":"center",padding:sbOpen?"8px 18px":"8px 0",background:isA?t.bg:"transparent",borderLeft:sbOpen?(isA?`3px solid ${t.ac}`:"3px solid transparent"):"none",border:"none",cursor:"pointer",transition:"all .15s"}}>
+      <span style={{width:22,height:22,borderRadius:t.term?(isProj?4:4):(isProj?6:"50%"),display:"flex",alignItems:"center",justifyContent:"center",fontSize:isProj?10:9,fontWeight:600,flexShrink:0,fontFamily:t.term?t.mf:t.sf,background:(isDone&&!isProj)?t.ok:isA?t.ac:t.bd,color:((isDone&&!isProj)||isA)?t.w:t.txM,transition:"all .2s"}}>
+        {isDone&&!isProj?"✓":isProj?(mod.n==="P1"?"◈":"◇"):mod.n}
+      </span>
+      {sbOpen&&<span style={{fontSize:12.5,color:isA?t.tx:t.txM,fontWeight:isA?600:400,fontFamily:t.term?t.mf:t.sf,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{t.term?mod.tt:mod.title}</span>}
+    </button>;
+  };
+
+  return <Ctx.Provider value={{theme:t,completed,markComplete,unmarkComplete}}>
+    <div style={{minHeight:"100vh",display:"flex",background:t.bg,fontFamily:t.sf}}>
+      {/* Sidebar — fixed height, no scroll */}
+      <div style={{width:sbOpen?232:56,flexShrink:0,background:t.bgS,borderRight:`1px solid ${t.bd}`,display:"flex",flexDirection:"column",transition:"width .3s",height:"100vh",position:"sticky",top:0}}>
+        <div style={{padding:sbOpen?"18px 18px 14px":"14px 0",borderBottom:`1px solid ${t.bd}`}}>
+          {sbOpen?<div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+            <div>
+              <div style={{fontFamily:t.hf,fontSize:t.term?14:17,fontWeight:700,color:t.tx}}>{t.st}{t.term&&<span style={{animation:"blink 1s step-end infinite",color:t.ac}}>_</span>}</div>
+              <div style={{fontSize:11,color:t.txM,marginTop:3}}>{progress}% {t.term?"complete":"abgeschlossen"}</div>
+            </div>
+            <button onClick={()=>setSbOpen(false)} style={{background:"none",border:"none",cursor:"pointer",color:t.txM,fontSize:16,padding:"4px 6px"}}>◂</button>
+          </div>:<div style={{display:"flex",justifyContent:"center"}}><button onClick={()=>setSbOpen(true)} style={{background:"none",border:"none",cursor:"pointer",color:t.txM,fontSize:16,padding:"4px 6px"}}>▸</button></div>}
+          {sbOpen&&<div style={{marginTop:10}}><Bar p={progress}/></div>}
+        </div>
+        <nav style={{flex:1,paddingTop:6,overflowY:"auto"}}>
+          {sbOpen&&<div style={{padding:"8px 18px 4px",fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".08em",color:t.txF}}>Lernen</div>}
+          {MODS_LEARN.map(m=><NavItem key={m.id} mod={m}/>)}
+          <div style={{margin:sbOpen?"10px 18px":"10px 8px",height:1,background:t.bd}}/>
+          {sbOpen&&<div style={{padding:"4px 18px 4px",fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".08em",color:t.txF}}>Projektarbeit</div>}
+          {MODS_PROJ.map(m=><NavItem key={m.id} mod={m} isProj/>)}
+        </nav>
+        <SBFooter themeKey={themeKey} setThemeKey={setThemeKey} open={sbOpen}/>
+      </div>
+      {/* Main */}
+      <div style={{flex:1,overflowY:"auto"}}>
+        <div style={{maxWidth:680,margin:"0 auto",padding:"32px 32px 48px"}}>
+          {render()}
+          <div style={{display:"flex",justifyContent:"space-between",marginTop:48,paddingTop:24,borderTop:`1px solid ${t.bd}`}}>
+            {aidx>0?<Bt onClick={()=>handleNav(ALL_MODS[aidx-1].id)}>← Zurück</Bt>:<div/>}
+            {aidx<ALL_MODS.length-1?<Bt primary onClick={()=>handleNav(ALL_MODS[aidx+1].id)}>Weiter →</Bt>:<div/>}
+          </div>
+        </div>
+      </div>
+      <style>{`@keyframes blink{50%{opacity:0}}@keyframes fadeIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}`}</style>
+    </div>
+  </Ctx.Provider>;
+}

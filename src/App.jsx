@@ -986,7 +986,6 @@ const MGuide = () => {
   return <div>
     <CL num="P2"/><H1>Projektbegleiter</H1>
     <P>Dein 9-Schritte-Guide durch die Projektarbeit — von der Idee bis zur Praesentation.</P>
-    <
     <div style={{display:"flex",gap:4,marginBottom:24,flexWrap:"wrap"}}>
       {STEPS.map((s,i)=>{const active=as===i;const done=Object.keys(checks[s.id]||{}).filter(k=>checks[s.id][k]).length===s.checks.length;
         return <button key={s.id} onClick={()=>setAs(i)} style={{padding:"6px 12px",borderRadius:t.term?4:20,border:`1px solid ${active?t.ac:done?t.ok+"40":t.bd}`,background:active?t.ac:done?t.okBg:t.bgC,color:active?t.w:done?t.ok:t.txM,fontSize:11,fontWeight:active?700:500,cursor:"pointer",fontFamily:t.sf,whiteSpace:"nowrap"}}>

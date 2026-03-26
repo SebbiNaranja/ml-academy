@@ -727,6 +727,27 @@ const SB_KEY="sb_publishable_G5MU28TO5E51Ge3XwS9KYQ_cJb8x1aW";
 const sbFetch=async(path,opts={})=>{const r=await fetch(`${SB_URL}/rest/v1/${path}`,{...opts,headers:{"apikey":SB_KEY,"Authorization":`Bearer ${SB_KEY}`,"Content-Type":"application/json","Prefer":opts.prefer||"return=representation",...(opts.headers||{})}});return r.json();};
 const AUTHOR_COLORS={"Sebbi":"#c47a2a","Lukas":"#5a8a5e","Achim":"#5a7a9a"};
 
+// ── CSV PARSER (einfach, ohne Library) ──
+const parseCSV=(text)=>{
+  const lines=text.split(/\r?\n/).filter(l=>l.trim());
+  if(lines.length<2)return null;
+  // Erkennt Trennzeichen: Semikolon, Komma, oder Tab
+  const sep=lines[0].includes(";")?";":(lines[0].includes("\t")?"\t":",");
+  const headers=lines[0].split(sep).map(h=>h.trim().replace(/^"|"$/g,""));
+  const rows=lines.slice(1).map(l=>l.split(sep).map(c=>c.trim().replace(/^"|"$/g,"")));
+  // Datentypen erkennen
+  const types=headers.map((_,ci)=>{
+    const vals=rows.slice(0,50).map(r=>r[ci]).filter(v=>v&&v!=="");
+    if(vals.length===0)return "leer";
+    const allNum=vals.every(v=>!isNaN(Number(v)));
+    if(allNum)return "numerisch";
+    const unique=new Set(vals);
+    if(unique.size<=10)return `kategorisch (${unique.size} Werte: ${[...unique].slice(0,5).join(", ")}${unique.size>5?"...":""})`;
+    return "text";
+  });
+  return {headers,types,rowCount:rows.length,sample:rows.slice(0,3),sep};
+};
+
 const MIdea = () => {
   const t=useT();const {ak,setAk,prov,setProv,author}=useApp();
   const [idea,setIdea]=useState("");
@@ -735,6 +756,8 @@ const MIdea = () => {
   const [result,setResult]=useState(null);
   const [history,setHistory]=useState([]);
   const [dbReady,setDbReady]=useState(false);
+  const [csvFiles,setCsvFiles]=useState([]);
+  const fileRef=useRef(null);
 
   // Lade alle Ideen aus Supabase beim Start
   useEffect(()=>{
@@ -751,13 +774,41 @@ const MIdea = () => {
   },[]);
 
 
+  // CSV-Dateien einlesen
+  const handleFiles=async(files)=>{
+    const newFiles=[];
+    for(const file of files){
+      if(!file.name.match(/\.(csv|tsv|txt)$/i))continue;
+      const text=await file.text();
+      const parsed=parseCSV(text);
+      if(parsed)newFiles.push({name:file.name,size:file.size,...parsed});
+    }
+    setCsvFiles(p=>[...p,...newFiles]);
+  };
+  const removeCsv=(idx)=>setCsvFiles(p=>p.filter((_,i)=>i!==idx));
+
+  // Daten-Summary fuer den Prompt bauen
+  const buildDataSummary=()=>{
+    if(csvFiles.length===0)return "";
+    return "\n\n--- HOCHGELADENE DATASETS ---\n"+csvFiles.map(f=>
+      `Datei: ${f.name} (${f.rowCount} Zeilen, ${f.headers.length} Spalten)\nSpalten:\n${f.headers.map((h,i)=>`  - ${h}: ${f.types[i]}`).join("\n")}\nBeispieldaten (erste 3 Zeilen):\n${f.sample.map(r=>f.headers.map((h,i)=>`${h}=${r[i]||"?"}`).join(", ")).join("\n")}`
+    ).join("\n\n");
+  };
+
   const sysPrompt=`Du bist ein ML-Projektberater fuer eine Uni-Projektarbeit (Angewandtes Machine Learning, SS2026, Prof. Bugra Turan).
-Bewerte die folgende Projektidee. Antworte IMMER exakt in diesem JSON-Format (kein Markdown, kein Text drumherum):
+Das Team besteht aus 3 Personen, jeder praesentiert 10 Minuten. Anforderungen: Scikit-learn, Git-Repository, Jupyter Notebook mit 9 Sektionen (Problembeschreibung, Datenquelle, EDA, Vorverarbeitung, Modellauswahl, Training, Evaluation, Diskussion, Quellen).
+
+${csvFiles.length>0?"Der Nutzer hat echte Datasets hochgeladen. Analysiere die Spalten, Datentypen und Beispielwerte GENAU. Empfehle konkret, welche Spalte als Zielvariable geeignet ist, welche Features relevant sind, und welche Vorverarbeitungsschritte noetig sind. Wenn mehrere Datasets hochgeladen wurden, bewerte jedes einzeln und empfehle das beste (oder eine sinnvolle Kombination).":""}
+
+Antworte IMMER exakt in diesem JSON-Format (kein Markdown, kein Text drumherum):
 {
   "titel": "Kurzer Projekttitel",
   "typ": "Klassifikation" oder "Regression",
   "score": Zahl 1-10,
-  "dataset": "Empfohlene Datenquelle mit Link-Hinweis",
+  "dataset": "Bewertung der hochgeladenen Daten ODER empfohlene Datenquelle",
+  "zielvariable": "Empfohlene Zielvariable (Spaltenname) mit Begruendung",
+  "relevante_features": ["Feature1", "Feature2", "Feature3"],
+  "vorverarbeitung": ["Schritt1", "Schritt2", "Schritt3"],
   "algorithmen": ["Algo1", "Algo2", "Algo3"],
   "metriken": ["Metrik1", "Metrik2"],
   "proGrund": "2-3 Saetze: Warum die Idee die Anforderungen gut erfuellt",
@@ -769,13 +820,14 @@ Bewerte die folgende Projektidee. Antworte IMMER exakt in diesem JSON-Format (ke
   const evaluate=async()=>{
     if(!idea.trim()||!ak||ld||!author)return;
     setLd(true);setResult(null);
+    const userMsg=idea+buildDataSummary();
     try{
       let text="";
       if(prov==="openai"){
-        const r=await fetch("https://api.openai.com/v1/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":`Bearer ${ak}`},body:JSON.stringify({model:"gpt-4o-mini",messages:[{role:"system",content:sysPrompt},{role:"user",content:idea}],max_tokens:1000})});
+        const r=await fetch("https://api.openai.com/v1/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":`Bearer ${ak}`},body:JSON.stringify({model:"gpt-4o-mini",messages:[{role:"system",content:sysPrompt},{role:"user",content:userMsg}],max_tokens:1500})});
         const d=await r.json();if(d.error)throw new Error(d.error.message);text=d.choices[0].message.content;
       } else {
-        const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":ak,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,system:sysPrompt,messages:[{role:"user",content:idea}]})});
+        const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":ak,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1500,system:sysPrompt,messages:[{role:"user",content:userMsg}]})});
         const d=await r.json();if(d.error)throw new Error(d.error.message);text=d.content[0].text;
       }
       const json=JSON.parse(text);
@@ -813,9 +865,35 @@ Bewerte die folgende Projektidee. Antworte IMMER exakt in diesem JSON-Format (ke
     </Cd>}
     <div style={{marginBottom:20}}>
       <textarea value={idea} onChange={e=>setIdea(e.target.value)} placeholder={"z.B. Ich moechte anhand von Wetterdaten den Stromverbrauch einer Stadt vorhersagen."} rows={3} style={{width:"100%",boxSizing:"border-box",padding:"12px 14px",borderRadius:t.term?6:8,border:`1px solid ${t.bd}`,background:t.bgI,fontFamily:t.sf,fontSize:13,color:t.tx,outline:"none",resize:"vertical",lineHeight:1.6}}/>
-      <div style={{display:"flex",gap:8,marginTop:10,flexWrap:"wrap"}}>
+      {/* CSV Upload */}
+      <div style={{marginTop:12,padding:"16px 18px",borderRadius:t.term?6:10,border:`2px dashed ${csvFiles.length>0?t.ok+"60":t.bd}`,background:csvFiles.length>0?t.okBg:t.bgC,cursor:"pointer",transition:"all .2s"}}
+        onClick={()=>fileRef.current?.click()}
+        onDragOver={e=>{e.preventDefault();e.currentTarget.style.borderColor=t.ac;}}
+        onDragLeave={e=>{e.currentTarget.style.borderColor=csvFiles.length>0?t.ok+"60":t.bd;}}
+        onDrop={e=>{e.preventDefault();e.currentTarget.style.borderColor=csvFiles.length>0?t.ok+"60":t.bd;handleFiles(e.dataTransfer.files);}}>
+        <input ref={fileRef} type="file" accept=".csv,.tsv,.txt" multiple onChange={e=>handleFiles(e.target.files)} style={{display:"none"}}/>
+        {csvFiles.length===0?<div style={{textAlign:"center"}}>
+          <div style={{fontSize:20,marginBottom:4}}>+</div>
+          <div style={{fontSize:12,color:t.txM}}>CSV-Dateien hierher ziehen oder klicken</div>
+          <div style={{fontSize:11,color:t.txF,marginTop:4}}>Die KI analysiert die Spalten und gibt bessere Empfehlungen</div>
+        </div>
+        :<div>
+          <div style={{fontSize:11,fontWeight:700,color:t.ok,marginBottom:8}}>{csvFiles.length} Dataset{csvFiles.length>1?"s":""} geladen</div>
+          <div style={{display:"flex",flexDirection:"column",gap:6}}>
+            {csvFiles.map((f,i)=><div key={i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 12px",background:t.bg,borderRadius:t.term?4:6,border:`1px solid ${t.bd}`}}>
+              <div>
+                <div style={{fontSize:12,fontWeight:600,color:t.tx}}>{f.name}</div>
+                <div style={{fontSize:11,color:t.txM}}>{f.rowCount} Zeilen, {f.headers.length} Spalten: {f.headers.slice(0,4).join(", ")}{f.headers.length>4?"...":""}</div>
+              </div>
+              <button onClick={e=>{e.stopPropagation();removeCsv(i);}} style={{background:"none",border:"none",cursor:"pointer",color:t.txF,fontSize:14,padding:"2px 6px"}}>x</button>
+            </div>)}
+          </div>
+          <div style={{fontSize:11,color:t.txM,marginTop:6,textAlign:"center"}}>Weitere Dateien hinzufuegen: klicken oder ziehen</div>
+        </div>}
+      </div>
+      <div style={{display:"flex",gap:8,marginTop:12,flexWrap:"wrap"}}>
         <Bt primary onClick={evaluate} disabled={!ak||!idea.trim()||ld}>{ld?"Wird bewertet ...":"Idee bewerten"}</Bt>
-        {result&&!result.error&&<Bt onClick={()=>{setResult(null);setIdea("");}}>Neue Idee bewerten</Bt>}
+        {result&&!result.error&&<Bt onClick={()=>{setResult(null);setIdea("");setCsvFiles([]);}}>Neue Idee bewerten</Bt>}
         {!ak&&<span style={{fontSize:12,color:t.txM,alignSelf:"center"}}>Zuerst API-Key eingeben</span>}
       </div>
     </div>
@@ -832,6 +910,10 @@ Bewerte die folgende Projektidee. Antworte IMMER exakt in diesem JSON-Format (ke
         <Tag color={result.machbarkeit==="Leicht"?t.ok:result.machbarkeit==="Mittel"?t.ac:t.err}>{result.machbarkeit}</Tag>
         {result.algorithmen.map((a,i)=><Tag key={i}>{a}</Tag>)}
       </div>
+      {result.zielvariable&&<div style={{padding:"12px 14px",background:t.mathBg,border:`1px solid ${t.math}30`,borderRadius:t.term?6:8,marginBottom:12}}>
+        <div style={{fontSize:11,fontWeight:700,color:t.math,marginBottom:4}}>ZIELVARIABLE</div>
+        <div style={{fontSize:13,color:t.txB,lineHeight:1.5}}>{result.zielvariable}</div>
+      </div>}
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:16}}>
         <div style={{padding:"12px 14px",background:t.bgAS,borderRadius:t.term?6:8,border:`1px solid ${t.bdA}`}}>
           <div style={{fontSize:11,fontWeight:700,color:t.ac,marginBottom:6}}>DATENQUELLE</div>
@@ -842,6 +924,14 @@ Bewerte die folgende Projektidee. Antworte IMMER exakt in diesem JSON-Format (ke
           <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{result.metriken.map((m,i)=><Tag key={i}>{m}</Tag>)}</div>
         </div>
       </div>
+      {result.relevante_features&&<div style={{padding:"12px 14px",background:t.bgC,border:`1px solid ${t.bd}`,borderRadius:t.term?6:8,marginBottom:12}}>
+        <div style={{fontSize:11,fontWeight:700,color:t.inf,marginBottom:6}}>RELEVANTE FEATURES</div>
+        <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{result.relevante_features.map((f,i)=><Tag key={i} color={t.inf}>{f}</Tag>)}</div>
+      </div>}
+      {result.vorverarbeitung&&<div style={{padding:"12px 14px",background:t.bgC,border:`1px solid ${t.bd}`,borderRadius:t.term?6:8,marginBottom:12}}>
+        <div style={{fontSize:11,fontWeight:700,color:t.math,marginBottom:6}}>VORVERARBEITUNG</div>
+        <div style={{display:"flex",flexDirection:"column",gap:4}}>{result.vorverarbeitung.map((v,i)=><div key={i} style={{fontSize:12,color:t.txB,display:"flex",gap:6}}><span style={{color:t.math,fontWeight:700}}>{i+1}.</span>{v}</div>)}</div>
+      </div>}
       <div style={{background:t.okBg,border:`1px solid ${t.ok}30`,borderRadius:t.term?6:8,padding:"12px 14px",marginBottom:10}}>
         <div style={{fontSize:12,fontWeight:700,color:t.ok,marginBottom:4}}>Warum die Idee passt</div>
         <div style={{fontSize:13,color:t.txB,lineHeight:1.6}}>{result.proGrund}</div>

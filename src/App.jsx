@@ -44,7 +44,7 @@ const THEMES = {
   },
 };
 
-const Ctx = createContext({theme:THEMES["paper-light"],completed:{},markComplete:()=>{},unmarkComplete:()=>{}});
+const Ctx = createContext({theme:THEMES["paper-light"],completed:{},markComplete:()=>{},unmarkComplete:()=>{},ak:"",setAk:()=>{},prov:"openai",setProv:()=>{}});
 const useT = () => useContext(Ctx).theme;
 const useApp = () => useContext(Ctx);
 
@@ -573,8 +573,7 @@ const M7 = () => {
 
 // ── MODULE 8: AI Tutor ──
 const M8 = () => {
-  const t=useT();
-  const [ak,setAk]=useState("");const [prov,setProv]=useState("openai");
+  const t=useT();const {ak,setAk,prov,setProv}=useApp();
   const [msgs,setMsgs]=useState([{role:"assistant",content:"Willkommen! Ich bin dein ML-Tutor. Gib deinen API-Key ein und stell mir jede Frage."}]);
   const [inp,setInp]=useState("");const [ld,setLd]=useState(false);const [ss,setSs]=useState(true);
   const endRef=useRef(null);
@@ -722,13 +721,39 @@ const MDash = () => {
 };
 
 // ── MODULE: Ideenbewertung ──
+// ── SUPABASE CONFIG ──
+const SB_URL="https://xibsyrwtqtsvmcaruaze.supabase.co";
+const SB_KEY="sb_publishable_G5MU28TO5E51Ge3XwS9KYQ_cJb8x1aW";
+const sbFetch=async(path,opts={})=>{const r=await fetch(`${SB_URL}/rest/v1/${path}`,{...opts,headers:{"apikey":SB_KEY,"Authorization":`Bearer ${SB_KEY}`,"Content-Type":"application/json","Prefer":opts.prefer||"return=representation",...(opts.headers||{})}});return r.json();};
+const AUTHOR_COLORS={"Sebbi":"#c47a2a","Lukas":"#5a8a5e","Achim":"#5a7a9a"};
+
 const MIdea = () => {
-  const t=useT();
+  const t=useT();const {ak,setAk,prov,setProv}=useApp();
   const [idea,setIdea]=useState("");
-  const [ak,setAk]=useState("");const [prov,setProv]=useState("openai");const [ss,setSs]=useState(true);
+  const [ss,setSs]=useState(true);
   const [ld,setLd]=useState(false);
   const [result,setResult]=useState(null);
   const [history,setHistory]=useState([]);
+  const [author,setAuthor]=useState(()=>{try{return localStorage.getItem("ml_author")||"";}catch(e){return "";}});
+  const [dbReady,setDbReady]=useState(false);
+
+  // Lade alle Ideen aus Supabase beim Start
+  useEffect(()=>{
+    sbFetch("ideas?select=*&order=created_at.desc").then(data=>{
+      if(Array.isArray(data)){setHistory(data.map(r=>({id:r.id,idea:r.idea,result:r.result,author:r.author,ts:new Date(r.created_at).toLocaleString("de-DE",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})})));setDbReady(true);}
+    }).catch(()=>setDbReady(false));
+    // Realtime: Polle alle 8 Sekunden (einfach + zuverlaessig)
+    const iv=setInterval(()=>{
+      sbFetch("ideas?select=*&order=created_at.desc").then(data=>{
+        if(Array.isArray(data))setHistory(data.map(r=>({id:r.id,idea:r.idea,result:r.result,author:r.author,ts:new Date(r.created_at).toLocaleString("de-DE",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})})));
+      }).catch(()=>{});
+    },8000);
+    return ()=>clearInterval(iv);
+  },[]);
+
+  // Autor speichern
+  const pickAuthor=(name)=>{setAuthor(name);try{localStorage.setItem("ml_author",name);}catch(e){}};
+
   const sysPrompt=`Du bist ein ML-Projektberater fuer eine Uni-Projektarbeit (Angewandtes Machine Learning, SS2026, Prof. Bugra Turan).
 Bewerte die folgende Projektidee. Antworte IMMER exakt in diesem JSON-Format (kein Markdown, kein Text drumherum):
 {
@@ -745,7 +770,7 @@ Bewerte die folgende Projektidee. Antworte IMMER exakt in diesem JSON-Format (ke
   "verbesserung": "1-2 Saetze: Wie koennte man die Idee noch schaerfer machen?"
 }`;
   const evaluate=async()=>{
-    if(!idea.trim()||!ak||ld)return;
+    if(!idea.trim()||!ak||ld||!author)return;
     setLd(true);setResult(null);
     try{
       let text="";
@@ -757,12 +782,43 @@ Bewerte die folgende Projektidee. Antworte IMMER exakt in diesem JSON-Format (ke
         const d=await r.json();if(d.error)throw new Error(d.error.message);text=d.content[0].text;
       }
       const json=JSON.parse(text);
-      setResult(json);setHistory(p=>[{idea,result:json,ts:new Date().toLocaleTimeString()},...p]);
+      setResult(json);
+      // In Supabase speichern
+      const saved=await sbFetch("ideas",{method:"POST",body:JSON.stringify({author,idea,result:json})});
+      if(Array.isArray(saved)&&saved[0]){
+        const r=saved[0];
+        setHistory(p=>[{id:r.id,idea:r.idea,result:r.result,author:r.author,ts:new Date(r.created_at).toLocaleString("de-DE",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})},...p]);
+      }
     }catch(err){setResult({error:err.message});}finally{setLd(false);}
   };
+  const deleteIdea=async(id)=>{
+    await sbFetch(`ideas?id=eq.${id}`,{method:"DELETE",prefer:"return=minimal"}).catch(()=>{});
+    setHistory(p=>p.filter(h=>h.id!==id));
+    if(result&&history.find(h=>h.id===id&&h.result.titel===result.titel))setResult(null);
+  };
   const scoreColor=(s)=>s>=8?t.ok:s>=5?t.ac:t.err;
+  const authorColor=(name)=>AUTHOR_COLORS[name]||t.ac;
   const Tag=({children,color})=><span style={{fontSize:11,padding:"2px 8px",borderRadius:10,background:(color||t.ac)+"18",color:color||t.ac,fontWeight:600,whiteSpace:"nowrap"}}>{children}</span>;
+  const AuthorBadge=({name})=><span style={{fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:10,background:authorColor(name)+"20",color:authorColor(name),border:`1px solid ${authorColor(name)}40`}}>{name}</span>;
+
+  // Autor-Auswahl wenn noch nicht gesetzt
+  if(!author)return <div>
+    <ST>Wer bist du?</ST>
+    <P>Waehle deinen Namen, damit dein Team sieht, welche Ideen von dir kommen.</P>
+    <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+      {Object.keys(AUTHOR_COLORS).map(name=><button key={name} onClick={()=>pickAuthor(name)} style={{padding:"14px 28px",borderRadius:t.term?6:12,border:`2px solid ${authorColor(name)}`,background:authorColor(name)+"12",color:authorColor(name),fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:t.hf,transition:"all .15s"}}>{name}</button>)}
+    </div>
+  </div>;
+
   return <div>
+    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
+      <div style={{display:"flex",alignItems:"center",gap:8}}>
+        <AuthorBadge name={author}/>
+        <button onClick={()=>{setAuthor("");try{localStorage.removeItem("ml_author");}catch(e){}}} style={{fontSize:11,color:t.txF,background:"none",border:"none",cursor:"pointer",fontFamily:t.sf}}>wechseln</button>
+      </div>
+      {dbReady&&<span style={{fontSize:11,color:t.ok}}>● Supabase verbunden</span>}
+      {!dbReady&&<span style={{fontSize:11,color:t.err}}>● Offline (lokal)</span>}
+    </div>
     <ST>Beschreibe deine Projektidee</ST>
     <P>Schreib in 1-3 Saetzen, was du vorhersagen moechtest und womit. Die KI bewertet, ob das fuer die PA geeignet ist.</P>
     <button onClick={()=>setSs(!ss)} style={{fontFamily:t.sf,fontSize:12,color:t.txM,background:"none",border:"none",cursor:"pointer",marginBottom:12}}>API-Einstellungen {ss?"▴":"▾"}</button>
@@ -775,6 +831,7 @@ Bewerte die folgende Projektidee. Antworte IMMER exakt in diesem JSON-Format (ke
       <textarea value={idea} onChange={e=>setIdea(e.target.value)} placeholder={"z.B. Ich moechte anhand von Wetterdaten den Stromverbrauch einer Stadt vorhersagen."} rows={3} style={{width:"100%",boxSizing:"border-box",padding:"12px 14px",borderRadius:t.term?6:8,border:`1px solid ${t.bd}`,background:t.bgI,fontFamily:t.sf,fontSize:13,color:t.tx,outline:"none",resize:"vertical",lineHeight:1.6}}/>
       <div style={{display:"flex",gap:8,marginTop:10,flexWrap:"wrap"}}>
         <Bt primary onClick={evaluate} disabled={!ak||!idea.trim()||ld}>{ld?"Wird bewertet ...":"Idee bewerten"}</Bt>
+        {result&&!result.error&&<Bt onClick={()=>{setResult(null);setIdea("");}}>Neue Idee bewerten</Bt>}
         {!ak&&<span style={{fontSize:12,color:t.txM,alignSelf:"center"}}>Zuerst API-Key eingeben</span>}
       </div>
     </div>
@@ -819,18 +876,22 @@ Bewerte die folgende Projektidee. Antworte IMMER exakt in diesem JSON-Format (ke
       </div>
     </Cd>}
     {result&&result.error&&<Info title="Fehler" type="warning">{result.error}</Info>}
-    {history.length>1&&<><ST>Bisherige Bewertungen</ST>
+    {history.length>0&&<><ST>Alle Team-Bewertungen ({history.length})</ST>
       <div style={{display:"flex",flexDirection:"column",gap:8}}>
-        {history.slice(1).map((h,i)=><button key={i} onClick={()=>setResult(h.result)} style={{textAlign:"left",padding:"10px 14px",background:t.bgC,border:`1px solid ${t.bd}`,borderRadius:t.term?6:8,cursor:"pointer"}}>
+        {history.map((h,i)=>{const isActive=result&&!result.error&&result.titel===h.result?.titel;return <button key={h.id||i} onClick={()=>{setResult(h.result);setIdea(h.idea);}} style={{textAlign:"left",padding:"10px 14px",background:isActive?t.bgAS:t.bgC,border:`1px solid ${isActive?t.ac+"60":t.bd}`,borderRadius:t.term?6:8,cursor:"pointer",transition:"all .15s"}}>
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-            <span style={{fontSize:13,fontWeight:600,color:t.tx}}>{h.result.titel}</span>
             <div style={{display:"flex",alignItems:"center",gap:8}}>
-              <Tag color={scoreColor(h.result.score)}>{h.result.score}/10</Tag>
+              <AuthorBadge name={h.author}/>
+              <span style={{fontSize:13,fontWeight:600,color:isActive?t.ac:t.tx}}>{h.result?.titel||"?"}</span>
+            </div>
+            <div style={{display:"flex",alignItems:"center",gap:8}}>
+              <Tag color={scoreColor(h.result?.score)}>{h.result?.score}/10</Tag>
               <span style={{fontSize:11,color:t.txF}}>{h.ts}</span>
+              {h.author===author&&<span onClick={(e)=>{e.stopPropagation();deleteIdea(h.id);}} style={{fontSize:13,color:t.txF,cursor:"pointer",padding:"0 4px"}}>x</span>}
             </div>
           </div>
           <div style={{fontSize:12,color:t.txM,marginTop:4}}>{h.idea.slice(0,80)}{h.idea.length>80?"...":""}</div>
-        </button>)}
+        </button>;})}
       </div>
     </>}
   </div>;
@@ -941,6 +1002,8 @@ export default function MLLernApp(){
   const [completed,setCompleted]=useState({});
   const [sbOpen,setSbOpen]=useState(true);
   const [themeKey,setThemeKey]=useState("paper-light");
+  const [ak,setAk]=useState(()=>{try{return typeof import.meta!=="undefined"&&import.meta.env?.VITE_API_KEY||"";}catch(e){return "";}});
+  const [prov,setProv]=useState(()=>{try{return typeof import.meta!=="undefined"&&import.meta.env?.VITE_API_PROVIDER||"anthropic";}catch(e){return "anthropic";}});
   const t=THEMES[themeKey]||THEMES["paper-light"];
   const handleNav=(id)=>{setActive(id);};
   const markComplete=(id)=>setCompleted(p=>({...p,[id]:true}));
@@ -966,7 +1029,7 @@ export default function MLLernApp(){
     </button>;
   };
 
-  return <Ctx.Provider value={{theme:t,completed,markComplete,unmarkComplete}}>
+  return <Ctx.Provider value={{theme:t,completed,markComplete,unmarkComplete,ak,setAk,prov,setProv}}>
     <div style={{minHeight:"100vh",display:"flex",background:t.bg,fontFamily:t.sf}}>
       {/* Sidebar — fixed height, no scroll */}
       <div style={{width:sbOpen?232:56,flexShrink:0,background:t.bgS,borderRight:`1px solid ${t.bd}`,display:"flex",flexDirection:"column",transition:"width .3s",height:"100vh",position:"sticky",top:0}}>

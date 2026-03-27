@@ -828,7 +828,7 @@ const MIdea = () => {
   const sysPrompt=`Du bist ein ML-Projektberater fuer eine Uni-Projektarbeit (Angewandtes Machine Learning, SS2026, Prof. Bugra Turan).
 Das Team besteht aus 3 Personen, jeder praesentiert 10 Minuten. Anforderungen: Scikit-learn, Git-Repository, Jupyter Notebook mit 9 Sektionen (Problembeschreibung, Datenquelle, EDA, Vorverarbeitung, Modellauswahl, Training, Evaluation, Diskussion, Quellen).
 
-${csvFiles.length>0?"Der Nutzer hat echte Datasets hochgeladen. Analysiere die Spalten, Datentypen und Beispielwerte GENAU. Empfehle konkret, welche Spalte als Zielvariable geeignet ist, welche Features relevant sind, und welche Vorverarbeitungsschritte noetig sind. Wenn mehrere Datasets hochgeladen wurden, bewerte jedes einzeln und empfehle das beste (oder eine sinnvolle Kombination).":""}
+${dataFiles.length>0?"Der Nutzer hat echte Datasets hochgeladen. Analysiere die Spalten, Datentypen und Beispielwerte GENAU. Empfehle konkret, welche Spalte als Zielvariable geeignet ist, welche Features relevant sind, und welche Vorverarbeitungsschritte noetig sind. Wenn mehrere Datasets hochgeladen wurden, bewerte jedes einzeln und empfehle das beste (oder eine sinnvolle Kombination).":""}
 
 Antworte IMMER exakt in diesem JSON-Format (kein Markdown, kein Text drumherum):
 {

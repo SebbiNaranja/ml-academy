@@ -600,7 +600,7 @@ const M8 = () => {
     {ss&&<Cd style={{marginBottom:16}}>
       <div style={{display:"flex",gap:8,marginBottom:12}}>{[["openai","OpenAI"],["anthropic","Anthropic"]].map(([id,l])=><Bt key={id} primary={prov===id} onClick={()=>setProv(id)} style={{fontSize:12,padding:"6px 14px"}}>{l}</Bt>)}</div>
       <input type="password" value={ak} onChange={e=>setAk(e.target.value)} placeholder={prov==="openai"?"sk-...":"sk-ant-..."} style={{width:"100%",boxSizing:"border-box",padding:"8px 12px",borderRadius:t.term?6:8,border:`1px solid ${t.bd}`,background:t.bgI,fontFamily:t.term?t.mf:t.sf,fontSize:13,color:t.tx,outline:"none"}}/>
-      <div style={{fontSize:11,color:t.txF,marginTop:6}}>Wird nur lokal verwendet.</div>
+      <div style={{fontSize:11,color:t.txF,marginTop:6}}>{ak?"Key gesetzt ✓":"Key wird nur in deinem Browser gespeichert."}</div>
     </Cd>}
     <Cd style={{padding:0,overflow:"hidden"}}>
       <div style={{maxHeight:340,minHeight:200,overflowY:"auto",padding:16}}>
@@ -768,6 +768,7 @@ const MIdea = () => {
   const [history,setHistory]=useState([]);
   const [dbReady,setDbReady]=useState(false);
   const [dataFiles,setDataFiles]=useState([]);
+  const [editingId,setEditingId]=useState(null);
   const [ratingOpen,setRatingOpen]=useState(null);
   const [myStars,setMyStars]=useState(0);
   const [myComment,setMyComment]=useState("");
@@ -861,11 +862,16 @@ Antworte IMMER exakt in diesem JSON-Format (kein Markdown, kein Text drumherum):
       }
       const json=JSON.parse(text);
       setResult(json);
-      // In Supabase speichern (inkl. Dateinamen)
       const fileNames=dataFiles.map(f=>({name:f.name,format:f.format,ext:f.ext}));
-      const saved=await sbFetch("ideas",{method:"POST",body:JSON.stringify({author,idea,result:json,files:fileNames,ratings:{}})});
-      if(Array.isArray(saved)&&saved[0]){
-        setHistory(p=>[mapRow(saved[0]),...p]);
+      if(editingId){
+        // Bestehende Idee updaten (Bewertung ersetzen)
+        await sbFetch(`ideas?id=eq.${editingId}`,{method:"PATCH",body:JSON.stringify({idea,result:json,files:fileNames})});
+        setHistory(p=>p.map(h=>h.id===editingId?{...h,idea,result:json,files:fileNames}:h));
+        setEditingId(null);
+      } else {
+        // Neue Idee speichern
+        const saved=await sbFetch("ideas",{method:"POST",body:JSON.stringify({author,idea,result:json,files:fileNames,ratings:{}})});
+        if(Array.isArray(saved)&&saved[0]){setHistory(p=>[mapRow(saved[0]),...p]);}
       }
     }catch(err){setResult({error:err.message});}finally{setLd(false);}
   };
@@ -890,7 +896,7 @@ Antworte IMMER exakt in diesem JSON-Format (kein Markdown, kein Text drumherum):
     {ss&&<Cd style={{marginBottom:16}}>
       <div style={{display:"flex",gap:8,marginBottom:12}}>{[["openai","OpenAI"],["anthropic","Anthropic"]].map(([id,l])=><Bt key={id} primary={prov===id} onClick={()=>setProv(id)} style={{fontSize:12,padding:"6px 14px"}}>{l}</Bt>)}</div>
       <input type="password" value={ak} onChange={e=>setAk(e.target.value)} placeholder={prov==="openai"?"sk-...":"sk-ant-..."} style={{width:"100%",boxSizing:"border-box",padding:"8px 12px",borderRadius:t.term?6:8,border:`1px solid ${t.bd}`,background:t.bgI,fontFamily:t.term?t.mf:t.sf,fontSize:13,color:t.tx,outline:"none"}}/>
-      <div style={{fontSize:11,color:t.txF,marginTop:6}}>Wird nur lokal verwendet.</div>
+      <div style={{fontSize:11,color:t.txF,marginTop:6}}>{ak?"Key gesetzt ✓":"Key wird nur in deinem Browser gespeichert."}</div>
     </Cd>}
     <div style={{marginBottom:20}}>
       <textarea value={idea} onChange={e=>setIdea(e.target.value)} placeholder={"z.B. Ich moechte anhand von Wetterdaten den Stromverbrauch einer Stadt vorhersagen."} rows={3} style={{width:"100%",boxSizing:"border-box",padding:"12px 14px",borderRadius:t.term?6:8,border:`1px solid ${t.bd}`,background:t.bgI,fontFamily:t.sf,fontSize:13,color:t.tx,outline:"none",resize:"vertical",lineHeight:1.6}}/>
@@ -932,8 +938,9 @@ Antworte IMMER exakt in diesem JSON-Format (kein Markdown, kein Text drumherum):
         </div>}
       </div>
       <div style={{display:"flex",gap:8,marginTop:12,flexWrap:"wrap"}}>
-        <Bt primary onClick={evaluate} disabled={!ak||!idea.trim()||ld}>{ld?"Wird bewertet ...":"Idee bewerten"}</Bt>
-        {result&&!result.error&&<Bt onClick={()=>{setResult(null);setIdea("");setDataFiles([]);}}>Neue Idee bewerten</Bt>}
+        <Bt primary onClick={evaluate} disabled={!ak||!idea.trim()||ld}>{ld?"Wird bewertet ...":editingId?"Neu bewerten":"Idee bewerten"}</Bt>
+        {editingId&&<Bt onClick={()=>{setEditingId(null);setIdea("");setResult(null);setDataFiles([]);}}>Abbrechen</Bt>}
+        {result&&!result.error&&!editingId&&<Bt onClick={()=>{setResult(null);setIdea("");setDataFiles([]);}}>Neue Idee bewerten</Bt>}
         {!ak&&<span style={{fontSize:12,color:t.txM,alignSelf:"center"}}>Zuerst API-Key eingeben</span>}
       </div>
     </div>
@@ -1004,7 +1011,6 @@ Antworte IMMER exakt in diesem JSON-Format (kein Markdown, kein Text drumherum):
                 <Tag color={scoreColor(h.result?.score)}>{h.result?.score}/10</Tag>
                 {avgStars!==null&&<span style={{fontSize:12,color:"#f59e0b",fontWeight:600}}>{"★".repeat(Math.round(avgStars))} {avgStars}</span>}
                 <span style={{fontSize:11,color:t.txF}}>{h.ts}</span>
-                {h.author===author&&<span onClick={(e)=>{e.stopPropagation();deleteIdea(h.id);}} style={{fontSize:13,color:t.txF,cursor:"pointer",padding:"0 4px"}}>x</span>}
               </div>
             </div>
             <div style={{fontSize:12,color:t.txM,marginTop:4}}>{h.idea.slice(0,80)}{h.idea.length>80?"...":""}</div>
@@ -1029,9 +1035,13 @@ Antworte IMMER exakt in diesem JSON-Format (kein Markdown, kein Text drumherum):
               <Bt primary onClick={()=>saveRating(h.id)} disabled={myStars===0} style={{fontSize:11,padding:"4px 10px"}}>Speichern</Bt>
               <Bt onClick={()=>{setRatingOpen(null);setMyStars(0);setMyComment("");}} style={{fontSize:11,padding:"4px 10px"}}>Abbrechen</Bt>
             </div>
-            :<button onClick={(e)=>{e.stopPropagation();setRatingOpen(h.id);setMyStars(rats[author]?.stars||0);setMyComment(rats[author]?.comment||"");}} style={{fontSize:11,color:t.ac,background:"none",border:"none",cursor:"pointer",padding:0,fontFamily:t.sf}}>
-              {rats[author]?"✏ Meine Bewertung aendern":"★ Bewerten"}
-            </button>}
+            :<div style={{display:"flex",alignItems:"center",gap:12}}>
+              <button onClick={(e)=>{e.stopPropagation();setRatingOpen(h.id);setMyStars(rats[author]?.stars||0);setMyComment(rats[author]?.comment||"");}} style={{fontSize:11,color:t.ac,background:"none",border:"none",cursor:"pointer",padding:0,fontFamily:t.sf}}>
+                {rats[author]?"✏ Meine Bewertung aendern":"★ Bewerten"}
+              </button>
+              <button onClick={(e)=>{e.stopPropagation();setIdea(h.idea);setEditingId(h.id);setResult(null);setDataFiles([]);window.scrollTo({top:0,behavior:"smooth"});}} style={{fontSize:11,color:t.inf,background:"none",border:"none",cursor:"pointer",padding:0,fontFamily:t.sf}}>🔄 Neu bewerten</button>
+              <button onClick={(e)=>{e.stopPropagation();if(confirm("Idee wirklich loeschen?"))deleteIdea(h.id);}} style={{fontSize:11,color:t.err,background:"none",border:"none",cursor:"pointer",padding:0,fontFamily:t.sf}}>🗑 Loeschen</button>
+            </div>}
           </div>
         </div>;})}
       </div>

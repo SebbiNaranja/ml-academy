@@ -728,26 +728,36 @@ const SB_KEY="sb_publishable_G5MU28TO5E51Ge3XwS9KYQ_cJb8x1aW";
 const sbFetch=async(path,opts={})=>{const r=await fetch(`${SB_URL}/rest/v1/${path}`,{...opts,headers:{"apikey":SB_KEY,"Authorization":`Bearer ${SB_KEY}`,"Content-Type":"application/json","Prefer":opts.prefer||"return=representation",...(opts.headers||{})}});return r.json();};
 const AUTHOR_COLORS={"Sebbi":"#c47a2a","Lukas":"#5a8a5e","Achim":"#5a7a9a"};
 
-// ── CSV PARSER (einfach, ohne Library) ──
-const parseCSV=(text)=>{
+// ── FILE PARSERS ──
+const parseTabular=(text)=>{
   const lines=text.split(/\r?\n/).filter(l=>l.trim());
   if(lines.length<2)return null;
-  // Erkennt Trennzeichen: Semikolon, Komma, oder Tab
   const sep=lines[0].includes(";")?";":(lines[0].includes("\t")?"\t":",");
   const headers=lines[0].split(sep).map(h=>h.trim().replace(/^"|"$/g,""));
   const rows=lines.slice(1).map(l=>l.split(sep).map(c=>c.trim().replace(/^"|"$/g,"")));
-  // Datentypen erkennen
   const types=headers.map((_,ci)=>{
     const vals=rows.slice(0,50).map(r=>r[ci]).filter(v=>v&&v!=="");
     if(vals.length===0)return "leer";
-    const allNum=vals.every(v=>!isNaN(Number(v)));
-    if(allNum)return "numerisch";
+    if(vals.every(v=>!isNaN(Number(v))))return "numerisch";
     const unique=new Set(vals);
     if(unique.size<=10)return `kategorisch (${unique.size} Werte: ${[...unique].slice(0,5).join(", ")}${unique.size>5?"...":""})`;
     return "text";
   });
   return {headers,types,rowCount:rows.length,sample:rows.slice(0,3),sep};
 };
+const FILE_ICONS={"tabular":"📊","json":"📋","image":"🖼️","excel":"📗","xml":"📄","other":"📎"};
+const parseFile=async(file)=>{
+  const ext=file.name.split(".").pop().toLowerCase();
+  const base={name:file.name,size:file.size,ext};
+  if(["csv","tsv","txt"].includes(ext)){const text=await file.text();const p=parseTabular(text);return p?{...base,format:"tabular",...p}:null;}
+  if(ext==="json"){try{const text=await file.text();const data=JSON.parse(text);if(Array.isArray(data)&&data.length>0&&typeof data[0]==="object"){const headers=Object.keys(data[0]);const types=headers.map(h=>{const vals=data.slice(0,50).map(r=>r[h]).filter(v=>v!=null);if(vals.every(v=>typeof v==="number"||(!isNaN(Number(v))&&v!=="")))return "numerisch";const unique=new Set(vals.map(String));if(unique.size<=10)return `kategorisch (${unique.size} Werte: ${[...unique].slice(0,5).join(", ")}${unique.size>5?"...":""})`;return "text";});return {...base,format:"tabular",headers,types,rowCount:data.length,sample:data.slice(0,3).map(r=>headers.map(h=>String(r[h]??"")))};}return {...base,format:"json",structure:typeof data==="object"?Object.keys(data).slice(0,10).join(", "):"scalar",rowCount:Array.isArray(data)?data.length:Object.keys(data).length};}catch{return null;}}
+  if(["jpg","jpeg","png","gif","bmp","webp","svg"].includes(ext)){const url=URL.createObjectURL(file);return {...base,format:"image",preview:url};}
+  if(["xlsx","xls","xlsm"].includes(ext)){return {...base,format:"excel",note:"Excel erkannt — fuer beste Analyse als CSV exportieren"};}
+  if(ext==="xml"){try{const text=await file.text();const parser=new DOMParser();const doc=parser.parseFromString(text,"text/xml");const root=doc.documentElement;return {...base,format:"xml",rootTag:root.tagName,childCount:root.children.length};}catch{return null;}}
+  return {...base,format:"other",note:"Datei erkannt"};
+};
+// ── STAR RATING ──
+const StarRating=({value=0,onChange,size=18})=><div style={{display:"flex",gap:1}}>{[1,2,3,4,5].map(s=><span key={s} onClick={onChange?()=>onChange(s):undefined} style={{cursor:onChange?"pointer":"default",fontSize:size,color:s<=value?"#f59e0b":"#d1d5db",transition:"color .15s",userSelect:"none"}}>{s<=value?"★":"☆"}</span>)}</div>;
 
 const MIdea = () => {
   const t=useT();const {ak,setAk,prov,setProv,author}=useApp();
@@ -757,43 +767,61 @@ const MIdea = () => {
   const [result,setResult]=useState(null);
   const [history,setHistory]=useState([]);
   const [dbReady,setDbReady]=useState(false);
-  const [csvFiles,setCsvFiles]=useState([]);
+  const [dataFiles,setDataFiles]=useState([]);
+  const [ratingOpen,setRatingOpen]=useState(null);
+  const [myStars,setMyStars]=useState(0);
+  const [myComment,setMyComment]=useState("");
   const fileRef=useRef(null);
 
-  // Lade alle Ideen aus Supabase beim Start
+  const mapRow=(r)=>({id:r.id,idea:r.idea,result:r.result,author:r.author,files:r.files||[],ratings:r.ratings||{},ts:new Date(r.created_at).toLocaleString("de-DE",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})});
   useEffect(()=>{
     sbFetch("ideas?select=*&order=created_at.desc").then(data=>{
-      if(Array.isArray(data)){setHistory(data.map(r=>({id:r.id,idea:r.idea,result:r.result,author:r.author,ts:new Date(r.created_at).toLocaleString("de-DE",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})})));setDbReady(true);}
+      if(Array.isArray(data)){setHistory(data.map(mapRow));setDbReady(true);}
     }).catch(()=>setDbReady(false));
-    // Realtime: Polle alle 8 Sekunden (einfach + zuverlaessig)
     const iv=setInterval(()=>{
       sbFetch("ideas?select=*&order=created_at.desc").then(data=>{
-        if(Array.isArray(data))setHistory(data.map(r=>({id:r.id,idea:r.idea,result:r.result,author:r.author,ts:new Date(r.created_at).toLocaleString("de-DE",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})})));
+        if(Array.isArray(data))setHistory(data.map(mapRow));
       }).catch(()=>{});
     },8000);
     return ()=>clearInterval(iv);
   },[]);
 
-
-  // CSV-Dateien einlesen
+  // Dateien einlesen (alle Formate)
   const handleFiles=async(files)=>{
     const newFiles=[];
     for(const file of files){
-      if(!file.name.match(/\.(csv|tsv|txt)$/i))continue;
-      const text=await file.text();
-      const parsed=parseCSV(text);
-      if(parsed)newFiles.push({name:file.name,size:file.size,...parsed});
+      const parsed=await parseFile(file);
+      if(parsed)newFiles.push(parsed);
     }
-    setCsvFiles(p=>[...p,...newFiles]);
+    setDataFiles(p=>[...p,...newFiles]);
   };
-  const removeCsv=(idx)=>setCsvFiles(p=>p.filter((_,i)=>i!==idx));
+  const removeFile=(idx)=>{
+    const f=dataFiles[idx];
+    if(f.preview&&f.format==="image")URL.revokeObjectURL(f.preview);
+    setDataFiles(p=>p.filter((_,i)=>i!==idx));
+  };
 
   // Daten-Summary fuer den Prompt bauen
   const buildDataSummary=()=>{
-    if(csvFiles.length===0)return "";
-    return "\n\n--- HOCHGELADENE DATASETS ---\n"+csvFiles.map(f=>
-      `Datei: ${f.name} (${f.rowCount} Zeilen, ${f.headers.length} Spalten)\nSpalten:\n${f.headers.map((h,i)=>`  - ${h}: ${f.types[i]}`).join("\n")}\nBeispieldaten (erste 3 Zeilen):\n${f.sample.map(r=>f.headers.map((h,i)=>`${h}=${r[i]||"?"}`).join(", ")).join("\n")}`
-    ).join("\n\n");
+    if(dataFiles.length===0)return "";
+    return "\n\n--- HOCHGELADENE DATEIEN ---\n"+dataFiles.map(f=>{
+      if(f.format==="tabular")return `Datei: ${f.name} (${f.rowCount} Zeilen, ${f.headers.length} Spalten)\nSpalten:\n${f.headers.map((h,i)=>`  - ${h}: ${f.types[i]}`).join("\n")}\nBeispieldaten:\n${f.sample.map(r=>f.headers.map((h,i)=>`${h}=${r[i]||"?"}`).join(", ")).join("\n")}`;
+      if(f.format==="json")return `Datei: ${f.name} (JSON, Struktur: ${f.structure}, ${f.rowCount} Eintraege)`;
+      if(f.format==="image")return `Datei: ${f.name} (Bild, ${Math.round(f.size/1024)}KB — bitte beruecksichtige, dass Bilddaten zusaetzliche Vorverarbeitung benoetigen)`;
+      if(f.format==="excel")return `Datei: ${f.name} (Excel — ${f.note})`;
+      if(f.format==="xml")return `Datei: ${f.name} (XML, Root: ${f.rootTag}, ${f.childCount} Kinder-Elemente)`;
+      return `Datei: ${f.name} (${f.ext})`;
+    }).join("\n\n");
+  };
+
+  // Rating speichern
+  const saveRating=async(ideaId)=>{
+    const entry=history.find(h=>h.id===ideaId);
+    if(!entry)return;
+    const newRatings={...entry.ratings,[author]:{stars:myStars,comment:myComment}};
+    await sbFetch(`ideas?id=eq.${ideaId}`,{method:"PATCH",body:JSON.stringify({ratings:newRatings})}).catch(()=>{});
+    setHistory(p=>p.map(h=>h.id===ideaId?{...h,ratings:newRatings}:h));
+    setRatingOpen(null);setMyStars(0);setMyComment("");
   };
 
   const sysPrompt=`Du bist ein ML-Projektberater fuer eine Uni-Projektarbeit (Angewandtes Machine Learning, SS2026, Prof. Bugra Turan).
@@ -833,11 +861,11 @@ Antworte IMMER exakt in diesem JSON-Format (kein Markdown, kein Text drumherum):
       }
       const json=JSON.parse(text);
       setResult(json);
-      // In Supabase speichern
-      const saved=await sbFetch("ideas",{method:"POST",body:JSON.stringify({author,idea,result:json})});
+      // In Supabase speichern (inkl. Dateinamen)
+      const fileNames=dataFiles.map(f=>({name:f.name,format:f.format,ext:f.ext}));
+      const saved=await sbFetch("ideas",{method:"POST",body:JSON.stringify({author,idea,result:json,files:fileNames,ratings:{}})});
       if(Array.isArray(saved)&&saved[0]){
-        const r=saved[0];
-        setHistory(p=>[{id:r.id,idea:r.idea,result:r.result,author:r.author,ts:new Date(r.created_at).toLocaleString("de-DE",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})},...p]);
+        setHistory(p=>[mapRow(saved[0]),...p]);
       }
     }catch(err){setResult({error:err.message});}finally{setLd(false);}
   };
@@ -866,27 +894,38 @@ Antworte IMMER exakt in diesem JSON-Format (kein Markdown, kein Text drumherum):
     </Cd>}
     <div style={{marginBottom:20}}>
       <textarea value={idea} onChange={e=>setIdea(e.target.value)} placeholder={"z.B. Ich moechte anhand von Wetterdaten den Stromverbrauch einer Stadt vorhersagen."} rows={3} style={{width:"100%",boxSizing:"border-box",padding:"12px 14px",borderRadius:t.term?6:8,border:`1px solid ${t.bd}`,background:t.bgI,fontFamily:t.sf,fontSize:13,color:t.tx,outline:"none",resize:"vertical",lineHeight:1.6}}/>
-      {/* CSV Upload */}
-      <div style={{marginTop:12,padding:"16px 18px",borderRadius:t.term?6:10,border:`2px dashed ${csvFiles.length>0?t.ok+"60":t.bd}`,background:csvFiles.length>0?t.okBg:t.bgC,cursor:"pointer",transition:"all .2s"}}
+      {/* Datei Upload (alle Formate) */}
+      <div style={{marginTop:12,padding:"16px 18px",borderRadius:t.term?6:10,border:`2px dashed ${dataFiles.length>0?t.ok+"60":t.bd}`,background:dataFiles.length>0?t.okBg:t.bgC,cursor:"pointer",transition:"all .2s"}}
         onClick={()=>fileRef.current?.click()}
         onDragOver={e=>{e.preventDefault();e.currentTarget.style.borderColor=t.ac;}}
-        onDragLeave={e=>{e.currentTarget.style.borderColor=csvFiles.length>0?t.ok+"60":t.bd;}}
-        onDrop={e=>{e.preventDefault();e.currentTarget.style.borderColor=csvFiles.length>0?t.ok+"60":t.bd;handleFiles(e.dataTransfer.files);}}>
-        <input ref={fileRef} type="file" accept=".csv,.tsv,.txt" multiple onChange={e=>handleFiles(e.target.files)} style={{display:"none"}}/>
-        {csvFiles.length===0?<div style={{textAlign:"center"}}>
+        onDragLeave={e=>{e.currentTarget.style.borderColor=dataFiles.length>0?t.ok+"60":t.bd;}}
+        onDrop={e=>{e.preventDefault();e.currentTarget.style.borderColor=dataFiles.length>0?t.ok+"60":t.bd;handleFiles(e.dataTransfer.files);}}>
+        <input ref={fileRef} type="file" accept=".csv,.tsv,.txt,.json,.jpg,.jpeg,.png,.gif,.bmp,.webp,.svg,.xlsx,.xls,.xlsm,.xml" multiple onChange={e=>handleFiles(e.target.files)} style={{display:"none"}}/>
+        {dataFiles.length===0?<div style={{textAlign:"center"}}>
           <div style={{fontSize:20,marginBottom:4}}>+</div>
-          <div style={{fontSize:12,color:t.txM}}>CSV-Dateien hierher ziehen oder klicken</div>
-          <div style={{fontSize:11,color:t.txF,marginTop:4}}>Die KI analysiert die Spalten und gibt bessere Empfehlungen</div>
+          <div style={{fontSize:12,color:t.txM}}>Dateien hierher ziehen oder klicken</div>
+          <div style={{fontSize:11,color:t.txF,marginTop:4}}>CSV, JSON, Bilder, Excel, XML — die KI analysiert alles und gibt bessere Empfehlungen</div>
         </div>
         :<div>
-          <div style={{fontSize:11,fontWeight:700,color:t.ok,marginBottom:8}}>{csvFiles.length} Dataset{csvFiles.length>1?"s":""} geladen</div>
+          <div style={{fontSize:11,fontWeight:700,color:t.ok,marginBottom:8}}>{dataFiles.length} Datei{dataFiles.length>1?"en":""} geladen</div>
           <div style={{display:"flex",flexDirection:"column",gap:6}}>
-            {csvFiles.map((f,i)=><div key={i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 12px",background:t.bg,borderRadius:t.term?4:6,border:`1px solid ${t.bd}`}}>
-              <div>
-                <div style={{fontSize:12,fontWeight:600,color:t.tx}}>{f.name}</div>
-                <div style={{fontSize:11,color:t.txM}}>{f.rowCount} Zeilen, {f.headers.length} Spalten: {f.headers.slice(0,4).join(", ")}{f.headers.length>4?"...":""}</div>
+            {dataFiles.map((f,i)=><div key={i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 12px",background:t.bg,borderRadius:t.term?4:6,border:`1px solid ${t.bd}`}}>
+              <div style={{display:"flex",alignItems:"center",gap:8,flex:1,minWidth:0}}>
+                <span style={{fontSize:16,flexShrink:0}}>{FILE_ICONS[f.format]||"📎"}</span>
+                {f.format==="image"&&f.preview&&<img src={f.preview} alt={f.name} style={{width:32,height:32,objectFit:"cover",borderRadius:4,flexShrink:0}}/>}
+                <div style={{minWidth:0}}>
+                  <div style={{fontSize:12,fontWeight:600,color:t.tx,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{f.name}</div>
+                  <div style={{fontSize:11,color:t.txM}}>
+                    {f.format==="tabular"&&`${f.rowCount} Zeilen, ${f.headers.length} Spalten: ${f.headers.slice(0,3).join(", ")}${f.headers.length>3?"...":""}`}
+                    {f.format==="json"&&`JSON — ${f.structure} (${f.rowCount} Eintraege)`}
+                    {f.format==="image"&&`Bild (${Math.round(f.size/1024)} KB)`}
+                    {f.format==="excel"&&f.note}
+                    {f.format==="xml"&&`XML — <${f.rootTag}> (${f.childCount} Elemente)`}
+                    {f.format==="other"&&`${f.ext.toUpperCase()}-Datei`}
+                  </div>
+                </div>
               </div>
-              <button onClick={e=>{e.stopPropagation();removeCsv(i);}} style={{background:"none",border:"none",cursor:"pointer",color:t.txF,fontSize:14,padding:"2px 6px"}}>x</button>
+              <button onClick={e=>{e.stopPropagation();removeFile(i);}} style={{background:"none",border:"none",cursor:"pointer",color:t.txF,fontSize:14,padding:"2px 6px",flexShrink:0}}>x</button>
             </div>)}
           </div>
           <div style={{fontSize:11,color:t.txM,marginTop:6,textAlign:"center"}}>Weitere Dateien hinzufuegen: klicken oder ziehen</div>
@@ -894,7 +933,7 @@ Antworte IMMER exakt in diesem JSON-Format (kein Markdown, kein Text drumherum):
       </div>
       <div style={{display:"flex",gap:8,marginTop:12,flexWrap:"wrap"}}>
         <Bt primary onClick={evaluate} disabled={!ak||!idea.trim()||ld}>{ld?"Wird bewertet ...":"Idee bewerten"}</Bt>
-        {result&&!result.error&&<Bt onClick={()=>{setResult(null);setIdea("");setCsvFiles([]);}}>Neue Idee bewerten</Bt>}
+        {result&&!result.error&&<Bt onClick={()=>{setResult(null);setIdea("");setDataFiles([]);}}>Neue Idee bewerten</Bt>}
         {!ak&&<span style={{fontSize:12,color:t.txM,alignSelf:"center"}}>Zuerst API-Key eingeben</span>}
       </div>
     </div>
@@ -952,21 +991,49 @@ Antworte IMMER exakt in diesem JSON-Format (kein Markdown, kein Text drumherum):
     </Cd>}
     {result&&result.error&&<Info title="Fehler" type="warning">{result.error}</Info>}
     {history.length>0&&<><ST>Alle Team-Bewertungen ({history.length})</ST>
-      <div style={{display:"flex",flexDirection:"column",gap:8}}>
-        {history.map((h,i)=>{const isActive=result&&!result.error&&result.titel===h.result?.titel;return <button key={h.id||i} onClick={()=>{setResult(h.result);setIdea(h.idea);}} style={{textAlign:"left",padding:"10px 14px",background:isActive?t.bgAS:t.bgC,border:`1px solid ${isActive?t.ac+"60":t.bd}`,borderRadius:t.term?6:8,cursor:"pointer",transition:"all .15s"}}>
-          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-            <div style={{display:"flex",alignItems:"center",gap:8}}>
-              <AuthorBadge name={h.author}/>
-              <span style={{fontSize:13,fontWeight:600,color:isActive?t.ac:t.tx}}>{h.result?.titel||"?"}</span>
+      <div style={{display:"flex",flexDirection:"column",gap:10}}>
+        {history.map((h,i)=>{const isActive=result&&!result.error&&result.titel===h.result?.titel;const rats=h.ratings||{};const ratNames=Object.keys(rats);const avgStars=ratNames.length>0?Math.round(ratNames.reduce((s,n)=>s+(rats[n].stars||0),0)/ratNames.length*10)/10:null;
+        return <div key={h.id||i} style={{background:isActive?t.bgAS:t.bgC,border:`1px solid ${isActive?t.ac+"60":t.bd}`,borderRadius:t.term?6:10,overflow:"hidden",transition:"all .15s"}}>
+          <button onClick={()=>{setResult(h.result);setIdea(h.idea);}} style={{width:"100%",textAlign:"left",padding:"12px 14px",background:"transparent",border:"none",cursor:"pointer"}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+              <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
+                <AuthorBadge name={h.author}/>
+                <span style={{fontSize:13,fontWeight:600,color:isActive?t.ac:t.tx}}>{h.result?.titel||"?"}</span>
+              </div>
+              <div style={{display:"flex",alignItems:"center",gap:8}}>
+                <Tag color={scoreColor(h.result?.score)}>{h.result?.score}/10</Tag>
+                {avgStars!==null&&<span style={{fontSize:12,color:"#f59e0b",fontWeight:600}}>{"★".repeat(Math.round(avgStars))} {avgStars}</span>}
+                <span style={{fontSize:11,color:t.txF}}>{h.ts}</span>
+                {h.author===author&&<span onClick={(e)=>{e.stopPropagation();deleteIdea(h.id);}} style={{fontSize:13,color:t.txF,cursor:"pointer",padding:"0 4px"}}>x</span>}
+              </div>
             </div>
-            <div style={{display:"flex",alignItems:"center",gap:8}}>
-              <Tag color={scoreColor(h.result?.score)}>{h.result?.score}/10</Tag>
-              <span style={{fontSize:11,color:t.txF}}>{h.ts}</span>
-              {h.author===author&&<span onClick={(e)=>{e.stopPropagation();deleteIdea(h.id);}} style={{fontSize:13,color:t.txF,cursor:"pointer",padding:"0 4px"}}>x</span>}
+            <div style={{fontSize:12,color:t.txM,marginTop:4}}>{h.idea.slice(0,80)}{h.idea.length>80?"...":""}</div>
+            {/* Dateien anzeigen */}
+            {h.files&&h.files.length>0&&<div style={{display:"flex",gap:4,flexWrap:"wrap",marginTop:6}}>
+              {h.files.map((f,fi)=><span key={fi} style={{fontSize:10,padding:"1px 6px",borderRadius:8,background:t.bd+"40",color:t.txM}}>{FILE_ICONS[f.format]||"📎"} {f.name}</span>)}
+            </div>}
+          </button>
+          {/* Team-Ratings anzeigen */}
+          <div style={{padding:"0 14px 10px",display:"flex",flexDirection:"column",gap:4}}>
+            {ratNames.length>0&&<div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+              {ratNames.map(name=><div key={name} style={{display:"flex",alignItems:"center",gap:4,padding:"3px 8px",borderRadius:8,background:authorColor(name)+"10",border:`1px solid ${authorColor(name)}20`}}>
+                <span style={{fontSize:10,fontWeight:700,color:authorColor(name)}}>{name}</span>
+                <StarRating value={rats[name].stars} size={12}/>
+                {rats[name].comment&&<span style={{fontSize:10,color:t.txM,fontStyle:"italic"}}>"{rats[name].comment}"</span>}
+              </div>)}
+            </div>}
+            {/* Eigene Bewertung abgeben */}
+            {ratingOpen===h.id?<div style={{display:"flex",alignItems:"center",gap:8,marginTop:4,flexWrap:"wrap"}}>
+              <StarRating value={myStars} onChange={setMyStars} size={16}/>
+              <input value={myComment} onChange={e=>setMyComment(e.target.value)} placeholder="Kommentar (optional)" style={{flex:1,minWidth:120,padding:"4px 8px",borderRadius:6,border:`1px solid ${t.bd}`,background:t.bgI,fontSize:11,color:t.tx,fontFamily:t.sf,outline:"none"}}/>
+              <Bt primary onClick={()=>saveRating(h.id)} disabled={myStars===0} style={{fontSize:11,padding:"4px 10px"}}>Speichern</Bt>
+              <Bt onClick={()=>{setRatingOpen(null);setMyStars(0);setMyComment("");}} style={{fontSize:11,padding:"4px 10px"}}>Abbrechen</Bt>
             </div>
+            :<button onClick={(e)=>{e.stopPropagation();setRatingOpen(h.id);setMyStars(rats[author]?.stars||0);setMyComment(rats[author]?.comment||"");}} style={{fontSize:11,color:t.ac,background:"none",border:"none",cursor:"pointer",padding:0,fontFamily:t.sf}}>
+              {rats[author]?"✏ Meine Bewertung aendern":"★ Bewerten"}
+            </button>}
           </div>
-          <div style={{fontSize:12,color:t.txM,marginTop:4}}>{h.idea.slice(0,80)}{h.idea.length>80?"...":""}</div>
-        </button>;})}
+        </div>;})}
       </div>
     </>}
   </div>;

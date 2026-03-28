@@ -60,12 +60,14 @@ const MODS_LEARN = [
   {id:"tutor",title:"AI Tutor",n:"08",tt:"08_ai_tutor"},
 ];
 const MODS_PROJ = [
-  {id:"compass",title:"Mein PA-Kompass",n:"🧭",tt:"pa_kompass"},
   {id:"guide",title:"Projektbegleiter",n:"P1",tt:"p1_guide"},
   {id:"ideas",title:"Ideenbewertung",n:"P2",tt:"p2_ideen"},
-  {id:"dashboard",title:"Sebbis Hyperfokus-HQ",n:"🧠",tt:"hyperfokus_hq"},
 ];
-const ALL_MODS = [...MODS_LEARN,...MODS_PROJ];
+// Sebbi-exklusiv: PA-Kompass erscheint nur fuer Sebbi in der Sidebar
+const MODS_SEBBI = [
+  {id:"compass",title:"Sebbis Hyperfokus-HQ",n:"🧠",tt:"hyperfokus_hq"},
+];
+const ALL_MODS_FOR=(author)=>[...MODS_LEARN,...MODS_PROJ,...(author==="Sebbi"?MODS_SEBBI:[])];
 
 // ── SHARED UI ──
 const Bar = ({p}) => {
@@ -674,15 +676,7 @@ const STEPS=[
     checks:["Ziele überprüft","Reflexion geschrieben","Limitationen benannt","Verbesserungen vorgeschlagen"]},
 ];
 
-const MILES=[
-  {id:"topic",l:"Thema gewählt",e:"🎯"},{id:"data",l:"Daten gefunden",e:"📦"},
-  {id:"eda",l:"EDA abgeschlossen",e:"🔍"},{id:"clean",l:"Daten aufbereitet",e:"🧹"},
-  {id:"models",l:"Modelle trainiert",e:"🏋️"},{id:"results",l:"Ergebnisse da",e:"📊"},
-  {id:"doku",l:"Doku fertig",e:"📝"},{id:"pptx",l:"PPTX erstellt",e:"🎤"},
-  {id:"repo",l:"Git Repo ready",e:"🚀"},{id:"submit",l:"Abgabe",e:"🏆"},
-];
-
-// ── MODULE: PA-Kompass (ADHS-gerecht) ──
+// ── MODULE: PA-Kompass / Sebbis Hyperfokus-HQ (ADHS-gerecht, nur fuer Sebbi) ──
 const PA_DEADLINES=[
   {date:"2026-03-31",label:"PPTX an Prof senden",desc:"1-2 Folien: Was wollt ihr machen?"},
   {date:"2026-06-30",label:"Projekt abgeben",desc:"Git Repo mit Code + Doku per E-Mail"},
@@ -862,7 +856,7 @@ const MCompass = () => {
   const filteredGlossar=PA_GLOSSAR.filter(g=>!glossarFilter||g.term.toLowerCase().includes(glossarFilter.toLowerCase())||g.simple.toLowerCase().includes(glossarFilter.toLowerCase()));
 
   return <div>
-    <CL num="🧭"/><H1>Mein PA-Kompass</H1>
+    <CL num="🧠"/><H1>Sebbis Hyperfokus-HQ</H1>
     <P>Dein persoenlicher Guide durch die Projektarbeit. Aktuell: Projekt auswaehlen!</P>
 
     {/* ═══════════════════════════════════════ */}
@@ -1145,45 +1139,6 @@ const MCompass = () => {
   </div>;
 };
 
-// ── MODULE: Dashboard ──
-const MDash = () => {
-  const t=useT();
-  const [miles,setMiles]=useState(()=>{const o={};MILES.forEach(m=>{o[m.id]=false;});return o;});
-  const [justDone,setJustDone]=useState(null);
-  const toggle=(id)=>{const nv=!miles[id];setMiles(p=>({...p,[id]:nv}));if(nv){setJustDone(id);setTimeout(()=>setJustDone(null),2500);}};
-  const cnt=Object.values(miles).filter(Boolean).length;
-  const pct=Math.round(cnt/MILES.length*100);
-  const deadlines=[{d:"31. März 2026",task:"PPTX per E-Mail (1-2 Folien)",u:true},{d:"30. Juni 2026",task:"Git-Repository Abgabe"},{d:"7. Juli 2026",task:"10-Min-Präsentation (Vor Ort!)"}];
-  return <div>
-    <CL num="🧠"/><H1>Sebbis Hyperfokus-HQ</H1>
-    <P>Meilensteine, Deadlines, Dopamin-Kicks — alles auf einen Blick. Wenn der Hyperfokus kickt, bist du hier richtig.</P>
-    {justDone&&<div style={{background:`linear-gradient(135deg,${t.ok}15,${t.ac}15)`,border:`1px solid ${t.ok}40`,borderRadius:t.term?8:12,padding:"16px 20px",marginBottom:20,textAlign:"center",animation:"fadeIn .3s ease"}}>
-      <div style={{fontSize:32,marginBottom:4}}>{MILES.find(m=>m.id===justDone)?.e}</div>
-      <div style={{fontFamily:t.hf,fontWeight:700,color:t.tx,fontSize:16}}>Meilenstein erreicht!</div>
-      <div style={{fontSize:13,color:t.txB,marginTop:2}}>{MILES.find(m=>m.id===justDone)?.l}</div>
-    </div>}
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12,marginBottom:24}}>
-      <Cd style={{textAlign:"center"}}><div style={{fontSize:36,fontWeight:700,color:t.ac,fontFamily:t.hf}}>{pct}%</div><div style={{fontSize:12,color:t.txM,marginTop:4}}>Fortschritt</div><div style={{marginTop:8}}><Bar p={pct}/></div></Cd>
-      <Cd style={{textAlign:"center"}}><div style={{fontSize:36,fontWeight:700,color:t.ok,fontFamily:t.hf}}>{cnt}</div><div style={{fontSize:12,color:t.txM,marginTop:4}}>von {MILES.length} Meilensteinen</div></Cd>
-      <Cd style={{textAlign:"center"}}><div style={{fontSize:36,fontWeight:700,color:t.err,fontFamily:t.hf}}>5</div><div style={{fontSize:12,color:t.txM,marginTop:4}}>Tage bis PPTX</div></Cd>
-    </div>
-    <ST>Termine</ST>
-    <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:24}}>
-      {deadlines.map((d,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:14,padding:"12px 16px",background:t.bgC,border:`1px solid ${d.u?t.err+"40":t.bd}`,borderRadius:t.term?6:8}}>
-        <div style={{fontFamily:t.term?t.mf:t.sf,fontSize:12,fontWeight:700,color:d.u?t.err:t.ac,minWidth:110,flexShrink:0}}>{d.d}</div>
-        <div style={{fontSize:13,color:t.txB,flex:1}}>{d.task}</div>
-        {d.u&&<span style={{fontSize:11,padding:"2px 8px",borderRadius:10,background:t.errBg,color:t.err,fontWeight:600,whiteSpace:"nowrap"}}>bald fällig</span>}
-      </div>)}
-    </div>
-    <ST>Meilensteine</ST>
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-      {MILES.map(m=>{const done=miles[m.id];return <button key={m.id} onClick={()=>toggle(m.id)} style={{display:"flex",alignItems:"center",gap:10,padding:"12px 14px",background:done?t.okBg:t.bgC,border:`1px solid ${done?t.ok+"40":t.bd}`,borderRadius:t.term?6:8,cursor:"pointer",textAlign:"left",transition:"all .2s"}}>
-        <span style={{width:24,height:24,borderRadius:t.term?4:6,border:`2px solid ${done?t.ok:t.bd}`,background:done?t.ok:"transparent",display:"flex",alignItems:"center",justifyContent:"center",color:t.w,fontSize:12,flexShrink:0}}>{done?"✓":""}</span>
-        <span style={{fontSize:13,fontWeight:done?600:400,color:done?t.ok:t.tx}}>{m.e} {m.l}</span>
-      </button>;})}
-    </div>
-  </div>;
-};
 
 // ── MODULE: Ideenbewertung ──
 // ── SUPABASE CONFIG ──
@@ -1653,12 +1608,13 @@ export default function MLLernApp(){
       </div>
     </div>
   </div>;
-  const aidx=ALL_MODS.findIndex(m=>m.id===active);
+  const allMods=ALL_MODS_FOR(author);
+  const aidx=allMods.findIndex(m=>m.id===active);
   const render=()=>{switch(active){
     case"welcome":return <M1/>;case"data":return <M2/>;case"supervised":return <M3/>;
     case"gradient":return <M4/>;case"neural":return <M5/>;case"deep":return <M6/>;
     case"quiz":return <M7/>;case"tutor":return <M8/>;
-    case"compass":return <MCompass/>;case"dashboard":return <MDash/>;case"guide":return <MGuide/>;case"ideas":return <MIdea/>;
+    case"compass":return <MCompass/>;case"guide":return <MGuide/>;case"ideas":return <MIdea/>;
     default:return <M1/>;
   }};
 
@@ -1696,6 +1652,11 @@ export default function MLLernApp(){
           <div style={{margin:sbOpen?"10px 18px":"10px 8px",height:1,background:t.bd}}/>
           {sbOpen&&<div style={{padding:"4px 18px 4px",fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".08em",color:t.txF}}>Projektarbeit</div>}
           {MODS_PROJ.map(m=><NavItem key={m.id} mod={m} isProj/>)}
+          {author==="Sebbi"&&<>
+            <div style={{margin:sbOpen?"10px 18px":"10px 8px",height:1,background:t.bd}}/>
+            {sbOpen&&<div style={{padding:"4px 18px 4px",fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".08em",color:t.txF}}>Sebbi</div>}
+            {MODS_SEBBI.map(m=><NavItem key={m.id} mod={m} isProj/>)}
+          </>}
         </nav>
         <SBFooter themeKey={themeKey} setThemeKey={setThemeKey} open={sbOpen}/>
       </div>
@@ -1704,8 +1665,8 @@ export default function MLLernApp(){
         <div style={{maxWidth:680,margin:"0 auto",padding:"32px 32px 48px"}}>
           {render()}
           <div style={{display:"flex",justifyContent:"space-between",marginTop:48,paddingTop:24,borderTop:`1px solid ${t.bd}`}}>
-            {aidx>0?<Bt onClick={()=>handleNav(ALL_MODS[aidx-1].id)}>← Zurück</Bt>:<div/>}
-            {aidx<ALL_MODS.length-1?<Bt primary onClick={()=>handleNav(ALL_MODS[aidx+1].id)}>Weiter →</Bt>:<div/>}
+            {aidx>0?<Bt onClick={()=>handleNav(allMods[aidx-1].id)}>← Zurück</Bt>:<div/>}
+            {aidx<allMods.length-1?<Bt primary onClick={()=>handleNav(allMods[aidx+1].id)}>Weiter →</Bt>:<div/>}
           </div>
         </div>
       </div>

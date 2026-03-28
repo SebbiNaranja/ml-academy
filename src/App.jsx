@@ -688,6 +688,45 @@ const PA_DEADLINES=[
   {date:"2026-06-30",label:"Projekt abgeben",desc:"Git Repo mit Code + Doku per E-Mail"},
   {date:"2026-07-07",label:"Praesentation",desc:"10 Min. pro Person, vor Ort"},
 ];
+// Sebbis Original-Favoriten + alle 5 Vorschlaege
+const PA_MEINE_WAHL=[
+  {name:"Spotify — Wird ein Song ein Hit?",emoji:"🎵",wahl:true,
+    frage:"Kann man anhand von Audio-Features (Tempo, Energie, Tanzbarkeit) vorhersagen, ob ein Song populaer wird?",
+    erklaerung:"Spotify liefert fuer jeden Song Zahlen: Wie schnell ist er (Tempo)? Wie energiegeladen (Energie)? Wie tanzbar (Tanzbarkeit)? Die Idee: Der Computer lernt aus tausenden Songs mit diesen Zahlen, welche Kombination 'Hit' ergibt und welche nicht.",
+    dl_problem:"Das Problem: Spotify-Daten sind TABELLEN (Zahlen in Spalten). Deep Learning ist aber am staerksten bei Bildern, Text oder Audio. Ein neuronales Netz auf Tabellen-Daten bringt kaum Vorteile gegenueber klassischem ML — und der Prof will explizit DL sehen.",
+    dl_loesung:"Es gaebe einen Weg: Statt die Zahlen zu nutzen, koenntet ihr die echten Audio-Dateien als Mel-Spektrogramme (= Bilder vom Klang) umwandeln und darauf ein CNN trainieren. Das waere echtes Deep Learning — aber deutlich aufwaendiger und ein grosser Sprung fuer Anfaenger.",
+    fazit:"Cooles Thema, das jeden anspricht. Aber: Entweder tabellarisch (dann kein echtes DL) oder mit Spektrogrammen (dann sehr anspruchsvoll). Risiko-Thema fuer Anfaenger.",
+    schwierigkeit:"Schwer (wegen DL-Anforderung)"},
+  {name:"ADHS-Prioritaetenchecker",emoji:"🧠",wahl:true,
+    frage:"Kann ML Menschen mit ADHS helfen, Aufgaben zu priorisieren und Zeitaufwand einzuschaetzen?",
+    erklaerung:"Die Idee: Verschiedene Kaggle-Datensaetze zu ADHS (Diagnose-Daten, Produktivitaets-Daten, Leseleistung) zusammenfuehren und daraus ein System bauen, das bei der Aufgabenplanung hilft.",
+    dl_problem:"Mehrere Probleme: Was genau soll der Computer vorhersagen? 'Prioritaet' ist kein klares Ziel. Vier verschiedene Datensaetze muessten zusammengefuehrt werden (extrem aufwaendig). Die Verbindung zwischen den Daten und dem Ergebnis ist schwach. Dazu kommt: 80% der Zeit wuerde fuer Daten-Aufbereitung draufgehen, nicht fuer DL.",
+    dl_loesung:"Man koennte theoretisch ein neuronales Netz auf die zusammengefuehrten Daten trainieren — aber das waere wieder Tabellen-DL (nicht die Staerke von DL) und die Datenqualitaet ist das Hauptproblem.",
+    fazit:"Persoenlich mega motivierend. Aber: Unklares Ziel + schwache Daten + DL-Anforderung = hohes Risiko. Fuer ein erstes ML-Projekt zu riskant. Die Motivation ist Gold wert — vielleicht fuer ein spaeteres Projekt.",
+    schwierigkeit:"Sehr schwer (zu viele Unbekannte)"},
+  {name:"Studentenperformance",emoji:"📚",wahl:false,
+    frage:"Kann man anhand von Lernzeit, Familie, Fehlzeiten vorhersagen, wer die Pruefung besteht?",
+    erklaerung:"Saubere, kleine Datensaetze mit klaren Features. Direkte studentische Perspektive. Aber: Wieder tabellarische Daten — kein ideales DL-Projekt.",
+    dl_problem:"Gleiche Problematik wie Spotify: Tabellen-Daten sind nicht die Staerke von DL. Der Prof will explizit DL sehen.",
+    dl_loesung:"Kein guter Workaround fuer echtes DL.",
+    fazit:"Einfach und verstaendlich, aber passt nicht zur DL-Anforderung.",
+    schwierigkeit:"Einfach (aber kein DL)"},
+  {name:"Immobilienpreise",emoji:"🏠",wahl:false,
+    frage:"Was ist eine Wohnung wert? Preis vorhersagen anhand von Groesse, Lage, Baujahr.",
+    erklaerung:"Regression statt Klassifikation: Der Computer sagt nicht 'Kategorie A oder B', sondern 'Diese Wohnung kostet ca. 280.000 Euro'. Gute Datensaetze verfuegbar (Ames Housing, Berliner Mieten).",
+    dl_problem:"Tabellarische Daten + Regression. DL bringt hier keinen Vorteil gegenueber klassischem ML.",
+    dl_loesung:"Man koennte Bilder der Wohnungen einbeziehen — aber dafuer gibt es kaum fertige Datensaetze.",
+    fazit:"Tolles Thema zum Lernen, aber nicht DL-geeignet.",
+    schwierigkeit:"Mittel (aber kein DL)"},
+  {name:"Fake News / Spam",emoji:"📰",wahl:false,
+    frage:"Ist dieser Text echt oder fake? Spam oder kein Spam?",
+    erklaerung:"Textklassifikation: Der Computer liest Texte und lernt Muster fuer Fake News oder Spam. Gesellschaftlich relevant und aktuell.",
+    dl_problem:"Text-DL ist moeglich (NLP mit Transformern), aber Textverarbeitung (Tokenisierung, Embeddings) ist ein zusaetzlicher Lernschritt fuer Anfaenger.",
+    dl_loesung:"Moeglich mit vortrainierten Sprachmodellen (BERT), aber deutlich komplexer als Bildklassifikation.",
+    fazit:"DL-faehig, aber anspruchsvoller als Bilder. Koennte funktionieren, wenn jemand im Team Text-Erfahrung hat.",
+    schwierigkeit:"Mittel-Schwer"},
+];
+// DL-optimierte Alternativvorschlaege (Bildklassifikation)
 const PA_PROJEKT_TIPPS=[
   {name:"Hautkrebs-Erkennung",dataset:"HAM10000 (Kaggle)",emoji:"🔬",
     frage:"Ist dieses Hautbild gutartig oder boesartig?",
@@ -862,9 +901,51 @@ const MCompass = () => {
         </div>
       </div>
 
-      {/* ─── DIE 3 PROJEKTE ─── */}
-      <div style={{fontSize:16,fontWeight:700,fontFamily:t.hf,color:t.tx,marginBottom:4}}>Drei Projekte zur Auswahl</div>
-      <div style={{fontSize:12,color:t.txM,marginBottom:16}}>Alle drei nutzen Bildklassifikation mit CNNs. Daten gibt es kostenlos auf Kaggle. Klick ein Projekt an fuer alle Details.</div>
+      {/* ─── SEBBIS ORIGINAL-AUSWAHL: ALLE 5 VORSCHLAEGE ─── */}
+      <div style={{fontSize:16,fontWeight:700,fontFamily:t.hf,color:t.tx,marginBottom:4}}>Unsere 5 Ideen — und warum es knifflig wird</div>
+      <div style={{fontSize:12,color:t.txM,marginBottom:16}}>Das waren unsere urspruenglichen 5 Vorschlaege. Du hast Spotify und ADHS gewaehlt (markiert mit ⭐). Hier siehst du fuer jedes Projekt, wie es mit der DL-Anforderung des Profs zusammenpasst.</div>
+
+      {PA_MEINE_WAHL.map((mw,i)=>{const isOpen=expanded==="mw_"+i;
+        return <div key={"mw"+i} style={{marginBottom:10}}>
+          <button onClick={()=>setExpanded(isOpen?null:"mw_"+i)} style={{width:"100%",textAlign:"left",padding:"14px 18px",background:isOpen?mw.wahl?t.ac+"12":t.bgAS:mw.wahl?t.ac+"06":t.bgC,border:`1px solid ${mw.wahl?t.ac+"40":t.bd}`,borderRadius:isOpen?`${t.term?6:10}px ${t.term?6:10}px 0 0`:t.term?6:10,cursor:"pointer",fontFamily:t.sf,transition:"all .15s"}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+              <div style={{display:"flex",alignItems:"center",gap:8}}>
+                <span style={{fontSize:18}}>{mw.emoji}</span>
+                {mw.wahl&&<span style={{fontSize:11,fontWeight:700,padding:"1px 6px",borderRadius:4,background:t.ac+"20",color:t.ac}}>⭐ DEINE WAHL</span>}
+                <span style={{fontSize:14,fontWeight:mw.wahl?700:600,color:t.tx}}>{mw.name}</span>
+              </div>
+              <span style={{fontSize:10,fontWeight:600,padding:"2px 6px",borderRadius:4,background:mw.schwierigkeit.includes("Schwer")||mw.schwierigkeit.includes("schwer")?t.errBg:mw.schwierigkeit.includes("Einfach")?t.okBg:t.ac+"15",color:mw.schwierigkeit.includes("Schwer")||mw.schwierigkeit.includes("schwer")?t.err:mw.schwierigkeit.includes("Einfach")?t.ok:t.ac}}>{mw.schwierigkeit}</span>
+            </div>
+          </button>
+          {isOpen&&<div style={{padding:"16px 20px",border:`1px solid ${mw.wahl?t.ac+"40":t.bd}`,borderTop:"none",borderRadius:`0 0 ${t.term?6:10}px ${t.term?6:10}px`,background:t.bgAS}}>
+            <div style={{fontSize:13,color:t.ac,fontWeight:600,marginBottom:10}}>"{mw.frage}"</div>
+            <div style={{fontSize:13,color:t.txB,lineHeight:1.7,marginBottom:12}}>{mw.erklaerung}</div>
+            <div style={{background:t.err+"08",border:`1px solid ${t.err}20`,borderRadius:t.term?4:8,padding:"10px 14px",marginBottom:10}}>
+              <div style={{fontSize:11,fontWeight:700,color:t.err,marginBottom:4}}>⚠️ DL-PROBLEM</div>
+              <div style={{fontSize:12,color:t.txB,lineHeight:1.7}}>{mw.dl_problem}</div>
+            </div>
+            <div style={{background:t.ac+"08",border:`1px solid ${t.ac}20`,borderRadius:t.term?4:8,padding:"10px 14px",marginBottom:10}}>
+              <div style={{fontSize:11,fontWeight:700,color:t.ac,marginBottom:4}}>💡 MOEGLICHE DL-LOESUNG</div>
+              <div style={{fontSize:12,color:t.txB,lineHeight:1.7}}>{mw.dl_loesung}</div>
+            </div>
+            <div style={{background:t.bgC,border:`1px solid ${t.bd}`,borderRadius:t.term?4:8,padding:"10px 14px"}}>
+              <div style={{fontSize:11,fontWeight:700,color:t.txM,marginBottom:4}}>FAZIT</div>
+              <div style={{fontSize:12,color:t.txB,lineHeight:1.7,fontWeight:500}}>{mw.fazit}</div>
+            </div>
+          </div>}
+        </div>;})}
+
+      {/* ─── WARUM BILDER? ─── */}
+      <div style={{background:t.ac+"10",border:`1px solid ${t.ac}25`,borderRadius:t.term?6:10,padding:"14px 18px",marginTop:16,marginBottom:16}}>
+        <div style={{fontSize:12,fontWeight:700,color:t.ac,marginBottom:4}}>Und jetzt? Warum Bildklassifikation als Alternative?</div>
+        <div style={{fontSize:12,color:t.txB,lineHeight:1.7}}>
+          Das Problem bei Spotify, ADHS, Studenten und Immobilien: Die Daten sind TABELLEN (Zahlen in Spalten). Deep Learning ist aber am staerksten bei Bildern und Text. Der Prof will DL sehen — also braucht ihr ein Projekt, bei dem DL Sinn macht. Bildklassifikation ist der perfekte Einstieg: Bild rein, Kategorie raus, fertige Datensaetze, Transfer Learning macht es machbar.
+        </div>
+      </div>
+
+      {/* ─── DIE 3 BILD-PROJEKTE ALS DL-ALTERNATIVEN ─── */}
+      <div style={{fontSize:16,fontWeight:700,fontFamily:t.hf,color:t.tx,marginBottom:4}}>3 DL-taugliche Alternativen (Bildklassifikation)</div>
+      <div style={{fontSize:12,color:t.txM,marginBottom:16}}>Diese drei Projekte passen perfekt zur DL-Anforderung. Alle nutzen CNNs auf Bilddaten. Klick fuer Details.</div>
 
       {PA_PROJEKT_TIPPS.map((pr,i)=>{const isOpen=openProject===i;
         return <div key={i} style={{marginBottom:12}}>

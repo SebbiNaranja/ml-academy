@@ -197,7 +197,7 @@ const M1 = () => {
       <p style={{fontFamily:t.hf,fontSize:18,fontStyle:"italic",color:t.tx,lineHeight:1.5,margin:0}}>Machine Learning: Ein Computer lernt aus Erfahrung (Daten), statt explizit programmiert zu werden.</p>
       <p style={{fontFamily:t.sf,fontSize:12,color:t.txM,marginTop:10}}>Basierend auf Arthur Samuel, 1959</p>
     </div>
-    <Info title="Warum das fuer eure PA wichtig ist" type="warning">Prof. Turan erwartet klassisches ML (Scikit-learn), kein Deep Learning. Ihr muesst erklaeren koennen, warum euer Ansatz ML ist und nicht einfach Regelwerk.</Info>
+    <Info title="Warum das fuer eure PA wichtig ist" type="warning">Prof. Turan erwartet Deep Learning (PyTorch oder TensorFlow/Keras), nicht klassisches ML. Ihr muesst erklaeren koennen, warum euer Ansatz ML ist und nicht einfach Regelwerk — und warum ihr DL statt klassischer Algorithmen nutzt.</Info>
     <Verstanden moduleId="welcome"/>
   </div>;
 };
@@ -348,7 +348,7 @@ const M3 = () => {
       <Cd><div style={{fontSize:12,fontWeight:700,color:t.err,marginBottom:6}}>OVERFITTING</div><P>Das Modell lernt die Trainingsdaten auswendig -- inklusive Rauschen und Zufall. Es funktioniert perfekt auf Trainingsdaten, versagt aber bei neuen Daten.</P><div style={{fontSize:11,color:t.txM}}>Abhilfe: Mehr Daten, einfacheres Modell, Regularisierung, Cross-Validation</div></Cd>
       <Cd><div style={{fontSize:12,fontWeight:700,color:t.ac,marginBottom:6}}>UNDERFITTING</div><P>Das Modell ist zu einfach fuer die Daten. Es erkennt nicht mal die offensichtlichen Muster. Schlecht auf Trainings- UND Testdaten.</P><div style={{fontSize:11,color:t.txM}}>Abhilfe: Komplexeres Modell, mehr Features, Feature Engineering</div></Cd>
     </div>
-    <Info title="Train/Test-Split" type="warning">NIEMALS mit den Testdaten trainieren! Standardmaessig: 80% Training, 20% Test. In Scikit-learn: train_test_split(X, y, test_size=0.2, random_state=42). Der random_state sorgt fuer Reproduzierbarkeit.</Info>
+    <Info title="Train/Test-Split" type="warning">NIEMALS mit den Testdaten trainieren! Standardmaessig: 70% Training, 15% Validation, 15% Test. In PyTorch/Keras nutzt ihr torch.utils.data.random_split() oder ImageDataGenerator. In Scikit-learn gibt es train_test_split() — gut zum Lernen, aber fuer eure PA nutzt ihr PyTorch oder TensorFlow.</Info>
     <Verstanden moduleId="supervised"/>
   </div>;
 };
@@ -416,7 +416,7 @@ const M4 = () => {
     </div>
 
     <Info title="Varianten in der Praxis" type="info">Batch GD: Nutzt alle Daten pro Schritt (stabil, langsam). Stochastic GD (SGD): Nutzt einen Datenpunkt (schnell, rauschig). Mini-Batch GD: Nutzt kleine Gruppen (32-256 Datenpunkte) -- der Standard in der Praxis.</Info>
-    <Info title="Fuer eure PA" type="warning">Bei Scikit-learn muesst ihr Gradient Descent nicht selbst implementieren -- die Algorithmen machen das intern. Aber ihr muesst erklaeren koennen, was passiert, wenn jemand fragt.</Info>
+    <Info title="Fuer eure PA" type="warning">In PyTorch/Keras muesst ihr Gradient Descent nicht selbst programmieren — der Optimizer (z.B. Adam) macht das fuer euch. Aber ihr muesst erklaeren koennen, was dabei passiert: Learning Rate, Loss minimieren, Gewichte anpassen.</Info>
     <Verstanden moduleId="gradient"/>
   </div>;
 };
@@ -471,7 +471,7 @@ const M5 = () => {
     </div>
 
     <Info title="Backpropagation" type="math">So lernt das Netz: Der Fehler am Output wird zurueckpropagiert (Kettenregel der Ableitung), und jedes Gewicht wird per Gradient Descent angepasst. Vorwaerts: Vorhersage. Rueckwaerts: Lernen.</Info>
-    <Info title="Fuer eure PA" type="warning">Prof. Turan bevorzugt klassisches ML. Neuronale Netze hier nur zum Verstaendnis -- in der PA nutzt ihr Scikit-learn-Algorithmen wie Random Forest oder SVM, die intern anders funktionieren.</Info>
+    <Info title="Fuer eure PA" type="warning">Prof. Turan will explizit Deep Learning sehen — also neuronale Netze! Genau das, was ihr hier gelernt habt. In der PA nutzt ihr CNNs (Convolutional Neural Networks) mit PyTorch oder TensorFlow/Keras. Dieses Kapitel ist also direkt relevant.</Info>
     <Verstanden moduleId="neural"/>
   </div>;
 };
@@ -522,7 +522,7 @@ const M6 = () => {
     </Cd>
 
     <Info title="Selbstorganisation" type="tip">Niemand sagt dem Netz, wonach es suchen soll. Die Hierarchie (Kanten → Formen → Objekte) entsteht automatisch durch das Training. Das ist der zentrale Unterschied zu handgemachtem Feature Engineering.</Info>
-    <Info title="Deep Learning vs. Klassisches ML" type="warning">Deep Learning braucht viele Daten und Rechenpower (GPUs). Bei kleinen Datensaetzen (unter 10.000 Beispiele) sind klassische Algorithmen wie Random Forest oft besser. Genau deshalb bevorzugt Prof. Turan klassisches ML fuer eure PA -- ihr arbeitet mit ueberschaubaren Datensaetzen.</Info>
+    <Info title="Deep Learning fuer eure PA" type="warning">Prof. Turan will explizit Deep Learning sehen — nicht klassisches ML. DL braucht viele Daten und Rechenpower, stimmt. Aber: Bild-Datensaetze auf Kaggle haben 10.000+ Bilder, und mit Transfer Learning (vortrainierte Netze) braucht ihr keine eigene GPU. Genau deshalb empfehlen wir Bildklassifikation als Projekt.</Info>
     <Verstanden moduleId="deep"/>
   </div>;
 };
@@ -644,29 +644,29 @@ const STEPS=[
     terms:[{t:"Histogramm",d:"Zeigt, wie oft Werte in bestimmten Bereichen vorkommen."},{t:"Korrelation",d:"Zusammenhang zwischen Werten. Nahe 1 = stark, nahe 0 = kein Zusammenhang."},{t:"Class Imbalance",d:"Wenn eine Kategorie viel häufiger ist (95% gesund, 5% krank)."}],
     code:"import seaborn as sns\ndf[\"target\"].hist(bins=30)\nsns.heatmap(df.corr(), annot=True, cmap=\"coolwarm\")",
     checks:["Verteilung visualisiert","Korrelationsmatrix erstellt","Auffälligkeiten dokumentiert","Class Imbalance geprüft"]},
-  {id:"preproc",n:4,t:"Datenvorverarbeitung",s:"Daten aufräumen",
-    ex:"Echte Daten sind immer etwas 'dreckig' — fehlende Werte, Ausreißer, verschiedene Skalen. Hier räumst du auf.",
-    prof:"Fehlende Werte, Ausreißer, Normalisierung, Feature Engineering, Encoding.",
-    terms:[{t:"NaN",d:"Fehlender Wert. Muss behandelt werden (löschen oder füllen)."},{t:"Normalisierung",d:"Features auf gleiche Skala bringen (z.B. 0-1)."},{t:"One-Hot Encoding",d:"Kategorien in Zahlen: aus rot/blau/grün werden 3 Spalten mit 0/1."}],
-    code:"from sklearn.preprocessing import StandardScaler\ndf.isnull().sum()  # Fehlende Werte\ndf.fillna(df.median(), inplace=True)\nscaler = StandardScaler()\ndf_scaled = scaler.fit_transform(df)",
+  {id:"preproc",n:4,t:"Datenvorverarbeitung",s:"Bilder vorbereiten",
+    ex:"Bilder auf gleiche Groesse bringen, normalisieren, optional augmentieren (spiegeln, drehen, zoomen). Das macht euer Modell robuster.",
+    prof:"Resize, Normalisierung, Data Augmentation, Train/Val/Test-Split.",
+    terms:[{t:"Resize",d:"Alle Bilder auf gleiche Groesse bringen (z.B. 224x224 Pixel)."},{t:"Normalisierung",d:"Pixelwerte auf 0-1 skalieren (statt 0-255)."},{t:"Data Augmentation",d:"Trainingsbilder kuenstlich vermehren: spiegeln, drehen, zoomen. Schuetzt vor Overfitting."}],
+    code:"from torchvision import transforms\ntransform = transforms.Compose([\n  transforms.Resize((224, 224)),\n  transforms.RandomHorizontalFlip(),\n  transforms.RandomRotation(15),\n  transforms.ToTensor(),\n  transforms.Normalize([0.485,0.456,0.406],[0.229,0.224,0.225])\n])",
     checks:["Fehlende Werte behandelt","Ausreißer geprüft","Normalisierung durchgeführt","Kategorien codiert"]},
-  {id:"models",n:5,t:"Modellauswahl",s:"Welche Algorithmen testest du?",
-    ex:"Wähle 3-4 Algorithmen und begründe warum. Nimm bewährte Algorithmen aus Scikit-learn und vergleiche sauber.",
-    prof:"Begründung der Wahl, Beschreibung, Hyperparameter.",
-    terms:[{t:"Random Forest",d:"Viele Entscheidungsbäume stimmen gemeinsam ab. Robust."},{t:"Gradient Boosting",d:"Bäume korrigieren nacheinander Fehler. Oft Kaggle-Gewinner."},{t:"Hyperparameter",d:"Einstellungen, die DU festlegst (nicht das Modell lernt)."},{t:"Baseline",d:"Einfachstes Modell — der Maßstab für komplexere."}],
-    code:"from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier\nfrom sklearn.linear_model import LogisticRegression\nmodels = {\n  \"Logistic Regression\": LogisticRegression(),\n  \"Random Forest\": RandomForestClassifier(n_estimators=100),\n  \"Gradient Boosting\": GradientBoostingClassifier(),\n}",
-    checks:["3-4 Modelle ausgewählt","Auswahl begründet","Hyperparameter beschrieben","Baseline definiert"]},
+  {id:"models",n:5,t:"Modellauswahl",s:"Welche DL-Architektur nutzt du?",
+    ex:"Wähle 2-3 CNN-Architekturen und begründe warum. Z.B. ein eigenes CNN vs. Transfer Learning mit ResNet/VGG.",
+    prof:"Begründung der Wahl, Beschreibung der Architektur, Hyperparameter.",
+    terms:[{t:"CNN",d:"Convolutional Neural Network — spezialisiert auf Bilder. Erkennt Muster wie Kanten und Formen."},{t:"Transfer Learning",d:"Vortrainiertes Netz (z.B. ResNet50) auf eigene Aufgabe feintunen. Spart Zeit."},{t:"Hyperparameter",d:"Einstellungen, die DU festlegst: Learning Rate, Batch Size, Epochs, Dropout."},{t:"Baseline",d:"Einfachstes Modell — der Maßstab für komplexere."}],
+    code:"import torch\nimport torchvision.models as models\n# Transfer Learning: ResNet50 vortrainiert\nmodel = models.resnet50(pretrained=True)\n# Letzte Schicht anpassen (z.B. 7 Klassen)\nmodel.fc = torch.nn.Linear(model.fc.in_features, 7)",
+    checks:["2-3 Architekturen ausgewählt","Auswahl begründet","Hyperparameter beschrieben","Baseline definiert"]},
   {id:"training",n:6,t:"Training",s:"Modelle trainieren",
     ex:"Daten aufteilen, Modelle trainieren, Trainingsfortschritt beobachten. NIEMALS mit Testdaten trainieren!",
-    prof:"Train/Test-Split, Konfiguration, Overfitting-Prävention, Trainingskurven.",
-    terms:[{t:"Train/Test-Split",d:"70-80% zum Lernen, 20-30% zum Testen."},{t:"Overfitting",d:"Modell lernt auswendig statt Muster. Wie Antworten memorieren statt verstehen."},{t:"Cross-Validation",d:"Daten mehrfach unterschiedlich aufteilen. Robustere Bewertung."}],
-    code:"from sklearn.model_selection import train_test_split, cross_val_score\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)\nmodel.fit(X_train, y_train)\nscores = cross_val_score(model, X_train, y_train, cv=5)",
+    prof:"Train/Val/Test-Split, Batch Size, Learning Rate, Epochs, Loss-Funktion, Optimizer, Dropout, Early Stopping, Lernkurven.",
+    terms:[{t:"Train/Val/Test-Split",d:"70% Lernen, 15% Validierung, 15% Test. Val zum Tunen, Test nur am Ende."},{t:"Overfitting",d:"Modell lernt auswendig statt Muster. Training-Loss sinkt, Val-Loss steigt."},{t:"Early Stopping",d:"Training stoppen wenn Val-Loss nicht mehr besser wird."}],
+    code:"import torch\nfrom torch.utils.data import DataLoader, random_split\n# Daten aufteilen\ntrain_set, val_set, test_set = random_split(dataset, [0.7, 0.15, 0.15])\ntrain_loader = DataLoader(train_set, batch_size=32, shuffle=True)\n# Training Loop\nfor epoch in range(50):\n  model.train()\n  for images, labels in train_loader:\n    optimizer.zero_grad()\n    loss = criterion(model(images), labels)\n    loss.backward()\n    optimizer.step()",
     checks:["Daten aufgeteilt","Modelle trainiert","Cross-Validation durchgeführt","Overfitting geprüft"]},
   {id:"eval",n:7,t:"Evaluation",s:"Wie gut sind deine Modelle?",
     ex:"Vergleichstabelle aller Modelle. Detaillierte Analyse des besten. Fehleranalyse: WO macht es Fehler?",
     prof:"Metriken definieren, Vergleichstabelle, Confusion Matrix, Fehleranalyse.",
     terms:[{t:"Accuracy",d:"Anteil korrekter Vorhersagen. Vorsicht bei Imbalance!"},{t:"F1-Score",d:"Kompromiss aus Precision und Recall. Gute Einzelzahl."},{t:"Confusion Matrix",d:"Zeigt True/False Positives/Negatives. Das vollständige Bild."}],
-    code:"from sklearn.metrics import classification_report, confusion_matrix\ny_pred = model.predict(X_test)\nprint(classification_report(y_test, y_pred))\nsns.heatmap(confusion_matrix(y_test, y_pred), annot=True)",
+    code:"from sklearn.metrics import classification_report, confusion_matrix\n# sklearn.metrics ist OK fuer Auswertung (nicht fuers Modell!)\ny_pred = model(test_images).argmax(dim=1)\nprint(classification_report(y_test, y_pred.numpy()))\nsns.heatmap(confusion_matrix(y_test, y_pred.numpy()), annot=True)",
     checks:["Metriken definiert","Modelle verglichen","Confusion Matrix erstellt","Fehleranalyse durchgeführt"]},
   {id:"discuss",n:8,t:"Diskussion & Fazit",s:"Reflektieren und einordnen",
     ex:"Der wichtigste Teil! Was hat funktioniert? Was nicht? Warum? Ehrliche Reflexion schlägt perfekte Ergebnisse.",
@@ -674,6 +674,14 @@ const STEPS=[
     terms:[{t:"Limitation",d:"Einschränkungen deines Ansatzes (zu wenig Daten, Bias, ...)."},{t:"Generalisierung",d:"Kann dein Modell auch mit neuen Daten umgehen?"}],
     code:"# Kein Code — reiner Text:\n# 1. Ziele erreicht?\n# 2. Bestes Modell und warum?\n# 3. Was hat NICHT funktioniert?\n# 4. Limitationen?\n# 5. Nächste Schritte?",
     checks:["Ziele überprüft","Reflexion geschrieben","Limitationen benannt","Verbesserungen vorgeschlagen"]},
+];
+
+const MILES=[
+  {id:"topic",l:"Thema gewaehlt",e:"🎯"},{id:"data",l:"Daten gefunden",e:"📦"},
+  {id:"eda",l:"EDA abgeschlossen",e:"🔍"},{id:"clean",l:"Daten aufbereitet",e:"🧹"},
+  {id:"models",l:"Modelle trainiert",e:"🏋️"},{id:"results",l:"Ergebnisse da",e:"📊"},
+  {id:"doku",l:"Doku fertig",e:"📝"},{id:"pptx",l:"PPTX erstellt",e:"🎤"},
+  {id:"repo",l:"Git Repo ready",e:"🚀"},{id:"submit",l:"Abgabe",e:"🏆"},
 ];
 
 // ── MODULE: PA-Kompass / Sebbis Hyperfokus-HQ (ADHS-gerecht, nur fuer Sebbi) ──
@@ -845,6 +853,12 @@ const MCompass = () => {
   const [expanded,setExpanded]=useState(null);
   const [openProject,setOpenProject]=useState(null);
   const [glossarFilter,setGlossarFilter]=useState("");
+  const [miles,setMiles]=useState(()=>{try{const s=localStorage.getItem("ml_miles_"+author);return s?JSON.parse(s):{};} catch(e){return {};}});
+  const [justDone,setJustDone]=useState(null);
+  useEffect(()=>{try{localStorage.setItem("ml_miles_"+author,JSON.stringify(miles));}catch(e){}},[miles,author]);
+  const toggleMile=(id)=>{const nv=!miles[id];setMiles(p=>({...p,[id]:nv}));if(nv){setJustDone(id);setTimeout(()=>setJustDone(null),2500);}};
+  const mileCnt=Object.values(miles).filter(Boolean).length;
+  const milePct=Math.round(mileCnt/MILES.length*100);
   useEffect(()=>{try{localStorage.setItem("ml_compass_"+author,JSON.stringify(checks));}catch(e){}},[checks,author]);
 
   const toggleCheck=(phaseId,idx)=>setChecks(p=>{const key=phaseId+"_"+idx;return {...p,[key]:!p[key]};});
@@ -1128,6 +1142,30 @@ const MCompass = () => {
       </div>}
     </Section>
 
+    {/* ═══════ MEILENSTEINE ═══════ */}
+    <Section title={`Meilensteine (${mileCnt}/${MILES.length})`} emoji="🏆">
+      {justDone&&<div style={{background:`linear-gradient(135deg,${t.ok}15,${t.ac}15)`,border:`1px solid ${t.ok}40`,borderRadius:t.term?8:12,padding:"14px 18px",marginBottom:14,textAlign:"center",animation:"fadeIn .3s ease"}}>
+        <div style={{fontSize:28,marginBottom:2}}>{MILES.find(m=>m.id===justDone)?.e}</div>
+        <div style={{fontFamily:t.hf,fontWeight:700,color:t.tx,fontSize:15}}>Meilenstein erreicht!</div>
+        <div style={{fontSize:12,color:t.txB,marginTop:2}}>{MILES.find(m=>m.id===justDone)?.l}</div>
+      </div>}
+      <div style={{marginBottom:12}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+          <span style={{fontSize:12,fontWeight:600,color:t.txM}}>Fortschritt</span>
+          <span style={{fontSize:13,fontWeight:700,color:t.ac}}>{milePct}%</span>
+        </div>
+        <div style={{height:8,borderRadius:4,background:t.bd+"40",overflow:"hidden"}}>
+          <div style={{height:"100%",width:milePct+"%",background:`linear-gradient(90deg, ${t.ac}, ${t.ok})`,borderRadius:4,transition:"width .5s"}}/>
+        </div>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+        {MILES.map(m=>{const done=miles[m.id];return <button key={m.id} onClick={()=>toggleMile(m.id)} style={{display:"flex",alignItems:"center",gap:8,padding:"10px 12px",background:done?t.okBg:t.bgC,border:`1px solid ${done?t.ok+"40":t.bd}`,borderRadius:t.term?6:8,cursor:"pointer",textAlign:"left",transition:"all .2s"}}>
+          <span style={{width:20,height:20,borderRadius:t.term?4:5,border:`2px solid ${done?t.ok:t.bd}`,background:done?t.ok:"transparent",display:"flex",alignItems:"center",justifyContent:"center",color:t.w,fontSize:11,flexShrink:0}}>{done?"✓":""}</span>
+          <span style={{fontSize:12,fontWeight:done?600:400,color:done?t.ok:t.tx}}>{m.e} {m.l}</span>
+        </button>;})}
+      </div>
+    </Section>
+
     {/* ═══════ AUFKLAPPBAR: DOKU-ANFORDERUNGEN ═══════ */}
     <Section title="Was muss in die Abgabe?" emoji="📝">
       <div style={{fontSize:12,color:t.txM,lineHeight:1.7,marginBottom:8}}>Der Prof erwartet 9 Dokumentations-Abschnitte. Jede Phase oben entspricht einem Abschnitt:</div>
@@ -1245,7 +1283,7 @@ const MIdea = () => {
   };
 
   const sysPrompt=`Du bist ein ML-Projektberater fuer eine Uni-Projektarbeit (Angewandtes Machine Learning, SS2026, Prof. Bugra Turan).
-Das Team besteht aus 3 Personen, jeder praesentiert 10 Minuten. Anforderungen: Scikit-learn, Git-Repository, Jupyter Notebook mit 9 Sektionen (Problembeschreibung, Datenquelle, EDA, Vorverarbeitung, Modellauswahl, Training, Evaluation, Diskussion, Quellen).
+Das Team besteht aus 3 Personen (Sebbi, Lukas, Achim), jeder praesentiert 10 Minuten. Anforderungen: Deep Learning mit PyTorch oder TensorFlow/Keras (KEIN klassisches ML/Scikit-learn), Git-Repository, Jupyter Notebook mit 9 Sektionen (Problembeschreibung, Datenquelle, EDA, Vorverarbeitung, Data Augmentation optional, Modellauswahl, Training mit Batch Size/LR/Epochs/Loss/Optimizer/Dropout/Early Stopping/Lernkurven, Evaluation, Diskussion).
 
 ${dataFiles.length>0?"Der Nutzer hat echte Datasets hochgeladen. Analysiere die Spalten, Datentypen und Beispielwerte GENAU. Empfehle konkret, welche Spalte als Zielvariable geeignet ist, welche Features relevant sind, und welche Vorverarbeitungsschritte noetig sind. Wenn mehrere Datasets hochgeladen wurden, bewerte jedes einzeln und empfehle das beste (oder eine sinnvolle Kombination).":""}
 
@@ -1294,10 +1332,20 @@ Antworte IMMER exakt in diesem JSON-Format (kein Markdown, kein Text drumherum):
       }
     }catch(err){setResult({error:err.message});}finally{setLd(false);}
   };
-  const deleteIdea=async(id)=>{
-    await sbFetch(`ideas?id=eq.${id}`,{method:"DELETE",prefer:"return=minimal"}).catch(()=>{});
-    setHistory(p=>p.filter(h=>h.id!==id));
-    if(result&&history.find(h=>h.id===id&&h.result.titel===result.titel))setResult(null);
+  const archiveIdea=async(id)=>{
+    const item=history.find(h=>h.id===id);
+    if(!item)return;
+    const patched={...item.result,_archived:true};
+    await sbFetch(`ideas?id=eq.${id}`,{method:"PATCH",body:JSON.stringify({result:patched}),prefer:"return=minimal"}).catch(()=>{});
+    setHistory(p=>p.map(h=>h.id===id?{...h,result:patched}:h));
+    if(result&&item.result.titel===result.titel)setResult(null);
+  };
+  const restoreIdea=async(id)=>{
+    const item=history.find(h=>h.id===id);
+    if(!item)return;
+    const {_archived,...cleaned}=item.result;
+    await sbFetch(`ideas?id=eq.${id}`,{method:"PATCH",body:JSON.stringify({result:cleaned}),prefer:"return=minimal"}).catch(()=>{});
+    setHistory(p=>p.map(h=>h.id===id?{...h,result:cleaned}:h));
   };
   const scoreColor=(s)=>s>=8?t.ok:s>=5?t.ac:t.err;
   const authorColor=(name)=>AUTHOR_COLORS[name]||t.ac;
@@ -1416,11 +1464,11 @@ Antworte IMMER exakt in diesem JSON-Format (kein Markdown, kein Text drumherum):
       </div>
     </Cd>}
     {result&&result.error&&<Info title="Fehler" type="warning">{result.error}</Info>}
-    {history.length>0&&<><ST>Alle Team-Bewertungen ({history.length})</ST>
+    {history.length>0&&<>{(()=>{const active=history.filter(h=>!h.result?._archived);const archived=history.filter(h=>h.result?._archived);return <><ST>Alle Team-Bewertungen ({active.length})</ST>
       <div style={{display:"flex",flexDirection:"column",gap:10}}>
-        {history.map((h,i)=>{const isActive=result&&!result.error&&result.titel===h.result?.titel;const rats=h.ratings||{};const ratNames=Object.keys(rats);const avgStars=ratNames.length>0?Math.round(ratNames.reduce((s,n)=>s+(rats[n].stars||0),0)/ratNames.length*10)/10:null;
+        {active.map((h,i)=>{const isActive=result&&!result.error&&result.titel===h.result?.titel;const rats=h.ratings||{};const ratNames=Object.keys(rats);const avgStars=ratNames.length>0?Math.round(ratNames.reduce((s,n)=>s+(rats[n].stars||0),0)/ratNames.length*10)/10:null;
         return <div key={h.id||i} style={{background:isActive?t.bgAS:t.bgC,border:`1px solid ${isActive?t.ac+"60":t.bd}`,borderRadius:t.term?6:10,overflow:"hidden",transition:"all .15s"}}>
-          <button onClick={()=>{setResult(h.result);setIdea(h.idea);}} style={{width:"100%",textAlign:"left",padding:"12px 14px",background:"transparent",border:"none",cursor:"pointer"}}>
+          <button onClick={()=>{setResult(h.result);setIdea(h.idea);window.scrollTo({top:0,behavior:"smooth"});}} style={{width:"100%",textAlign:"left",padding:"12px 14px",background:"transparent",border:"none",cursor:"pointer"}}>
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
               <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
                 <AuthorBadge name={h.author}/>
@@ -1459,12 +1507,33 @@ Antworte IMMER exakt in diesem JSON-Format (kein Markdown, kein Text drumherum):
                 {rats[author]?"✏ Meine Bewertung aendern":"★ Bewerten"}
               </button>
               <button onClick={(e)=>{e.stopPropagation();setIdea(h.idea);setEditingId(h.id);setResult(null);setDataFiles([]);window.scrollTo({top:0,behavior:"smooth"});}} style={{fontSize:11,color:t.inf,background:"none",border:"none",cursor:"pointer",padding:0,fontFamily:t.sf}}>🔄 Neu bewerten</button>
-              <button onClick={(e)=>{e.stopPropagation();if(confirm("Idee wirklich loeschen?"))deleteIdea(h.id);}} style={{fontSize:11,color:t.err,background:"none",border:"none",cursor:"pointer",padding:0,fontFamily:t.sf}}>🗑 Loeschen</button>
+              <button onClick={(e)=>{e.stopPropagation();if(confirm("Idee archivieren?"))archiveIdea(h.id);}} style={{fontSize:11,color:t.err,background:"none",border:"none",cursor:"pointer",padding:0,fontFamily:t.sf}}>📦 Archivieren</button>
             </div>}
           </div>
         </div>;})}
       </div>
-    </>}
+      {archived.length>0&&<details style={{marginTop:16}}>
+        <summary style={{cursor:"pointer",fontSize:13,fontWeight:600,color:t.txM,padding:"8px 0",userSelect:"none"}}>📦 Archiv ({archived.length})</summary>
+        <div style={{display:"flex",flexDirection:"column",gap:8,marginTop:8}}>
+          {archived.map((h,i)=><div key={h.id||i} style={{background:t.bgC,border:`1px solid ${t.bd}`,borderRadius:t.term?6:10,padding:"10px 14px",opacity:.7}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+              <div style={{display:"flex",alignItems:"center",gap:8}}>
+                <AuthorBadge name={h.author}/>
+                <span style={{fontSize:13,fontWeight:600,color:t.txM,textDecoration:"line-through"}}>{h.result?.titel||"?"}</span>
+              </div>
+              <div style={{display:"flex",alignItems:"center",gap:8}}>
+                <Tag color={scoreColor(h.result?.score)}>{h.result?.score}/10</Tag>
+                <span style={{fontSize:11,color:t.txF}}>{h.ts}</span>
+              </div>
+            </div>
+            <div style={{fontSize:12,color:t.txF,marginTop:4}}>{h.idea.slice(0,80)}{h.idea.length>80?"...":""}</div>
+            <div style={{marginTop:6}}>
+              <button onClick={()=>restoreIdea(h.id)} style={{fontSize:11,color:t.ok,background:"none",border:"none",cursor:"pointer",padding:0,fontFamily:t.sf}}>♻ Wiederherstellen</button>
+            </div>
+          </div>)}
+        </div>
+      </details>}
+    </>;})()}</>}
   </div>;
 };
 

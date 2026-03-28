@@ -60,6 +60,7 @@ const MODS_LEARN = [
   {id:"tutor",title:"AI Tutor",n:"08",tt:"08_ai_tutor"},
 ];
 const MODS_PROJ = [
+  {id:"compass",title:"Mein PA-Kompass",n:"🧭",tt:"pa_kompass"},
   {id:"dashboard",title:"Dashboard",n:"P1",tt:"p1_dashboard"},
   {id:"guide",title:"Projektbegleiter",n:"P2",tt:"p2_guide"},
   {id:"ideas",title:"Ideenbewertung",n:"P3",tt:"p3_ideen"},
@@ -681,6 +682,389 @@ const MILES=[
   {id:"repo",l:"Git Repo ready",e:"🚀"},{id:"submit",l:"Abgabe",e:"🏆"},
 ];
 
+// ── MODULE: PA-Kompass (ADHS-gerecht) ──
+const PA_DEADLINES=[
+  {date:"2026-03-31",label:"PPTX an Prof senden",desc:"1-2 Folien: Was wollt ihr machen?"},
+  {date:"2026-06-30",label:"Projekt abgeben",desc:"Git Repo mit Code + Doku per E-Mail"},
+  {date:"2026-07-07",label:"Praesentation",desc:"10 Min. pro Person, vor Ort"},
+];
+const PA_PROJEKT_TIPPS=[
+  {name:"Hautkrebs-Erkennung",dataset:"HAM10000 (Kaggle)",emoji:"🔬",
+    frage:"Ist dieses Hautbild gutartig oder boesartig?",
+    erklaerung:"Stell dir vor, du zeigst dem Computer 10.000 Fotos von Hautflecken. Unter jedem Foto steht, ob es harmlos oder gefaehrlich ist. Der Computer schaut sich alle Fotos an und lernt dabei Muster: Welche Formen, Farben, Raender deuten auf Krebs hin? Nach dem Training kann er bei einem NEUEN Foto sagen: 'Das sieht gefaehrlich aus' oder 'Das ist wahrscheinlich harmlos.'",
+    was_ihr_tut:"Ihr nehmt ein fertiges, schlaues Netz (z.B. ResNet50 — hat schon Millionen Bilder gesehen) und bringt ihm bei, speziell Hautbilder zu unterscheiden. Das nennt man Transfer Learning. Weil es viel mehr harmlose als gefaehrliche Bilder gibt, muesstet ihr die Daten etwas tricksen (Data Augmentation), damit das Modell nicht einfach immer 'harmlos' sagt.",
+    pro:["Riesiger Datensatz (10.000+ Bilder) — genug zum Lernen","Medizinisch relevant — fuehlt sich sinnvoll an","Sehr viele Tutorials und Anleitungen online","Transfer Learning funktioniert hier besonders gut"],
+    con:["7 verschiedene Kategorien — etwas komplexer","Klassen-Ungleichgewicht: viel mehr gutartige Bilder","Medizinische Bilder koennen unangenehm sein"],
+    warum_gut:"Genug Daten, spannend, viele Hilfen online. Das Ungleichgewicht ist sogar ein Pluspunkt fuer die Doku — ihr koennt zeigen, dass ihr das Problem erkannt und behandelt habt.",
+    warum_nicht:"Wenn euch medizinische Bilder unangenehm sind. Oder wenn 7 Klassen euch zu komplex erscheinen.",
+    ansatz:"CNN mit Transfer Learning (z.B. ResNet50), Data Augmentation gegen Ungleichgewicht",
+    schwierigkeit:"Mittel",
+    doku_potenzial:"Sehr hoch — viel zu analysieren, zu diskutieren, und zu zeigen"},
+  {name:"Roentgenbild: Lungenentzuendung",dataset:"Chest X-Ray (Kaggle)",emoji:"🫁",
+    frage:"Zeigt dieses Roentgenbild eine gesunde oder kranke Lunge?",
+    erklaerung:"Der Computer bekommt Roentgenbilder von Lungen. Manche sind gesund, manche zeigen eine Lungenentzuendung. Er lernt die Unterschiede — z.B. dass bei einer Entzuendung bestimmte Bereiche 'verschleiert' aussehen. Danach kann er bei einem neuen Bild sagen: 'Das sieht nach Pneumonie aus.'",
+    was_ihr_tut:"Wieder Transfer Learning: Ihr nehmt ein vortrainiertes Netz (z.B. VGG16) und trainiert es auf eure Roentgenbilder. Nur 2 Klassen (gesund/krank), also ist die Aufgabe klar. Cool: Mit Grad-CAM koennt ihr dem Computer quasi eine Brille aufsetzen und sehen, WOHIN er auf dem Bild schaut — das ist super fuer die Praesentation!",
+    pro:["Nur 2 Klassen — einfachste Variante","Klare visuelle Unterschiede, gut erkennbar","Grad-CAM macht es visuell spannend","Perfekter Einstieg fuer absolute Anfaenger"],
+    con:["Kleinerer Datensatz als HAM10000","Nur 2 Klassen = weniger komplex = weniger zu diskutieren","Prof koennte finden, dass es ZU einfach ist"],
+    warum_gut:"Am einfachsten von allen drei. Grad-CAM (zeigt wo das Modell hinschaut) beeindruckt in der Praesentation. Wenig kann schiefgehen.",
+    warum_nicht:"Koennte zu einfach wirken. Weniger Stoff fuer die Diskussion/Doku, weil es nur 2 Klassen gibt.",
+    ansatz:"CNN mit Transfer Learning (z.B. VGG16), Grad-CAM fuer visuelle Erklaerbarkeit",
+    schwierigkeit:"Einfach",
+    doku_potenzial:"Mittel — funktioniert gut, aber weniger Tiefe fuer Diskussion"},
+  {name:"Emotionserkennung",dataset:"FER2013 (Kaggle)",emoji:"😊",
+    frage:"Welche Emotion zeigt dieses Gesicht? (Happy, Sad, Angry, Surprise, ...)",
+    erklaerung:"Der Computer bekommt Fotos von Gesichtern mit verschiedenen Emotionen. Er lernt: Wie sieht 'gluecklich' aus? Wie 'wuetend'? Manche Emotionen sind leicht (Gluecklich vs. Traurig), andere schwer (Angst vs. Ueberraschung). Genau DAS macht es spannend — man kann super ueber Fehler diskutieren.",
+    was_ihr_tut:"Ihr koenntet sogar ein eigenes CNN von Grund auf bauen (nicht nur Transfer Learning). 7 Klassen (Happy, Sad, Angry, Surprise, Fear, Disgust, Neutral). Die Confusion Matrix wird richtig interessant zeigen, welche Emotionen der Computer verwechselt — und ihr koennt diskutieren WARUM.",
+    pro:["7 Klassen — anspruchsvoll, zeigt echtes DL-Verstaendnis","35.000+ Bilder — genug Daten","Alltagsbezug, macht Spass, jeder versteht es","Die Fehler sind spannend zu analysieren (beste Diskussion!)"],
+    con:["Schwieriger — manche Emotionen sind echt aehnlich","Datensatz-Qualitaet ist nicht perfekt (unscharfe Bilder)","Braucht evtl. mehr Tuning als die anderen beiden"],
+    warum_gut:"Die beste Diskussion! Wenn das Modell 'Angst' und 'Ueberraschung' verwechselt, koennt ihr schreiben WARUM das Sinn macht. Der Prof liebt sowas. Und: Emotionen versteht jeder — eure Praesentation wird lebendig.",
+    warum_nicht:"Schwieriger umzusetzen. Wenn ihr euch unsicher fuehlt und wenig Zeit habt, ist das ein Risiko.",
+    ansatz:"CNN (eigenes oder Transfer Learning), Confusion Matrix zeigt spannende Verwechslungen",
+    schwierigkeit:"Mittel-Schwer",
+    doku_potenzial:"Sehr hoch — Fehleranalyse ist Gold wert fuer die Diskussion"},
+];
+const PA_GLOSSAR=[
+  {term:"Deep Learning (DL)",simple:"Eine Art des Lernens, bei der der Computer mit vielen Schichten (Layers) arbeitet — wie ein Gehirn mit mehreren Verarbeitungsstufen. Jede Schicht erkennt kompliziertere Muster.",why:"Der Prof will DL, NICHT klassisches ML wie Scikit-learn. Also: PyTorch oder TensorFlow/Keras."},
+  {term:"CNN (Convolutional Neural Network)",simple:"Ein spezielles neuronales Netz fuer Bilder. Es schaut sich kleine Bildausschnitte an und erkennt Muster wie Kanten, Formen, Texturen — und baut daraus ein Verstaendnis auf.",why:"Perfekt fuer Bildklassifikation. Das ist euer Hauptwerkzeug."},
+  {term:"Transfer Learning",simple:"Statt bei Null anzufangen, nehmt ihr ein Netz, das schon Millionen Bilder gesehen hat (z.B. ResNet), und bringt ihm nur noch EURE spezielle Aufgabe bei. Wie ein Koch, der schon kochen kann, aber ein neues Rezept lernt.",why:"Spart enorm viel Zeit und funktioniert meistens besser als von Null."},
+  {term:"Epoch",simple:"Einmal durch ALLE Trainingsdaten durchgehen. Training laeuft typisch 10-100 Epochs. Wie ein Schueler, der ein Buch mehrmals liest.",why:"Zu wenige: Modell lernt nicht genug. Zu viele: Modell lernt Daten auswendig (Overfitting)."},
+  {term:"Batch Size",simple:"Wie viele Beispiele der Computer gleichzeitig anschaut, bevor er seine Gewichte anpasst. Z.B. 32 Bilder auf einmal.",why:"Muss man angeben und begruenden. Typisch: 16, 32, 64."},
+  {term:"Learning Rate",simple:"Wie grosse Schritte das Modell beim Lernen macht. Zu gross = es springt uebers Ziel hinaus. Zu klein = es braucht ewig.",why:"DER wichtigste Hyperparameter. Typisch: 0.001 oder 0.0001."},
+  {term:"Loss-Funktion",simple:"Misst, wie schlecht das Modell gerade ist. Je kleiner der Loss, desto besser. Das Ziel des Trainings ist: Loss minimieren.",why:"Cross-Entropy fuer Klassifikation. Muss in der Doku stehen."},
+  {term:"Optimizer",simple:"Der Algorithmus, der die Gewichte anpasst. Adam ist der Standard — funktioniert fast immer gut.",why:"In der Doku angeben und begruenden. Adam ist eine sichere Wahl."},
+  {term:"Overfitting",simple:"Das Modell lernt die Trainingsdaten AUSWENDIG, statt allgemeine Muster zu erkennen. Wie ein Schueler, der nur die alten Pruefungsfragen auswendig lernt.",why:"Erkennt man wenn: Training-Loss sinkt, aber Validation-Loss steigt. Gegenmittel: Dropout, Early Stopping, mehr Daten."},
+  {term:"Dropout",simple:"Zufaellig werden waehrend des Trainings einige Neuronen 'ausgeschaltet'. Das zwingt das Netz, sich nicht auf einzelne Neuronen zu verlassen.",why:"Schuetzt vor Overfitting. Typischer Wert: 0.3-0.5."},
+  {term:"Early Stopping",simple:"Training automatisch anhalten, wenn das Modell auf den Validierungsdaten nicht mehr besser wird — bevor es overfittet.",why:"Steht explizit in den Anforderungen. Leicht umzusetzen."},
+  {term:"Confusion Matrix",simple:"Eine Tabelle, die zeigt: Was hat das Modell als was erkannt? Z.B. 90x Hautkrebs richtig erkannt, 5x faelschlich als gutartig eingestuft.",why:"Zeigt genau, WO das Modell Fehler macht. Muss in der Evaluation stehen."},
+  {term:"Accuracy / Precision / Recall / F1",simple:"Verschiedene Wege zu messen, wie gut das Modell ist. Accuracy = Wie oft liegt es insgesamt richtig? Precision = Wenn es 'Krebs' sagt, wie oft stimmt das? Recall = Wie viele echte Krebs-Faelle findet es? F1 = Mittelwert aus Precision und Recall.",why:"Alles in der Evaluation angeben. Bei ungleichen Klassen ist F1 besser als Accuracy."},
+];
+const PA_PROF_ZITAT="Eine Projektarbeit ist NICHT gescheitert, wenn die gewuenschte Performance nicht erreicht wird. Entscheidend ist, dass ihr den Prozess versteht und wissenschaftlich analysiert.";
+const PA_PPTX_REQ=[
+  "a) Titel der Projektarbeit",
+  "b) Ziel des Projekts: Was soll euer Modell koennen?",
+  "c) Datenquelle: Woher kommen die Daten? (Kaggle-Link)",
+  "d) Ansatz/Methodik: Welchen DL-Ansatz nutzt ihr?",
+  "e) Evaluationsmetriken: Womit messt ihr den Erfolg?",
+  "f) Aufgabenverteilung: Wer macht was im Team?",
+];
+const PA_PHASES=[
+  {id:"topic",title:"Thema finden",emoji:"💡",focus:"Was soll der Computer lernen?",
+    simple:"Ihr sucht ein Problem, bei dem ein Computer aus Beispielen lernen kann, etwas zu erkennen. Bildklassifikation ist ideal fuer Anfaenger: Ihr gebt dem Computer Bilder und er lernt, sie zu sortieren. Z.B. 'Ist dieses Roentgenbild gesund oder krank?'",
+    todo:["Projektvorschlaege anschauen (s. unten)","Ein Dataset auf Kaggle.com finden","Klaeren: Was ist die Frage? (Klassifikation!)","Thema im Team absprechen","Pruefen: Ist genug Datenmaterial vorhanden? (min. 1000 Bilder)"],
+    done:"Ihr wisst, welches Problem ihr loesen wollt und woher die Daten kommen.",
+    extra:"bildklassifikation"},
+  {id:"pptx",title:"PPTX fuer den Prof",emoji:"📧",focus:"1-2 Folien — Deadline: 31. Maerz 2026!",
+    simple:"Der Prof will wissen, was ihr vorhabt. Kein fertiges Projekt — nur ein Plan. Die 6 Punkte (a-f) muessen drauf. Das ist kein Hexenwerk: Titel, was ihr macht, woher die Daten, wie ihr vorgeht, wie ihr Erfolg messt, wer was macht.",
+    todo:["Die 6 Pflichtpunkte (a-f) abarbeiten (s. unten)","PPTX erstellen (1-2 Folien reichen!)","Per E-Mail an Prof. Turan senden","FRIST: 31.03.2026!"],
+    done:"Prof hat euren Plan und gibt Feedback.",
+    extra:"pptx_req"},
+  {id:"data",title:"Daten anschauen",emoji:"🔍",focus:"Was steckt in den Daten?",
+    simple:"Bevor ihr trainiert, schaut ihr euch die Daten an. Wie ein Koch, der erstmal den Kuehlschrank oeffnet. Wie viele Bilder/Zeilen? Welche Kategorien? Ist alles ausgewogen oder fehlt was?",
+    todo:["Dataset herunterladen","Jupyter Notebook oeffnen","Anzahl Datenpunkte zaehlen","Verteilung der Klassen anzeigen (Balkendiagramm)","Ein paar Beispiele anschauen","Auffaelligkeiten notieren"],
+    done:"Ihr wisst, was in den Daten steckt und wo Probleme lauern."},
+  {id:"prep",title:"Daten aufbereiten",emoji:"🧹",focus:"Daten sauber machen",
+    simple:"Echte Daten sind nie perfekt. Ihr bringt alles in Form: gleiche Groesse, fehlende Werte behandeln, Daten normalisieren. Wie Zutaten vorbereiten vor dem Kochen.",
+    todo:["Fehlende Werte finden und behandeln","Bilder auf gleiche Groesse bringen (falls Bildprojekt)","Daten normalisieren/standardisieren","Train/Validation/Test aufteilen (z.B. 70/15/15)","Optional: Data Augmentation (mehr Trainingsdaten erzeugen)"],
+    done:"Eure Daten sind sauber und bereit fuers Training."},
+  {id:"model",title:"Modell bauen",emoji:"🧠",focus:"Das neuronale Netz zusammenstecken",
+    simple:"Jetzt baut ihr das 'Gehirn'. Ihr muesst nichts erfinden — es gibt fertige Bauplaene (z.B. ResNet). Ihr waehlt eine Architektur, stellt die Hyperparameter ein, und erklaert warum.",
+    todo:["Framework waehlen (PyTorch oder TensorFlow/Keras)","Architektur waehlen und begruenden","Hyperparameter festlegen (Learning Rate, Batch Size, Epochs)","Loss-Funktion und Optimizer waehlen","Optional: Transfer Learning (vortrainiertes Netz nutzen)"],
+    done:"Euer Modell steht und ist bereit zum Trainieren."},
+  {id:"train",title:"Trainieren",emoji:"🏋️",focus:"Dem Computer die Beispiele zeigen",
+    simple:"Ihr startet das Training. Der Computer schaut sich die Beispiele immer wieder an und lernt Muster. Ihr beobachtet die Lernkurve: Geht der Fehler runter? Gut! Steigt er wieder? Overfitting!",
+    todo:["Training starten","Loss-Kurve beobachten und speichern","Verschiedene Modelle/Einstellungen vergleichen","Overfitting-Techniken anwenden (Dropout, Early Stopping)","Bestes Modell auswaehlen"],
+    done:"Euer Modell hat gelernt. Zeit zum Testen."},
+  {id:"eval",title:"Testen & Auswerten",emoji:"📊",focus:"Wie gut ist das Modell wirklich?",
+    simple:"Ihr testet mit Daten, die das Modell noch NIE gesehen hat. Dann messt ihr: Wie oft liegt es richtig? Wo macht es Fehler? Das ist der ehrliche Moment.",
+    todo:["Modell auf Testdaten laufen lassen","Metriken berechnen (Accuracy, Precision, Recall, F1)","Confusion Matrix erstellen","Fehleranalyse: Wo und warum irrt sich das Modell?","Vergleichstabelle aller Modelle erstellen","Ergebnisse visualisieren"],
+    done:"Ihr wisst, wie gut euer Modell ist und warum."},
+  {id:"discuss",title:"Diskussion schreiben",emoji:"💬",focus:"Was habt ihr gelernt?",
+    simple:"DAS ist der wichtigste Teil fuer die Note! Hat es funktioniert? Was nicht? Warum? Was wuerdet ihr naechstes Mal anders machen? Ehrlichkeit wird hier belohnt.",
+    todo:["Ergebnisse interpretieren","Was hat gut funktioniert?","Was hat NICHT funktioniert und warum?","Limitationen ehrlich benennen","Verbesserungsideen fuer die Zukunft aufschreiben"],
+    done:"Eure Diskussion zeigt, dass ihr den Prozess verstanden habt."},
+  {id:"finish",title:"Abgabe vorbereiten",emoji:"🚀",focus:"Alles zusammenpacken",
+    simple:"Git Repo aufraeuemen, README schreiben, requirements.txt erstellen, Doku finalisieren. Dann Link per E-Mail an den Prof. Fertig!",
+    todo:["Code aufraeumen und kommentieren","README.md schreiben (Anleitung zur Ausfuehrung)","requirements.txt erstellen","Doku finalisieren (Jupyter Notebook oder Markdown)","Git Repo pruefen: Ist alles reproduzierbar?","Link per E-Mail an den Prof senden","Praesentation vorbereiten (10 Min. pro Person)"],
+    done:"Abgegeben! Jetzt nur noch praesentieren."},
+];
+
+const MCompass = () => {
+  const t=useT();const {author}=useApp();
+  const [phase,setPhase]=useState(0);
+  const [checks,setChecks]=useState(()=>{try{const s=localStorage.getItem("ml_compass_"+author);return s?JSON.parse(s):{};}catch(e){return {};}});
+  const [expanded,setExpanded]=useState(null);
+  const [showGlossar,setShowGlossar]=useState(false);
+  const [showPhasen,setShowPhasen]=useState(false);
+  const [openProject,setOpenProject]=useState(null);
+  const [glossarFilter,setGlossarFilter]=useState("");
+  useEffect(()=>{try{localStorage.setItem("ml_compass_"+author,JSON.stringify(checks));}catch(e){}},[checks,author]);
+
+  const toggleCheck=(phaseId,idx)=>setChecks(p=>{const key=phaseId+"_"+idx;return {...p,[key]:!p[key]};});
+  const phaseProgress=(p)=>{const done=p.todo.filter((_,i)=>checks[p.id+"_"+i]).length;return Math.round(done/p.todo.length*100);};
+  const totalProgress=Math.round(PA_PHASES.reduce((s,p)=>s+phaseProgress(p),0)/PA_PHASES.length);
+  const today=new Date();
+  const daysUntil=(dateStr)=>{const d=new Date(dateStr);return Math.ceil((d-today)/(1000*60*60*24));};
+  const p=PA_PHASES[phase];
+  const filteredGlossar=PA_GLOSSAR.filter(g=>!glossarFilter||g.term.toLowerCase().includes(glossarFilter.toLowerCase())||g.simple.toLowerCase().includes(glossarFilter.toLowerCase()));
+
+  const InfoBox=({emoji,title,children,color})=><div style={{background:(color||t.ac)+"10",border:`1px solid ${(color||t.ac)}25`,borderRadius:t.term?6:10,padding:"14px 16px",marginBottom:12}}>
+    <div style={{fontSize:12,fontWeight:700,color:color||t.ac,marginBottom:6}}>{emoji} {title}</div>
+    <div style={{fontSize:13,color:t.txB,lineHeight:1.7}}>{children}</div>
+  </div>;
+
+  const Section=({title,emoji,children,defaultOpen})=>{
+    const [open,setOpen]=useState(defaultOpen||false);
+    return <div style={{marginBottom:16}}>
+      <button onClick={()=>setOpen(!open)} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 18px",background:open?t.ac+"10":t.bgC,border:`1px solid ${open?t.ac+"30":t.bd}`,borderRadius:t.term?6:10,cursor:"pointer",fontFamily:t.sf}}>
+        <span style={{fontSize:14,fontWeight:700,color:open?t.ac:t.tx}}>{emoji} {title}</span>
+        <span style={{fontSize:12,color:t.txM}}>{open?"▲":"▼"}</span>
+      </button>
+      {open&&<div style={{padding:"16px 18px",border:`1px solid ${t.bd}`,borderTop:"none",borderRadius:`0 0 ${t.term?6:10}px ${t.term?6:10}px`}}>{children}</div>}
+    </div>;
+  };
+
+  return <div>
+    <CL num="🧭"/><H1>Mein PA-Kompass</H1>
+    <P>Dein persoenlicher Guide durch die Projektarbeit. Aktuell: Projekt auswaehlen!</P>
+
+    {/* ═══════════════════════════════════════ */}
+    {/* HERO: PROJEKTWAHL — DAS IST JETZT DRAN */}
+    {/* ═══════════════════════════════════════ */}
+
+    <div style={{background:`linear-gradient(135deg, ${t.ac}12, ${t.ok}08)`,border:`2px solid ${t.ac}40`,borderRadius:t.term?8:16,padding:"24px 28px",marginBottom:24}}>
+      <div style={{fontSize:11,fontWeight:700,color:t.ac,textTransform:"uppercase",letterSpacing:".08em",marginBottom:6}}>🎯 Dein Fokus jetzt</div>
+      <div style={{fontSize:22,fontWeight:700,fontFamily:t.hf,color:t.tx,marginBottom:12}}>Welches Projekt nehmen wir?</div>
+
+      {/* Erstmal verstehen: Was machen wir ueberhaupt? */}
+      <div style={{background:t.bgC,borderRadius:t.term?6:10,padding:"16px 20px",marginBottom:16,border:`1px solid ${t.bd}`}}>
+        <div style={{fontSize:13,fontWeight:700,color:t.tx,marginBottom:8}}>Was machen wir ueberhaupt?</div>
+        <div style={{fontSize:13,color:t.txB,lineHeight:1.8}}>
+          Ihr bringt einem Computer bei, Bilder zu sortieren. Ganz konkret: Ihr zeigt ihm tausende Beispielbilder, bei denen ihr wisst, was drauf ist. Der Computer erkennt dabei selbst Muster. Danach kann er bei einem NEUEN Bild sagen, was er sieht.
+        </div>
+        <div style={{fontSize:13,color:t.txB,lineHeight:1.8,marginTop:8}}>
+          Das ist wie einem Kind Tiere beibringen: Ihr zeigt ihm 1000 Fotos von Hunden und Katzen, und irgendwann kann es selbst sagen "Das ist ein Hund." Nur dass euer "Kind" ein neuronales Netz ist.
+        </div>
+      </div>
+
+      {/* Warum Bildklassifikation */}
+      <div style={{background:t.ac+"08",borderRadius:t.term?6:10,padding:"14px 18px",marginBottom:16,border:`1px solid ${t.ac}20`}}>
+        <div style={{fontSize:12,fontWeight:700,color:t.ac,marginBottom:4}}>Warum gerade Bilder?</div>
+        <div style={{fontSize:12,color:t.txB,lineHeight:1.7}}>
+          Weil es der einfachste und klarste Einstieg in Deep Learning ist. Die Aufgabe ist simpel (Bild rein → Kategorie raus), es gibt riesige fertige Datensaetze, und ihr koennt ein vortrainiertes Netz nehmen (Transfer Learning), das schon "sehen" kann — ihr bringt ihm nur bei, WAS es sehen soll.
+        </div>
+      </div>
+
+      {/* Warum Deep Learning */}
+      <div style={{background:t.ac+"08",borderRadius:t.term?6:10,padding:"14px 18px",marginBottom:20,border:`1px solid ${t.ac}20`}}>
+        <div style={{fontSize:12,fontWeight:700,color:t.ac,marginBottom:4}}>Warum Deep Learning und nicht was Einfacheres?</div>
+        <div style={{fontSize:12,color:t.txB,lineHeight:1.7}}>
+          Der Prof sagt klar: Er will Deep Learning sehen (PyTorch oder TensorFlow), NICHT klassisches Machine Learning (Scikit-learn). Deep Learning = neuronale Netze mit vielen Schichten. Das klingt kompliziert, aber mit Transfer Learning ist es ueberraschend machbar — ihr muesstet nichts von Null erfinden.
+        </div>
+      </div>
+
+      {/* ─── DIE 3 PROJEKTE ─── */}
+      <div style={{fontSize:16,fontWeight:700,fontFamily:t.hf,color:t.tx,marginBottom:4}}>Drei Projekte zur Auswahl</div>
+      <div style={{fontSize:12,color:t.txM,marginBottom:16}}>Alle drei nutzen Bildklassifikation mit CNNs. Daten gibt es kostenlos auf Kaggle. Klick ein Projekt an fuer alle Details.</div>
+
+      {PA_PROJEKT_TIPPS.map((pr,i)=>{const isOpen=openProject===i;
+        return <div key={i} style={{marginBottom:12}}>
+          <button onClick={()=>setOpenProject(isOpen?null:i)} style={{width:"100%",textAlign:"left",padding:"16px 20px",background:isOpen?t.bgAS:t.bgC,border:`1px solid ${isOpen?t.ac+"40":t.bd}`,borderRadius:isOpen?`${t.term?6:10}px ${t.term?6:10}px 0 0`:t.term?6:10,cursor:"pointer",fontFamily:t.sf,transition:"all .15s"}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+              <div>
+                <span style={{fontSize:20,marginRight:8}}>{pr.emoji}</span>
+                <span style={{fontSize:15,fontWeight:700,color:t.tx}}>{pr.name}</span>
+                <span style={{fontSize:11,fontWeight:600,padding:"2px 8px",borderRadius:4,marginLeft:10,background:pr.schwierigkeit==="Einfach"?t.okBg:pr.schwierigkeit==="Mittel"?t.ac+"15":t.errBg,color:pr.schwierigkeit==="Einfach"?t.ok:pr.schwierigkeit==="Mittel"?t.ac:t.err}}>{pr.schwierigkeit}</span>
+              </div>
+              <span style={{fontSize:12,color:t.txM}}>{isOpen?"▲":"▼"}</span>
+            </div>
+            <div style={{fontSize:13,color:t.ac,fontWeight:600,marginTop:4}}>"{pr.frage}"</div>
+          </button>
+
+          {isOpen&&<div style={{padding:"20px 24px",border:`1px solid ${t.ac}40`,borderTop:"none",borderRadius:`0 0 ${t.term?6:10}px ${t.term?6:10}px`,background:t.bgAS}}>
+            {/* Was passiert hier? */}
+            <div style={{marginBottom:16}}>
+              <div style={{fontSize:12,fontWeight:700,color:t.tx,marginBottom:6}}>🧠 Was passiert hier — ganz einfach erklaert:</div>
+              <div style={{fontSize:13,color:t.txB,lineHeight:1.8,background:t.bgC,padding:"12px 16px",borderRadius:t.term?4:8,border:`1px solid ${t.bd}`}}>{pr.erklaerung}</div>
+            </div>
+
+            {/* Was IHR tut */}
+            <div style={{marginBottom:16}}>
+              <div style={{fontSize:12,fontWeight:700,color:t.tx,marginBottom:6}}>🔧 Was ihr konkret tun wuerdet:</div>
+              <div style={{fontSize:13,color:t.txB,lineHeight:1.8,background:t.bgC,padding:"12px 16px",borderRadius:t.term?4:8,border:`1px solid ${t.bd}`}}>{pr.was_ihr_tut}</div>
+            </div>
+
+            {/* Datensatz */}
+            <div style={{fontSize:12,color:t.txM,marginBottom:12}}>📦 Datensatz: <span style={{fontWeight:600,color:t.ac}}>{pr.dataset}</span> — Doku-Potenzial: <span style={{fontWeight:600,color:t.ac}}>{pr.doku_potenzial}</span></div>
+
+            {/* Pro / Contra */}
+            <div style={{display:"flex",gap:12,marginBottom:16,flexWrap:"wrap"}}>
+              <div style={{flex:1,minWidth:200,background:t.okBg,borderRadius:t.term?4:8,padding:"12px 14px"}}>
+                <div style={{fontSize:11,fontWeight:700,color:t.ok,marginBottom:6}}>DAFUER</div>
+                {pr.pro.map((p,j)=><div key={j} style={{fontSize:12,color:t.txB,lineHeight:1.6,paddingLeft:12,position:"relative"}}><span style={{position:"absolute",left:0,color:t.ok}}>+</span> {p}</div>)}
+              </div>
+              <div style={{flex:1,minWidth:200,background:t.errBg,borderRadius:t.term?4:8,padding:"12px 14px"}}>
+                <div style={{fontSize:11,fontWeight:700,color:t.err,marginBottom:6}}>DAGEGEN</div>
+                {pr.con.map((c,j)=><div key={j} style={{fontSize:12,color:t.txB,lineHeight:1.6,paddingLeft:12,position:"relative"}}><span style={{position:"absolute",left:0,color:t.err}}>−</span> {c}</div>)}
+              </div>
+            </div>
+
+            {/* Empfehlung */}
+            <div style={{display:"flex",gap:12,flexWrap:"wrap",marginBottom:12}}>
+              <div style={{flex:1,minWidth:200,padding:"10px 14px",background:t.ok+"10",borderRadius:t.term?4:8,border:`1px solid ${t.ok}20`}}>
+                <div style={{fontSize:11,fontWeight:700,color:t.ok,marginBottom:2}}>Nehmen wenn:</div>
+                <div style={{fontSize:12,color:t.txB,lineHeight:1.6}}>{pr.warum_gut}</div>
+              </div>
+              <div style={{flex:1,minWidth:200,padding:"10px 14px",background:t.err+"10",borderRadius:t.term?4:8,border:`1px solid ${t.err}20`}}>
+                <div style={{fontSize:11,fontWeight:700,color:t.err,marginBottom:2}}>Lieber nicht wenn:</div>
+                <div style={{fontSize:12,color:t.txB,lineHeight:1.6}}>{pr.warum_nicht}</div>
+              </div>
+            </div>
+
+            <div style={{fontSize:12,color:t.txM,padding:"8px 12px",background:t.bgC,borderRadius:t.term?4:6,border:`1px solid ${t.bd}`}}>
+              <span style={{fontWeight:600,color:t.ac}}>Technischer Ansatz:</span> {pr.ansatz}
+            </div>
+          </div>}
+        </div>;})}
+
+      {/* Zusammenfassung / Empfehlung */}
+      <div style={{background:t.bgC,borderRadius:t.term?6:10,padding:"16px 20px",marginTop:8,border:`1px solid ${t.bd}`}}>
+        <div style={{fontSize:13,fontWeight:700,color:t.tx,marginBottom:8}}>Und was soll ich dem Team sagen?</div>
+        <div style={{fontSize:13,color:t.txB,lineHeight:1.8}}>
+          Du musst kein Experte sein, um mitzureden. Hier ist, was du wissen musst:
+        </div>
+        <div style={{fontSize:13,color:t.txB,lineHeight:1.8,marginTop:8}}>
+          <span style={{fontWeight:600}}>Am sichersten:</span> Roentgenbild (Pneumonia) — am wenigsten kann schiefgehen, ideal wenn ihr wenig Erfahrung habt. Aber: Weniger spannend fuer die Doku.
+        </div>
+        <div style={{fontSize:13,color:t.txB,lineHeight:1.8,marginTop:4}}>
+          <span style={{fontWeight:600}}>Bestes Verhaeltnis:</span> Hautkrebs (HAM10000) — genug Daten, genug Komplexitaet, viele Hilfen online. Die sicherste Wahl fuer eine gute Note.
+        </div>
+        <div style={{fontSize:13,color:t.txB,lineHeight:1.8,marginTop:4}}>
+          <span style={{fontWeight:600}}>Am spannendsten:</span> Emotionserkennung — macht am meisten Spass und liefert die beste Diskussion, aber auch am anspruchsvollsten.
+        </div>
+        <div style={{fontSize:13,color:t.txM,lineHeight:1.8,marginTop:8,fontStyle:"italic"}}>
+          Tipp: Schlag dem Team die Projekte vor und fragt euch: Was interessiert UNS am meisten? Denn das Projekt zieht sich ueber Monate — Interesse schlaegt Einfachheit.
+        </div>
+      </div>
+    </div>
+
+    {/* ═══════ WICHTIG ZU WISSEN (Prof-Zitat + Philosophie) ═══════ */}
+    <div style={{background:t.okBg,border:`1px solid ${t.ok}30`,borderRadius:t.term?6:12,padding:"16px 20px",marginBottom:20}}>
+      <div style={{fontSize:12,fontWeight:700,color:t.ok,marginBottom:6}}>💚 DAS WICHTIGSTE — DRUCK RAUSNEHMEN</div>
+      <div style={{fontSize:14,fontStyle:"italic",color:t.tx,lineHeight:1.6,marginBottom:8}}>"{PA_PROF_ZITAT}"</div>
+      <div style={{fontSize:12,color:t.txB,lineHeight:1.7}}>
+        Heisst: Ihr muesst NICHT die beste Accuracy haben. Wenn euer Modell nur 60% der Bilder richtig erkennt, ist das OKAY — solange ihr erklaeren koennt WARUM und was man besser machen koennte. Lieber etwas, das mit einer schluessigen Erklaerung nicht perfekt funktioniert, als etwas, das irgendwie funktioniert, aber keiner versteht warum.
+      </div>
+      <div style={{fontSize:13,fontWeight:600,color:t.ok,marginTop:8}}>Verstehen {">"} Performance. Der Weg ist das Ziel.</div>
+    </div>
+
+    {/* ═══════ DEADLINES ═══════ */}
+    <div style={{display:"flex",gap:8,marginBottom:24,flexWrap:"wrap"}}>
+      {PA_DEADLINES.map((dl,i)=>{const days=daysUntil(dl.date);const urgent=days<=7&&days>=0;const past=days<0;
+        return <div key={i} style={{flex:1,minWidth:150,padding:"12px 14px",borderRadius:t.term?6:10,background:past?t.okBg:urgent?t.errBg:t.bgC,border:`1px solid ${past?t.ok+"40":urgent?t.err+"40":t.bd}`}}>
+          <div style={{fontSize:11,fontWeight:700,color:past?t.ok:urgent?t.err:t.txM,marginBottom:2}}>{past?"✓ ERLEDIGT":urgent?"⚡ DRINGEND":"📅 TERMIN"}</div>
+          <div style={{fontSize:13,fontWeight:600,color:t.tx}}>{dl.label}</div>
+          <div style={{fontSize:11,color:t.txM,marginTop:2}}>{dl.desc}</div>
+          <div style={{fontSize:12,fontWeight:700,color:past?t.ok:urgent?t.err:t.ac,marginTop:4}}>{past?"Geschafft!":days===0?"HEUTE!":days===1?"Morgen!":"Noch "+days+" Tage"}</div>
+        </div>;})}
+    </div>
+
+    {/* ═══════ AUFKLAPPBAR: BEGRIFFE-LEXIKON ═══════ */}
+    <Section title="Begriffe-Lexikon — einfach erklaert" emoji="📖">
+      <div style={{fontSize:12,color:t.txM,marginBottom:12}}>Hier findest du alle Fachbegriffe, die im Projekt vorkommen. Klick auf einen Begriff fuer mehr Details.</div>
+      <input value={glossarFilter} onChange={e=>setGlossarFilter(e.target.value)} placeholder="🔍 Begriff suchen..." style={{width:"100%",padding:"8px 12px",borderRadius:t.term?4:8,border:`1px solid ${t.bd}`,background:t.bgC,color:t.tx,fontSize:13,fontFamily:t.sf,marginBottom:12,boxSizing:"border-box"}}/>
+      <div style={{display:"flex",flexDirection:"column",gap:8}}>
+        {filteredGlossar.map((g,i)=><div key={i} onClick={()=>setExpanded(expanded===g.term?null:g.term)} style={{padding:"12px 16px",background:expanded===g.term?t.ac+"08":t.bgC,border:`1px solid ${expanded===g.term?t.ac+"30":t.bd}`,borderRadius:t.term?6:8,cursor:"pointer",transition:"all .15s"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <span style={{fontSize:13,fontWeight:700,color:t.ac}}>{g.term}</span>
+            <span style={{fontSize:11,color:t.txM}}>{expanded===g.term?"▲":"▼"}</span>
+          </div>
+          <div style={{fontSize:12,color:t.txB,marginTop:4,lineHeight:1.6}}>{g.simple}</div>
+          {expanded===g.term&&<div style={{marginTop:8,padding:"8px 12px",background:t.ac+"10",borderRadius:t.term?4:6,fontSize:12,color:t.txM,lineHeight:1.6}}>
+            <span style={{fontWeight:600,color:t.ac}}>Warum wichtig?</span> {g.why}
+          </div>}
+        </div>)}
+      </div>
+    </Section>
+
+    {/* ═══════ AUFKLAPPBAR: ALLE PHASEN ═══════ */}
+    <Section title="Alle Phasen im Ueberblick" emoji="🗺️">
+      <div style={{fontSize:12,color:t.txM,marginBottom:12}}>Sobald das Thema steht, arbeitet ihr euch Schritt fuer Schritt durch diese 9 Phasen. Jede Phase wird ein Kapitel in eurer Doku.</div>
+
+      {/* Gesamtfortschritt */}
+      <div style={{marginBottom:16}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+          <span style={{fontSize:12,fontWeight:600,color:t.txM}}>Gesamtfortschritt</span>
+          <span style={{fontSize:13,fontWeight:700,color:t.ac}}>{totalProgress}%</span>
+        </div>
+        <div style={{height:8,borderRadius:4,background:t.bd+"40",overflow:"hidden"}}>
+          <div style={{height:"100%",width:totalProgress+"%",background:`linear-gradient(90deg, ${t.ac}, ${t.ok})`,borderRadius:4,transition:"width .5s"}}/>
+        </div>
+      </div>
+
+      {/* Phase-Navigation */}
+      <div style={{display:"flex",gap:4,marginBottom:16,flexWrap:"wrap"}}>
+        {PA_PHASES.map((ph,i)=>{const prog=phaseProgress(ph);const active=phase===i;const done=prog===100;
+          return <button key={ph.id} onClick={()=>setPhase(i)} style={{padding:"6px 10px",borderRadius:t.term?4:20,border:`1px solid ${active?t.ac:done?t.ok+"40":t.bd}`,background:active?t.ac:done?t.okBg:t.bgC,color:active?t.w:done?t.ok:t.txM,fontSize:11,fontWeight:active?700:500,cursor:"pointer",fontFamily:t.sf,whiteSpace:"nowrap",transition:"all .15s"}}>
+            {done?"✓ ":""}{ph.emoji} {ph.title.split(" ")[0]}
+          </button>;})}
+      </div>
+
+      {/* Aktive Phase */}
+      {p&&<div>
+        <div style={{background:t.bgAS,border:`1px solid ${t.bdA}`,borderRadius:t.term?8:14,padding:"20px 24px",marginBottom:16}}>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+            <div>
+              <span style={{fontSize:24,marginRight:8}}>{p.emoji}</span>
+              <span style={{fontSize:18,fontWeight:700,fontFamily:t.hf,color:t.tx}}>{p.title}</span>
+            </div>
+            <span style={{fontSize:13,fontWeight:700,color:phaseProgress(p)===100?t.ok:t.ac}}>{phaseProgress(p)}%</span>
+          </div>
+
+          <div style={{background:t.ac+"15",border:`1px solid ${t.ac}30`,borderRadius:t.term?6:10,padding:"12px 14px",marginBottom:12}}>
+            <div style={{fontSize:11,fontWeight:700,color:t.ac,marginBottom:2}}>🎯 FOKUS</div>
+            <div style={{fontSize:14,fontWeight:600,color:t.tx,lineHeight:1.5}}>{p.focus}</div>
+          </div>
+
+          <div style={{fontSize:13,color:t.txB,lineHeight:1.7,marginBottom:16}}>{p.simple}</div>
+
+          {p.extra==="pptx_req"&&<div style={{background:t.ac+"10",border:`1px solid ${t.ac}25`,borderRadius:t.term?6:10,padding:"12px 16px",marginBottom:12}}>
+            <div style={{fontSize:12,fontWeight:700,color:t.ac,marginBottom:6}}>📋 DIESE 6 PUNKTE MUESSEN DRAUF</div>
+            {PA_PPTX_REQ.map((req,i)=><div key={i} style={{fontSize:12,color:t.txB,lineHeight:1.6,padding:"2px 0"}}>{req}</div>)}
+          </div>}
+
+          <div style={{fontSize:11,fontWeight:700,color:t.txM,marginBottom:6,textTransform:"uppercase",letterSpacing:".05em"}}>Checkliste</div>
+          <div style={{display:"flex",flexDirection:"column",gap:5}}>
+            {p.todo.map((item,i)=>{const checked=checks[p.id+"_"+i];
+              return <button key={i} onClick={()=>toggleCheck(p.id,i)} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 12px",background:checked?t.okBg:t.bgC,border:`1px solid ${checked?t.ok+"40":t.bd}`,borderRadius:t.term?6:8,cursor:"pointer",textAlign:"left",transition:"all .15s"}}>
+                <span style={{width:18,height:18,borderRadius:t.term?3:4,border:`2px solid ${checked?t.ok:t.bd}`,background:checked?t.ok:"transparent",display:"flex",alignItems:"center",justifyContent:"center",color:t.w,fontSize:10,flexShrink:0}}>{checked?"✓":""}</span>
+                <span style={{fontSize:12,color:checked?t.ok:t.tx,textDecoration:checked?"line-through":"none",opacity:checked?.7:1}}>{item}</span>
+              </button>;})}
+          </div>
+
+          <div style={{marginTop:12,padding:"8px 12px",background:t.okBg,border:`1px solid ${t.ok}30`,borderRadius:t.term?6:8}}>
+            <div style={{fontSize:11,fontWeight:700,color:t.ok,marginBottom:2}}>✓ FERTIG WENN:</div>
+            <div style={{fontSize:12,color:t.txB,lineHeight:1.5}}>{p.done}</div>
+          </div>
+        </div>
+
+        <div style={{display:"flex",justifyContent:"space-between"}}>
+          {phase>0?<Bt onClick={()=>setPhase(a=>a-1)}>← {PA_PHASES[phase-1].emoji} {PA_PHASES[phase-1].title}</Bt>:<div/>}
+          {phase<PA_PHASES.length-1?<Bt primary onClick={()=>setPhase(a=>a+1)}>{PA_PHASES[phase+1].emoji} {PA_PHASES[phase+1].title} →</Bt>:<div/>}
+        </div>
+      </div>}
+    </Section>
+
+    {/* ═══════ AUFKLAPPBAR: DOKU-ANFORDERUNGEN ═══════ */}
+    <Section title="Was muss in die Abgabe?" emoji="📝">
+      <div style={{fontSize:12,color:t.txM,lineHeight:1.7,marginBottom:8}}>Der Prof erwartet 9 Dokumentations-Abschnitte. Jede Phase oben entspricht einem Abschnitt:</div>
+      <div style={{fontSize:12,color:t.txB,lineHeight:1.8}}>
+        {"1. Problembeschreibung — 2. Datenquelle — 3. EDA (Daten anschauen) — 4. Vorverarbeitung — 5. Data Augmentation (optional) — 6. Modellauswahl — 7. Training (Batch Size, LR, Epochs, Loss, Optimizer, Dropout, Early Stopping, Lernkurven!) — 8. Evaluation — 9. Diskussion"}
+      </div>
+      <div style={{fontSize:12,color:t.txM,marginTop:8}}>Ausserdem: Sauberer Code, README.md, requirements.txt, Git Repo, Jupyter Notebook.</div>
+    </Section>
+  </div>;
+};
+
 // ── MODULE: Dashboard ──
 const MDash = () => {
   const t=useT();
@@ -1194,7 +1578,7 @@ export default function MLLernApp(){
     case"welcome":return <M1/>;case"data":return <M2/>;case"supervised":return <M3/>;
     case"gradient":return <M4/>;case"neural":return <M5/>;case"deep":return <M6/>;
     case"quiz":return <M7/>;case"tutor":return <M8/>;
-    case"dashboard":return <MDash/>;case"guide":return <MGuide/>;case"ideas":return <MIdea/>;
+    case"compass":return <MCompass/>;case"dashboard":return <MDash/>;case"guide":return <MGuide/>;case"ideas":return <MIdea/>;
     default:return <M1/>;
   }};
 
@@ -1202,7 +1586,7 @@ export default function MLLernApp(){
     const isA=active===mod.id;const isDone=completed[mod.id];
     return <button onClick={()=>handleNav(mod.id)} style={{width:"100%",textAlign:"left",display:"flex",alignItems:"center",gap:sbOpen?10:0,justifyContent:sbOpen?"flex-start":"center",padding:sbOpen?"8px 18px":"8px 0",background:isA?t.bg:"transparent",borderLeft:sbOpen?(isA?`3px solid ${t.ac}`:"3px solid transparent"):"none",border:"none",cursor:"pointer",transition:"all .15s"}}>
       <span style={{width:22,height:22,borderRadius:t.term?(isProj?4:4):(isProj?6:"50%"),display:"flex",alignItems:"center",justifyContent:"center",fontSize:isProj?10:9,fontWeight:600,flexShrink:0,fontFamily:t.term?t.mf:t.sf,background:(isDone&&!isProj)?t.ok:isA?t.ac:t.bd,color:((isDone&&!isProj)||isA)?t.w:t.txM,transition:"all .2s"}}>
-        {isDone&&!isProj?"✓":isProj?(mod.n==="P1"?"◈":"◇"):mod.n}
+        {isDone&&!isProj?"✓":isProj?(mod.n.startsWith("P")?mod.n==="P1"?"◈":"◇":mod.n):mod.n}
       </span>
       {sbOpen&&<span style={{fontSize:12.5,color:isA?t.tx:t.txM,fontWeight:isA?600:400,fontFamily:t.term?t.mf:t.sf,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{t.term?mod.tt:mod.title}</span>}
     </button>;

@@ -1500,40 +1500,71 @@ Antworte IMMER exakt in diesem JSON-Format (kein Markdown, kein Text drumherum):
         <div style={{fontSize:12,fontWeight:700,color:t.err,marginBottom:4}}>Worauf achten</div>
         <div style={{fontSize:13,color:t.txB,lineHeight:1.6}}>{result.woraufAchten}</div>
       </div>
-      <div style={{background:t.bgC,border:`1px solid ${t.bd}`,borderRadius:t.term?6:8,padding:"12px 14px",marginBottom:16}}>
+      <div style={{background:t.bgC,border:`1px solid ${t.bd}`,borderRadius:t.term?6:8,padding:"12px 14px"}}>
         <div style={{fontSize:12,fontWeight:700,color:t.txB,marginBottom:4}}>So wird die Idee noch besser</div>
         <div style={{fontSize:13,color:t.txB,lineHeight:1.6}}>{result.verbesserung}</div>
       </div>
-      {result.sektionen&&<>
-        <div style={{fontFamily:t.hf,fontSize:16,fontWeight:700,color:t.tx,marginBottom:4}}>Mini-Projektarbeit: 9 Sektionen</div>
-        <div style={{fontSize:12,color:t.txM,marginBottom:16}}>So koennte eure fertige Doku aussehen — Sektion fuer Sektion.</div>
-        {(()=>{const aufwandColor=(a)=>a==="Leicht"?t.ok:a==="Mittel"?t.ac:t.err;const SEC_EMOJI=["📋","📦","🔍","⚙️","🎨","🧠","🏋️","📊","💬"];return result.sektionen.map((s,i)=><details key={i} style={{marginBottom:8,background:t.bgC,border:`1px solid ${t.bd}`,borderRadius:t.term?6:10,overflow:"hidden"}}>
-          <summary style={{cursor:"pointer",padding:"12px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",userSelect:"none",listStyle:"none",WebkitAppearance:"none"}}>
-            <div style={{display:"flex",alignItems:"center",gap:8}}>
-              <span style={{fontSize:14}}>{SEC_EMOJI[i]||"📄"}</span>
-              <span style={{fontSize:13,fontWeight:600,color:t.tx}}>{s.nr}. {s.name}</span>
+    </Cd>}
+    {result&&!result.error&&result.sektionen&&<div style={{marginBottom:24}}>
+      <div style={{background:`linear-gradient(135deg, ${t.ac}12, ${t.inf}12)`,border:`2px solid ${t.ac}40`,borderRadius:t.term?8:14,padding:"24px 20px",marginBottom:16}}>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
+          <span style={{fontSize:24}}>📄</span>
+          <div style={{fontFamily:t.hf,fontSize:22,fontWeight:800,color:t.tx}}>Mini-Projektarbeit</div>
+        </div>
+        <div style={{fontSize:13,color:t.txB,lineHeight:1.6,marginBottom:16}}>So koennte eure fertige Doku fuer <strong style={{color:t.ac}}>"{result.titel}"</strong> aussehen — alle 9 Pflicht-Sektionen durchsimuliert.</div>
+        {(()=>{const aufwandColor=(a)=>a==="Leicht"?t.ok:a==="Mittel"?t.ac:t.err;const SEC_EMOJI=["📋","📦","🔍","⚙️","🎨","🧠","🏋️","📊","💬"];const leicht=result.sektionen.filter(s=>s.aufwand==="Leicht").length;const mittel=result.sektionen.filter(s=>s.aufwand==="Mittel").length;const schwer=result.sektionen.filter(s=>s.aufwand==="Schwer").length;
+        return <>
+          <div style={{display:"flex",gap:12,marginBottom:16,flexWrap:"wrap"}}>
+            <div style={{display:"flex",alignItems:"center",gap:6,padding:"6px 12px",borderRadius:20,background:t.ok+"18",border:`1px solid ${t.ok}30`}}>
+              <div style={{width:8,height:8,borderRadius:"50%",background:t.ok}}/>
+              <span style={{fontSize:12,fontWeight:600,color:t.ok}}>{leicht}x Leicht</span>
             </div>
-            <Tag color={aufwandColor(s.aufwand)}>{s.aufwand}</Tag>
-          </summary>
-          <div style={{padding:"0 14px 14px",borderTop:`1px solid ${t.bd}`}}>
-            <div style={{marginTop:12,padding:"12px 14px",background:t.bgAS,border:`1px solid ${t.bdA}`,borderRadius:t.term?6:8,marginBottom:10}}>
-              <div style={{fontSize:11,fontWeight:700,color:t.ac,marginBottom:6}}>ENTWURF</div>
-              <div style={{fontSize:13,color:t.txB,lineHeight:1.7,fontStyle:"italic"}}>{s.entwurf}</div>
+            <div style={{display:"flex",alignItems:"center",gap:6,padding:"6px 12px",borderRadius:20,background:t.ac+"18",border:`1px solid ${t.ac}30`}}>
+              <div style={{width:8,height:8,borderRadius:"50%",background:t.ac}}/>
+              <span style={{fontSize:12,fontWeight:600,color:t.ac}}>{mittel}x Mittel</span>
             </div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-              <div style={{padding:"10px 12px",background:t.infBg,border:`1px solid ${t.inf}30`,borderRadius:t.term?6:8}}>
-                <div style={{fontSize:11,fontWeight:700,color:t.inf,marginBottom:4}}>DAS BRAUCHT IHR</div>
-                <div style={{fontSize:12,color:t.txB,lineHeight:1.5}}>{s.braucht_ihr}</div>
-              </div>
-              <div style={{padding:"10px 12px",background:t.mathBg,border:`1px solid ${t.math}30`,borderRadius:t.term?6:8}}>
-                <div style={{fontSize:11,fontWeight:700,color:t.math,marginBottom:4}}>TIPP</div>
-                <div style={{fontSize:12,color:t.txB,lineHeight:1.5}}>{s.tipp}</div>
-              </div>
+            {schwer>0&&<div style={{display:"flex",alignItems:"center",gap:6,padding:"6px 12px",borderRadius:20,background:t.err+"18",border:`1px solid ${t.err}30`}}>
+              <div style={{width:8,height:8,borderRadius:"50%",background:t.err}}/>
+              <span style={{fontSize:12,fontWeight:600,color:t.err}}>{schwer}x Schwer</span>
+            </div>}
+          </div>
+          <div style={{display:"flex",gap:4,marginBottom:8}}>
+            {result.sektionen.map((s,i)=><div key={i} style={{flex:1,height:6,borderRadius:3,background:aufwandColor(s.aufwand)+"60"}} title={`${s.nr}. ${s.name}: ${s.aufwand}`}/>)}
+          </div>
+        </>;})()}
+      </div>
+      {(()=>{const aufwandColor=(a)=>a==="Leicht"?t.ok:a==="Mittel"?t.ac:t.err;const SEC_EMOJI=["📋","📦","🔍","⚙️","🎨","🧠","🏋️","📊","💬"];return result.sektionen.map((s,i)=><div key={i} style={{marginBottom:12,background:t.bgC,border:`1px solid ${t.bd}`,borderRadius:t.term?6:12,overflow:"hidden"}}>
+        <button onClick={(e)=>{const det=e.currentTarget.nextElementSibling;det.style.display=det.style.display==="none"?"block":"none";}} style={{width:"100%",textAlign:"left",cursor:"pointer",padding:"14px 16px",background:"transparent",border:"none",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+          <div style={{display:"flex",alignItems:"center",gap:10}}>
+            <span style={{width:32,height:32,borderRadius:t.term?4:8,background:aufwandColor(s.aufwand)+"15",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>{SEC_EMOJI[i]||"📄"}</span>
+            <div>
+              <div style={{fontSize:14,fontWeight:700,color:t.tx}}>{s.nr}. {s.name}</div>
+              <div style={{fontSize:11,color:t.txM,marginTop:1}}>Aufwand: {s.aufwand}</div>
             </div>
           </div>
-        </details>);})()}
-      </>}
-    </Cd>}
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
+            <Tag color={aufwandColor(s.aufwand)}>{s.aufwand}</Tag>
+            <span style={{color:t.txM,fontSize:12}}>▾</span>
+          </div>
+        </button>
+        <div style={{display:i===0?"block":"none",padding:"0 16px 16px",borderTop:`1px solid ${t.bd}`}}>
+          <div style={{marginTop:14,padding:"14px 16px",background:t.bgAS,border:`1px solid ${t.bdA}`,borderRadius:t.term?6:10,marginBottom:12}}>
+            <div style={{fontSize:11,fontWeight:700,color:t.ac,marginBottom:8,letterSpacing:".5px"}}>ENTWURF — SO KOENNTE ES IN DER DOKU STEHEN</div>
+            <div style={{fontSize:13,color:t.txB,lineHeight:1.8}}>{s.entwurf}</div>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+            <div style={{padding:"12px 14px",background:t.infBg,border:`1px solid ${t.inf}30`,borderRadius:t.term?6:8}}>
+              <div style={{fontSize:11,fontWeight:700,color:t.inf,marginBottom:6}}>DAS BRAUCHT IHR</div>
+              <div style={{fontSize:12,color:t.txB,lineHeight:1.6}}>{s.braucht_ihr}</div>
+            </div>
+            <div style={{padding:"12px 14px",background:t.mathBg,border:`1px solid ${t.math}30`,borderRadius:t.term?6:8}}>
+              <div style={{fontSize:11,fontWeight:700,color:t.math,marginBottom:6}}>PROFI-TIPP</div>
+              <div style={{fontSize:12,color:t.txB,lineHeight:1.6}}>{s.tipp}</div>
+            </div>
+          </div>
+        </div>
+      </div>);})()}
+    </div>}
     {result&&result.error&&<Info title="Fehler" type="warning">{result.error}</Info>}
     {history.length>0&&<>{(()=>{const active=history.filter(h=>!h.result?._archived);const archived=history.filter(h=>h.result?._archived);return <><ST>Alle Team-Bewertungen ({active.length})</ST>
       <div style={{display:"flex",flexDirection:"column",gap:10}}>

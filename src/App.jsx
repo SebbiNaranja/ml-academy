@@ -62,12 +62,12 @@ const MODS_LEARN = [
 const MODS_PROJ = [
   {id:"guide",title:"Projektbegleiter",n:"P1",tt:"p1_guide"},
   {id:"ideas",title:"Ideenbewertung",n:"P2",tt:"p2_ideen"},
+  {id:"komplett",title:"PA-Komplett-Guide",n:"📚",tt:"pa_komplett"},
 ];
 // Sebbi-exklusiv: PA-Kompass erscheint nur fuer Sebbi in der Sidebar
 const MODS_SEBBI = [
   {id:"compass",title:"Sebbis Hyperfokus-HQ",n:"🧠",tt:"hyperfokus_hq"},
   {id:"simulation",title:"PA-Simulation",n:"📄",tt:"pa_simulation"},
-  {id:"komplett",title:"PA-Komplett-Guide",n:"📚",tt:"pa_komplett"},
 ];
 const ALL_MODS_FOR=(author)=>[...MODS_LEARN,...MODS_PROJ,...(author==="Sebbi"?MODS_SEBBI:[])];
 
@@ -1986,7 +1986,7 @@ const MKomplettGuide = () => {
       {t:"Finale Architektur",l:<>ResNet-18 mit <Hl>Frozen Backbone</Hl>. Finaler <Hl>FC-Layer</Hl> (1000 Klassen) wird durch 10-Output-Layer ersetzt. Optional <Hl>Dropout</Hl> (p=0.3).</>,r:<><Ex>Frozen</Ex> = Eingefroren, diese Schichten bleiben unveraendert. <Ex>FC-Layer</Ex> = Letzte Schicht die die Entscheidung trifft. NUR diese trainieren wir auf unsere 10 Tiere. <Ex>Dropout</Ex> = 30% Verbindungen zufaellig abschalten gegen Auswendiglernen.</>},
       {t:"Hyperparameter",l:<><Hl>Learning Rate</Hl>: 0.001 (Adam). <Hl>Batch Size</Hl>: 32. Epochs: 25 mit <Hl>Early Stopping</Hl> (Patience=5). Loss: CrossEntropyLoss. <Hl>StepLR</Hl>: Faktor 0.1 alle 10 Epochs.</>,r:<><Ex>Learning Rate</Ex> = Schrittgroesse beim Lernen. <Ex>Adam</Ex> = Algorithmus der die Rate automatisch anpasst. <Ex>Batch Size</Ex> = 32 Bilder gleichzeitig. <Ex>Early Stopping</Ex> = Aufhoeren wenn 5 Runden nichts besser wird. <Ex>StepLR</Ex> = Lernrate wird kleiner ueber die Zeit.</>},
     ]},
-    {nr:7,name:"Training und Optimierung",emoji:"🏋️",subs:[
+    {nr:7,name:"Training",emoji:"🏋️",subs:[
       {t:"Training (Epochs, Batch, Optimizer)",l:<>Max. 25 Epochs, Batch Size 32, <Hl>Adam</Hl> mit LR 0.001. <Hl>StepLR-Scheduler</Hl> reduziert LR alle 10 Epochs. Training auf <Hl>GPU</Hl> (Google Colab).</>,r:<>Das Modell schaut sich 25-mal alle Bilder an, jeweils 32 auf einmal. <Ex>GPU</Ex> = Grafikkarte fuer schnelles Rechnen. Ohne GPU: Stunden statt Minuten.</>},
       {t:"Loss-Funktion",l:<><Hl>CrossEntropyLoss</Hl> — Standard fuer Multi-Class-Klassifikation. Optional <Hl>Weighted</Hl> bei Class Imbalance.</>,r:<><Ex>Loss-Funktion</Ex> = Misst wie falsch das Modell liegt. "Katze mit 10% Sicherheit" bei echtem Katzenbild = hoher Loss. <Ex>Weighted</Ex> = Seltene Tiere zaehlen mehr.</>},
       {t:"Overfitting-Analyse",l:<><Hl>Train-Loss</Hl> vs. <Hl>Validation-Loss</Hl> pro Epoch als Loss-Kurven-Plot. Divergenz = Overfitting. Gegenmassnahmen: Dropout, Early Stopping, Augmentation.</>,r:<><Ex>Overfitting</Ex> = Auswendiglernen statt Verstehen. Trainings-Linie faellt weiter, Validierungs-Linie steigt = Alarm! <Ex>Early Stopping</Ex> = Automatisch aufhoeren.</>},
@@ -1998,7 +1998,7 @@ const MKomplettGuide = () => {
       {t:"Modellvergleich",l:<>3 Konfigurationen: (1) ResNet-18 + Augmentation, (2) ResNet-18 ohne Augmentation, (3) MobileNetV2 + Augmentation.</>,r:"Wir trainieren DREI Varianten und vergleichen fair: Hilft Augmentation? Ist das groessere Netz besser?"},
       {t:"Interpretation / Grad-CAM",l:<>Klassenweise Performance, <Hl>Grad-CAM-Analyse</Hl> (Tier oder Hintergrund?), Fehleranalyse der am haeufigsten verwechselten Klassen.</>,r:<>Unser <Ex>Alleinstellungsmerkmal</Ex>: Mit Grad-CAM SEHEN wir ob das Modell betruegt. Fisch-Bilder: Schaut es auf Wasser statt Fisch? Das ist wissenschaftlicher als nur "Accuracy: 90%, fertig."</>},
     ]},
-    {nr:9,name:"Diskussion und Ausblick",emoji:"💬",subs:[
+    {nr:9,name:"Diskussion und Fazit",emoji:"💬",subs:[
       {t:"Zusammenfassung",l:<>Erreichte Accuracy vs. <Hl>Baseline</Hl> (Random Guess = 10%). Unterschiede zwischen den 3 Modellkonfigurationen. Erkenntnisse aus Grad-CAM.</>,r:<><Ex>Baseline</Ex> = Duemmster Ansatz zum Vergleich. Zufaelliges Raten = 10%. Alles darueber = besser als Zufall. Der Prof will sehen dass wir VERSTEHEN was wir gemacht haben.</>},
       {t:"Bewertung",l:<>Staerken (z.B. hohe Accuracy bei distinktiven Klassen) und Schwaechen (z.B. Verwechslung aehnlicher Arten).</>,r:<>Ehrliche Einschaetzung. Prof-Zitat: "Eine Projektarbeit ist nicht gescheitert wenn die Performance nicht erreicht wird." Es geht um die ANALYSE.</>},
       {t:"Limitationen",l:<>(1) <Hl>Datensatz-Bias</Hl> — nur 10 Arten. (2) Domainabhaengigkeit. (3) Frozen Backbone vs. volles Fine-Tuning.</>,r:<><Ex>Limitationen</Ex> = Grenzen der Arbeit. Das ist KEIN Schwaeche-Eingestaendnis sondern wissenschaftliche Reife. Der Prof WILL das sehen.</>},
@@ -2334,7 +2334,7 @@ Antworte IMMER exakt in diesem JSON-Format:
     {"nr": 4, "name": "Datenvorverarbeitung", "unterpunkte": [...]},
     {"nr": 5, "name": "Data Augmentation (optional)", "unterpunkte": [...]},
     {"nr": 6, "name": "Modellauswahl und -architektur", "unterpunkte": [...]},
-    {"nr": 7, "name": "Training und Optimierung", "unterpunkte": [...]},
+    {"nr": 7, "name": "Training", "unterpunkte": [...]},
     {"nr": 8, "name": "Evaluation und Ergebnisse", "unterpunkte": [...]},
     {"nr": 9, "name": "Diskussion und Fazit", "unterpunkte": [...]}
   ]
@@ -2409,8 +2409,8 @@ Antworte IMMER exakt in diesem JSON-Format:
   // MAIN RENDER
   // ════════════════════════════════════════════
   const TABS=[
-    {id:"af",label:"Vorschlag a-f",emoji:"🏷️"},
-    {id:"sek",label:"9 Sektionen",emoji:"📝"},
+    {id:"af",label:"Projektvorschlag (a\u2013f)",emoji:"🏷️"},
+    {id:"sek",label:"Projektdokumentation (1\u20139)",emoji:"📝"},
     {id:"guide",label:"Starter-Guide",emoji:"🎓"},
     {id:"ai",label:"Projekt analysieren",emoji:"🤖"},
   ];

@@ -1283,26 +1283,95 @@ const MIdea = () => {
   };
 
   const sysPrompt=`Du bist ein ML-Projektberater fuer eine Uni-Projektarbeit (Angewandtes Machine Learning, SS2026, Prof. Bugra Turan).
-Das Team besteht aus 3 Personen (Sebbi, Lukas, Achim), jeder praesentiert 10 Minuten. Anforderungen: Deep Learning mit PyTorch oder TensorFlow/Keras (KEIN klassisches ML/Scikit-learn), Git-Repository, Jupyter Notebook mit 9 Sektionen (Problembeschreibung, Datenquelle, EDA, Vorverarbeitung, Data Augmentation optional, Modellauswahl, Training mit Batch Size/LR/Epochs/Loss/Optimizer/Dropout/Early Stopping/Lernkurven, Evaluation, Diskussion).
+Das Team besteht aus 3 Personen (Sebbi, Lukas, Achim), jeder praesentiert 10 Minuten. Anforderungen: Deep Learning mit PyTorch oder TensorFlow/Keras (KEIN klassisches ML/Scikit-learn), Git-Repository, Jupyter Notebook mit 9 Sektionen.
 
 ${dataFiles.length>0?"Der Nutzer hat echte Datasets hochgeladen. Analysiere die Spalten, Datentypen und Beispielwerte GENAU. Empfehle konkret, welche Spalte als Zielvariable geeignet ist, welche Features relevant sind, und welche Vorverarbeitungsschritte noetig sind. Wenn mehrere Datasets hochgeladen wurden, bewerte jedes einzeln und empfehle das beste (oder eine sinnvolle Kombination).":""}
+
+WICHTIG: Simuliere fuer die Idee eine KOMPLETTE Mini-Projektarbeit. Fuer jede der 9 Pflicht-Sektionen: Schreibe einen konkreten Entwurf (so wie es in der fertigen Doku stehen koennte) UND bewerte die Machbarkeit.
 
 Antworte IMMER exakt in diesem JSON-Format (kein Markdown, kein Text drumherum):
 {
   "titel": "Kurzer Projekttitel",
   "typ": "Klassifikation" oder "Regression",
   "score": Zahl 1-10,
-  "dataset": "Bewertung der hochgeladenen Daten ODER empfohlene Datenquelle",
-  "zielvariable": "Empfohlene Zielvariable (Spaltenname) mit Begruendung",
-  "relevante_features": ["Feature1", "Feature2", "Feature3"],
-  "vorverarbeitung": ["Schritt1", "Schritt2", "Schritt3"],
-  "algorithmen": ["Algo1", "Algo2", "Algo3"],
-  "metriken": ["Metrik1", "Metrik2"],
-  "proGrund": "2-3 Saetze: Warum die Idee die Anforderungen gut erfuellt",
-  "woraufAchten": "2-3 Saetze: Moegliche Stolperfallen und worauf man aufpassen muss",
   "machbarkeit": "Leicht" oder "Mittel" oder "Anspruchsvoll",
-  "praesentationsPotenzial": "2 Saetze: Wie gut laesst sich das Thema in 10 Min. praesentieren?",
-  "verbesserung": "1-2 Saetze: Wie koennte man die Idee noch schaerfer machen?"
+  "proGrund": "2-3 Saetze: Warum die Idee die Anforderungen gut erfuellt",
+  "woraufAchten": "2-3 Saetze: Moegliche Stolperfallen",
+  "verbesserung": "1-2 Saetze: Wie die Idee schaerfer werden kann",
+  "sektionen": [
+    {
+      "name": "Problembeschreibung",
+      "nr": 1,
+      "entwurf": "2-4 Saetze: So koennte die Problembeschreibung in der Doku lauten. Konkret mit Fragestellung und Relevanz.",
+      "aufwand": "Leicht" oder "Mittel" oder "Schwer",
+      "braucht_ihr": "Was muss das Team tun/haben fuer diesen Abschnitt?",
+      "tipp": "Ein konkreter Tipp fuer diesen Abschnitt"
+    },
+    {
+      "name": "Datenquelle",
+      "nr": 2,
+      "entwurf": "Konkreter Datensatz mit Name, Quelle (z.B. Kaggle-Link), Groesse, Anzahl Klassen/Samples. Wenn eigene Daten: Sammlungsstrategie.",
+      "aufwand": "Leicht/Mittel/Schwer",
+      "braucht_ihr": "Was muss das Team tun?",
+      "tipp": "Konkreter Tipp"
+    },
+    {
+      "name": "EDA (Explorative Datenanalyse)",
+      "nr": 3,
+      "entwurf": "Welche Plots und Analysen wuerdet ihr zeigen? Klassenverteilung, Beispielbilder, Bildgroessen-Verteilung, etc. Konkret!",
+      "aufwand": "Leicht/Mittel/Schwer",
+      "braucht_ihr": "Was muss das Team tun?",
+      "tipp": "Konkreter Tipp"
+    },
+    {
+      "name": "Vorverarbeitung",
+      "nr": 4,
+      "entwurf": "Konkrete Pipeline: Resize auf welche Groesse? Normalisierung mit welchen Werten? Train/Val/Test-Split mit welchen Anteilen? Code-Skizze wenn moeglich.",
+      "aufwand": "Leicht/Mittel/Schwer",
+      "braucht_ihr": "Was muss das Team tun?",
+      "tipp": "Konkreter Tipp"
+    },
+    {
+      "name": "Data Augmentation",
+      "nr": 5,
+      "entwurf": "Welche Augmentierungen und warum? RandomHorizontalFlip, RandomRotation, ColorJitter, etc. Was bringt es konkret bei diesem Datensatz?",
+      "aufwand": "Leicht/Mittel/Schwer",
+      "braucht_ihr": "Was muss das Team tun?",
+      "tipp": "Konkreter Tipp"
+    },
+    {
+      "name": "Modellauswahl",
+      "nr": 6,
+      "entwurf": "Welches Modell und warum? z.B. ResNet-18 pretrained auf ImageNet, letzte FC-Schicht angepasst auf N Klassen. Vergleichsmodell? Warum Transfer Learning statt from scratch?",
+      "aufwand": "Leicht/Mittel/Schwer",
+      "braucht_ihr": "Was muss das Team tun?",
+      "tipp": "Konkreter Tipp"
+    },
+    {
+      "name": "Training",
+      "nr": 7,
+      "entwurf": "Konkrete Hyperparameter: Batch Size (z.B. 32), Learning Rate (z.B. 0.001), Epochs (z.B. 25), Loss-Funktion (CrossEntropyLoss), Optimizer (Adam), Dropout (0.3), Early Stopping (Patience 5). Wie sehen die erwarteten Loss-Kurven aus?",
+      "aufwand": "Leicht/Mittel/Schwer",
+      "braucht_ihr": "Was muss das Team tun? (GPU noetig? Google Colab?)",
+      "tipp": "Konkreter Tipp"
+    },
+    {
+      "name": "Evaluation",
+      "nr": 8,
+      "entwurf": "Welche Metriken? Accuracy, Precision, Recall, F1-Score, Confusion Matrix. Wo wird das Modell vermutlich Fehler machen? Grad-CAM fuer Erklaerbarkeit?",
+      "aufwand": "Leicht/Mittel/Schwer",
+      "braucht_ihr": "Was muss das Team tun?",
+      "tipp": "Konkreter Tipp"
+    },
+    {
+      "name": "Diskussion & Fazit",
+      "nr": 9,
+      "entwurf": "Was koennte man diskutieren? Limitationen, Verbesserungsmoeglichkeiten, Praxisrelevanz, was hat funktioniert und was nicht?",
+      "aufwand": "Leicht/Mittel/Schwer",
+      "braucht_ihr": "Was muss das Team tun?",
+      "tipp": "Konkreter Tipp"
+    }
+  ]
 }`;
   const evaluate=async()=>{
     if(!idea.trim()||!ak||ld||!author)return;
@@ -1311,10 +1380,10 @@ Antworte IMMER exakt in diesem JSON-Format (kein Markdown, kein Text drumherum):
     try{
       let text="";
       if(prov==="openai"){
-        const r=await fetch("https://api.openai.com/v1/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":`Bearer ${ak}`},body:JSON.stringify({model:"gpt-4o-mini",messages:[{role:"system",content:sysPrompt},{role:"user",content:userMsg}],max_tokens:1500})});
+        const r=await fetch("https://api.openai.com/v1/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":`Bearer ${ak}`},body:JSON.stringify({model:"gpt-4o-mini",messages:[{role:"system",content:sysPrompt},{role:"user",content:userMsg}],max_tokens:4000})});
         const d=await r.json();if(d.error)throw new Error(d.error.message);text=d.choices[0].message.content;
       } else {
-        const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":ak,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1500,system:sysPrompt,messages:[{role:"user",content:userMsg}]})});
+        const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":ak,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:4000,system:sysPrompt,messages:[{role:"user",content:userMsg}]})});
         const d=await r.json();if(d.error)throw new Error(d.error.message);text=d.content[0].text;
       }
       const json=JSON.parse(text);
@@ -1422,30 +1491,7 @@ Antworte IMMER exakt in diesem JSON-Format (kein Markdown, kein Text drumherum):
       <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:16}}>
         <Tag color={result.typ==="Klassifikation"?t.inf:"#7c3aed"}>{result.typ}</Tag>
         <Tag color={result.machbarkeit==="Leicht"?t.ok:result.machbarkeit==="Mittel"?t.ac:t.err}>{result.machbarkeit}</Tag>
-        {result.algorithmen.map((a,i)=><Tag key={i}>{a}</Tag>)}
       </div>
-      {result.zielvariable&&<div style={{padding:"12px 14px",background:t.mathBg,border:`1px solid ${t.math}30`,borderRadius:t.term?6:8,marginBottom:12}}>
-        <div style={{fontSize:11,fontWeight:700,color:t.math,marginBottom:4}}>ZIELVARIABLE</div>
-        <div style={{fontSize:13,color:t.txB,lineHeight:1.5}}>{result.zielvariable}</div>
-      </div>}
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:16}}>
-        <div style={{padding:"12px 14px",background:t.bgAS,borderRadius:t.term?6:8,border:`1px solid ${t.bdA}`}}>
-          <div style={{fontSize:11,fontWeight:700,color:t.ac,marginBottom:6}}>DATENQUELLE</div>
-          <div style={{fontSize:13,color:t.txB,lineHeight:1.5}}>{result.dataset}</div>
-        </div>
-        <div style={{padding:"12px 14px",background:t.bgAS,borderRadius:t.term?6:8,border:`1px solid ${t.bdA}`}}>
-          <div style={{fontSize:11,fontWeight:700,color:t.ac,marginBottom:6}}>METRIKEN</div>
-          <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{result.metriken.map((m,i)=><Tag key={i}>{m}</Tag>)}</div>
-        </div>
-      </div>
-      {result.relevante_features&&<div style={{padding:"12px 14px",background:t.bgC,border:`1px solid ${t.bd}`,borderRadius:t.term?6:8,marginBottom:12}}>
-        <div style={{fontSize:11,fontWeight:700,color:t.inf,marginBottom:6}}>RELEVANTE FEATURES</div>
-        <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{result.relevante_features.map((f,i)=><Tag key={i} color={t.inf}>{f}</Tag>)}</div>
-      </div>}
-      {result.vorverarbeitung&&<div style={{padding:"12px 14px",background:t.bgC,border:`1px solid ${t.bd}`,borderRadius:t.term?6:8,marginBottom:12}}>
-        <div style={{fontSize:11,fontWeight:700,color:t.math,marginBottom:6}}>VORVERARBEITUNG</div>
-        <div style={{display:"flex",flexDirection:"column",gap:4}}>{result.vorverarbeitung.map((v,i)=><div key={i} style={{fontSize:12,color:t.txB,display:"flex",gap:6}}><span style={{color:t.math,fontWeight:700}}>{i+1}.</span>{v}</div>)}</div>
-      </div>}
       <div style={{background:t.okBg,border:`1px solid ${t.ok}30`,borderRadius:t.term?6:8,padding:"12px 14px",marginBottom:10}}>
         <div style={{fontSize:12,fontWeight:700,color:t.ok,marginBottom:4}}>Warum die Idee passt</div>
         <div style={{fontSize:13,color:t.txB,lineHeight:1.6}}>{result.proGrund}</div>
@@ -1454,14 +1500,39 @@ Antworte IMMER exakt in diesem JSON-Format (kein Markdown, kein Text drumherum):
         <div style={{fontSize:12,fontWeight:700,color:t.err,marginBottom:4}}>Worauf achten</div>
         <div style={{fontSize:13,color:t.txB,lineHeight:1.6}}>{result.woraufAchten}</div>
       </div>
-      <div style={{background:t.infBg,border:`1px solid ${t.inf}30`,borderRadius:t.term?6:8,padding:"12px 14px",marginBottom:10}}>
-        <div style={{fontSize:12,fontWeight:700,color:t.inf,marginBottom:4}}>Potenzial in der Praesentation</div>
-        <div style={{fontSize:13,color:t.txB,lineHeight:1.6}}>{result.praesentationsPotenzial}</div>
-      </div>
-      <div style={{background:t.bgC,border:`1px solid ${t.bd}`,borderRadius:t.term?6:8,padding:"12px 14px"}}>
+      <div style={{background:t.bgC,border:`1px solid ${t.bd}`,borderRadius:t.term?6:8,padding:"12px 14px",marginBottom:16}}>
         <div style={{fontSize:12,fontWeight:700,color:t.txB,marginBottom:4}}>So wird die Idee noch besser</div>
         <div style={{fontSize:13,color:t.txB,lineHeight:1.6}}>{result.verbesserung}</div>
       </div>
+      {result.sektionen&&<>
+        <div style={{fontFamily:t.hf,fontSize:16,fontWeight:700,color:t.tx,marginBottom:4}}>Mini-Projektarbeit: 9 Sektionen</div>
+        <div style={{fontSize:12,color:t.txM,marginBottom:16}}>So koennte eure fertige Doku aussehen — Sektion fuer Sektion.</div>
+        {(()=>{const aufwandColor=(a)=>a==="Leicht"?t.ok:a==="Mittel"?t.ac:t.err;const SEC_EMOJI=["📋","📦","🔍","⚙️","🎨","🧠","🏋️","📊","💬"];return result.sektionen.map((s,i)=><details key={i} style={{marginBottom:8,background:t.bgC,border:`1px solid ${t.bd}`,borderRadius:t.term?6:10,overflow:"hidden"}}>
+          <summary style={{cursor:"pointer",padding:"12px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",userSelect:"none",listStyle:"none",WebkitAppearance:"none"}}>
+            <div style={{display:"flex",alignItems:"center",gap:8}}>
+              <span style={{fontSize:14}}>{SEC_EMOJI[i]||"📄"}</span>
+              <span style={{fontSize:13,fontWeight:600,color:t.tx}}>{s.nr}. {s.name}</span>
+            </div>
+            <Tag color={aufwandColor(s.aufwand)}>{s.aufwand}</Tag>
+          </summary>
+          <div style={{padding:"0 14px 14px",borderTop:`1px solid ${t.bd}`}}>
+            <div style={{marginTop:12,padding:"12px 14px",background:t.bgAS,border:`1px solid ${t.bdA}`,borderRadius:t.term?6:8,marginBottom:10}}>
+              <div style={{fontSize:11,fontWeight:700,color:t.ac,marginBottom:6}}>ENTWURF</div>
+              <div style={{fontSize:13,color:t.txB,lineHeight:1.7,fontStyle:"italic"}}>{s.entwurf}</div>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+              <div style={{padding:"10px 12px",background:t.infBg,border:`1px solid ${t.inf}30`,borderRadius:t.term?6:8}}>
+                <div style={{fontSize:11,fontWeight:700,color:t.inf,marginBottom:4}}>DAS BRAUCHT IHR</div>
+                <div style={{fontSize:12,color:t.txB,lineHeight:1.5}}>{s.braucht_ihr}</div>
+              </div>
+              <div style={{padding:"10px 12px",background:t.mathBg,border:`1px solid ${t.math}30`,borderRadius:t.term?6:8}}>
+                <div style={{fontSize:11,fontWeight:700,color:t.math,marginBottom:4}}>TIPP</div>
+                <div style={{fontSize:12,color:t.txB,lineHeight:1.5}}>{s.tipp}</div>
+              </div>
+            </div>
+          </div>
+        </details>);})()}
+      </>}
     </Cd>}
     {result&&result.error&&<Info title="Fehler" type="warning">{result.error}</Info>}
     {history.length>0&&<>{(()=>{const active=history.filter(h=>!h.result?._archived);const archived=history.filter(h=>h.result?._archived);return <><ST>Alle Team-Bewertungen ({active.length})</ST>

@@ -67,6 +67,7 @@ const MODS_PROJ = [
 const MODS_SEBBI = [
   {id:"compass",title:"Sebbis Hyperfokus-HQ",n:"🧠",tt:"hyperfokus_hq"},
   {id:"simulation",title:"PA-Simulation",n:"📄",tt:"pa_simulation"},
+  {id:"komplett",title:"PA-Komplett-Guide",n:"📚",tt:"pa_komplett"},
 ];
 const ALL_MODS_FOR=(author)=>[...MODS_LEARN,...MODS_PROJ,...(author==="Sebbi"?MODS_SEBBI:[])];
 
@@ -1852,6 +1853,585 @@ Antworte IMMER exakt in diesem JSON-Format (kein Markdown, kein Text drumherum):
   </div>;
 };
 
+const MKomplettGuide = () => {
+  const t=useT();const {ak,prov,setProv,setAk}=useApp();
+  const [tab,setTab]=useState("af");
+  const [openSec,setOpenSec]=useState({});
+  const [glossarFilter,setGlossarFilter]=useState("");
+  const [aiIdea,setAiIdea]=useState("");
+  const [aiLd,setAiLd]=useState(false);
+  const [aiResult,setAiResult]=useState(null);
+  const [aiSS,setAiSS]=useState(false);
+
+  const toggle=(key)=>setOpenSec(p=>({...p,[key]:!p[key]}));
+
+  // ── Two-Column Card Component ──
+  const TwoCol=({left,right,leftLabel,rightLabel})=><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:0,border:`1px solid ${t.bd}`,borderRadius:t.term?6:10,overflow:"hidden",marginBottom:12}}>
+    <div style={{padding:"14px 16px",background:t.bgC,borderRight:`1px solid ${t.bd}`}}>
+      {leftLabel&&<div style={{fontSize:10,fontWeight:700,color:t.inf,letterSpacing:".5px",marginBottom:8}}>{leftLabel}</div>}
+      <div style={{fontSize:13,color:t.txB,lineHeight:1.75}}>{left}</div>
+    </div>
+    <div style={{padding:"14px 16px",background:"#FFF8E7"+(t.term?"":""),backgroundImage:t.bg.startsWith("#0")?"none":"none",backgroundColor:t.term?(t.bg.startsWith("#0")?"#1a1a10":"#FFFBF0"):"#FFF8E7"}}>
+      {rightLabel&&<div style={{fontSize:10,fontWeight:700,color:"#8B6914",letterSpacing:".5px",marginBottom:8}}>{rightLabel}</div>}
+      <div style={{fontSize:13,color:t.term?"#c8b070":t.txB,lineHeight:1.75,fontStyle:"italic"}}>{right}</div>
+    </div>
+  </div>;
+
+  // ── Collapsible Section Component ──
+  const Section=({id,title,emoji,defaultOpen,children})=>{
+    const isOpen=openSec[id]!=null?openSec[id]:!!defaultOpen;
+    return <div style={{marginBottom:12,background:t.bgC,border:`1px solid ${t.bd}`,borderRadius:t.term?6:12,overflow:"hidden"}}>
+      <button onClick={()=>toggle(id)} style={{width:"100%",textAlign:"left",cursor:"pointer",padding:"14px 16px",background:"transparent",border:"none",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <span style={{fontSize:18}}>{emoji||"📄"}</span>
+          <span style={{fontSize:14,fontWeight:700,color:t.tx}}>{title}</span>
+        </div>
+        <span style={{color:t.txM,fontSize:12,transition:"transform .2s",transform:isOpen?"rotate(180deg)":"rotate(0)"}}>{"\u25BE"}</span>
+      </button>
+      {isOpen&&<div style={{padding:"0 16px 16px",borderTop:`1px solid ${t.bd}`}}>
+        <div style={{marginTop:12}}>{children}</div>
+      </div>}
+    </div>;
+  };
+
+  const SubH=({children})=><div style={{fontSize:13,fontWeight:700,color:t.ac,marginBottom:8,marginTop:14}}>{children}</div>;
+  const Hl=({children})=><span style={{fontWeight:700,color:t.tx}}>{children}</span>;
+  const Ex=({children})=><span style={{fontStyle:"italic",color:t.ac}}>{children}</span>;
+
+  // ════════════════════════════════════════════
+  // TAB 1: PROJEKTVORSCHLAG a-f (static)
+  // ════════════════════════════════════════════
+  const tabAF=()=><div>
+    <P>Der Projektvorschlag beantwortet die 6 Grundfragen (a-f), die der Prof fuer jedes Projekt sehen will. Links steht der offizielle Text, rechts was das fuer euch bedeutet.</P>
+
+    <Section id="af-a" title="a) Titel der Projektarbeit" emoji="🏷️" defaultOpen>
+      <TwoCol leftLabel="SO STEHT ES IN DER PA" rightLabel="WAS DAS HEISST"
+        left={<><Hl>Zootier-Klassifikation mit Transfer Learning und Explainability-Analyse mittels Grad-CAM</Hl></>}
+        right="Der Titel sagt in einem Satz: WAS machen wir (Tiere erkennen), WIE (mit Transfer Learning = vortrainiertes Netz weiterverwenden), und was ist das BESONDERE (Grad-CAM = wir schauen dem Modell beim Denken zu). Der Prof soll sofort sehen: Das ist ein Deep-Learning-Projekt."
+      />
+    </Section>
+
+    <Section id="af-b" title="b) Was ist das Ziel der Arbeit?" emoji="🎯">
+      <TwoCol leftLabel="SO STEHT ES IN DER PA" rightLabel="WAS DAS HEISST"
+        left={<>Ziel ist die Entwicklung eines <Hl>Bildklassifikationsmodells</Hl> auf Basis von <Hl>Transfer Learning</Hl> (ResNet-18, vortrainiert auf ImageNet), das Tierbilder einer von 10 Klassen zuordnet. Darueber hinaus wird mittels <Hl>Grad-CAM</Hl>-Visualisierung untersucht, auf welche Bildbereiche das Modell seine Entscheidungen stuetzt, um potenzielle <Hl>Biases</Hl> (z.B. Background Bias) aufzudecken.</>}
+        right={<>Wir bauen ein Programm, das Tierfotos erkennt ("Das ist ein Hund"). Dafuer nehmen wir ein Netz das schon 14 Millionen Bilder gesehen hat (<Ex>Transfer Learning</Ex>) und bringen ihm unsere 10 Tiere bei. Das Besondere: Mit <Ex>Grad-CAM</Ex> pruefen wir, ob es wirklich das Tier erkennt oder nur den Hintergrund (z.B. Wasser = Fisch). Das ist unser wissenschaftlicher Mehrwert.</>}
+      />
+    </Section>
+
+    <Section id="af-c" title="c) Welche Daten verwenden wir?" emoji="📦">
+      <TwoCol leftLabel="SO STEHT ES IN DER PA" rightLabel="WAS DAS HEISST"
+        left={<>Verwendet wird der <Hl>Animals-10</Hl>-Datensatz von Kaggle (ca. 26.000 Bilder, 10 Tierklassen: Schmetterling, Katze, Huhn, Kuh, Hund, Elefant, Pferd, Schaf, Spinne, Eichhoernchen). Der Datensatz ist frei verfuegbar und fuer Bildungszwecke lizenziert.</>}
+        right={<>Ca. 26.000 Tierfotos aus dem Internet, sortiert in 10 Ordner (ein Ordner pro Tierart). Kostenlos auf <Ex>Kaggle</Ex> (Daten-Plattform) herunterzuladen. Wichtig: Die Daten sind schon fertig sortiert, wir muessen sie nicht selbst labeln.</>}
+      />
+    </Section>
+
+    <Section id="af-d" title="d) Welche Methoden setzen wir ein?" emoji="🔧">
+      <TwoCol leftLabel="SO STEHT ES IN DER PA" rightLabel="WAS DAS HEISST"
+        left={<><Hl>Deep Learning</Hl> mit <Hl>PyTorch</Hl>: Transfer Learning (ResNet-18 mit Frozen Backbone + Fine-Tuning des Klassifikationskopfs), Data Augmentation (RandomFlip, Rotation, ColorJitter), systematische Evaluation (Accuracy, F1, Confusion Matrix) und <Hl>Explainability</Hl>-Analyse mittels Grad-CAM.</>}
+        right={<><Ex>PyTorch</Ex> = Die Programmier-Bibliothek mit der wir das Netz bauen (Alternative waere TensorFlow). <Ex>Frozen Backbone</Ex> = Den Hauptteil des Netzes einfrieren, nur die letzte Schicht auf unsere Tiere trainieren. <Ex>Explainability</Ex> = Erklaerbarkeit — WARUM trifft das Modell welche Entscheidung?</>}
+      />
+    </Section>
+
+    <Section id="af-e" title="e) Erwartete Ergebnisse" emoji="📊">
+      <TwoCol leftLabel="SO STEHT ES IN DER PA" rightLabel="WAS DAS HEISST"
+        left={<>Erwartet wird eine <Hl>Test-Accuracy</Hl> von ca. 85-92% auf dem Animals-10-Datensatz. Zentrale Deliverables: (1) Trainiertes Modell mit dokumentierter Performance, (2) Ablationsstudie (mit/ohne Augmentation, ResNet vs. MobileNet), (3) Grad-CAM-Analyse mit Beispielbildern die zeigen, worauf das Modell fokussiert.</>}
+        right={<>Wir erwarten, dass das Modell ca. 85-92 von 100 Bildern richtig erkennt. Aber: <Ex>"Eine Projektarbeit ist nicht gescheitert, wenn die gewuenschte Performance nicht erreicht wird"</Ex> (O-Ton Prof!). Wichtiger als die Zahl ist die ANALYSE: Was klappt, was nicht, und warum?</>}
+      />
+    </Section>
+
+    <Section id="af-f" title="f) Zeitplan" emoji="📅">
+      <TwoCol leftLabel="SO STEHT ES IN DER PA" rightLabel="WAS DAS HEISST"
+        left={<>KW 14-16: Datenanalyse (EDA) und Vorverarbeitung. KW 17-19: Modelltraining und Hyperparameter-Optimierung. KW 20-22: Evaluation, Grad-CAM-Analyse, Ablationsstudie. KW 23-25: Dokumentation und Praesentation. <Hl>Abgabe: 30.06.2026</Hl>. <Hl>PPTX-Vorschlag: 31.03.2026</Hl>.</>}
+        right={<>Grob 4 Phasen: (1) Daten anschauen (2 Wochen), (2) Modell trainieren (3 Wochen), (3) Ergebnisse auswerten + Grad-CAM (3 Wochen), (4) Alles aufschreiben (3 Wochen). <Ex>ACHTUNG: PPTX-Deadline ist 31.03.!</Ex> Da muss mindestens der Vorschlag als 1-2 Folien stehen.</>}
+      />
+    </Section>
+  </div>;
+
+  // ════════════════════════════════════════════
+  // TAB 2: 9 SEKTIONEN (static, two-column)
+  // ════════════════════════════════════════════
+  const SECS=[
+    {nr:1,name:"Problembeschreibung",emoji:"📋",subs:[
+      {t:"Klare Definition des Problems",l:<>Das vorliegende Projekt adressiert ein <Hl>Klassifikationsproblem</Hl> im Bereich der Bildverarbeitung. Gegeben ist ein Eingabebild eines Tieres; das System soll die korrekte Tierart aus 10 Klassen zuordnen.</>,r:<><Ex>Klassifikation</Ex> = Das Programm ordnet etwas in eine Kategorie ein ("Das ist ein Hund"). Die Alternative waere <Ex>Regression</Ex> = eine Zahl vorhersagen ("Das Haus kostet 350.000 Euro"). Wir machen Klassifikation.</>},
+      {t:"Relevanz und Anwendungskontext",l:"Automatisierte Tierart-Erkennung hat praktische Relevanz in der Zoologie (Artenmonitoring durch Wildkameras), im Bildungsbereich und als Benchmark-Problem im Bereich Computer Vision.",r:<><Ex>Computer Vision</Ex> = Der Bereich der KI, der sich mit dem "Sehen" von Computern befasst, also dem Verstehen von Bildern.</>},
+      {t:"Formulierung der Zielsetzung",l:<>Ziel ist ein Modell das Tierfotos zuverlaessig klassifiziert. Mittels <Hl>Grad-CAM</Hl> wird analysiert, welche Bildbereiche die Entscheidung beeinflussen.</>,r:<><Ex>Grad-CAM</Ex> = Farbige Heatmap ueber dem Bild. Rot = "hier schaut das Modell hin", Blau = "das ignoriert es". Damit pruefen wir, ob es wirklich das Tier erkennt und nicht z.B. das Gras.</>},
+      {t:"Erwartete Herausforderungen",l:<>Herausforderungen: <Hl>Inter-Class Similarity</Hl> (aehnliche Arten), <Hl>Background Bias</Hl> (korrelierte Hintergrundmuster), <Hl>Class Imbalance</Hl> und Varianz in Bildqualitaet.</>,r:<><Ex>Inter-Class Similarity</Ex> = Verschiedene Tiere sehen sich aehnlich (Katze vs. kleiner Hund). <Ex>Background Bias</Ex> = Modell lernt den Hintergrund statt das Tier. <Ex>Class Imbalance</Ex> = Von manchen Tieren gibt es viel mehr Bilder.</>},
+    ]},
+    {nr:2,name:"Datenquelle und Datenbeschreibung",emoji:"📦",subs:[
+      {t:"Herkunft der Daten",l:<>Verwendet wird der <Hl>Animals-10</Hl>-Datensatz von Kaggle.</>,r:<><Ex>Kaggle</Ex> = Plattform auf der Datensaetze oeffentlich geteilt werden. Kostenloser Account zum Download. Daten sind schon sortiert.</>},
+      {t:"Lizenz und Verfuegbarkeit",l:"Der Datensatz ist unter einer offenen Lizenz frei verfuegbar und darf fuer Bildungszwecke genutzt werden.",r:"Hier will der Prof sehen, dass wir uns Gedanken gemacht haben, ob wir die Daten ueberhaupt nutzen duerfen. Antwort: Ja."},
+      {t:"Anzahl der Datenpunkte und Features",l:<>Ca. 26.000 Bilder, 10 Klassen. Nach <Hl>Resizing</Hl> auf 224x224 Pixel ergibt sich ein Feature-Vektor der Dimension 150.528 pro Bild.</>,r:<><Ex>Datenpunkte</Ex> = Anzahl Bilder (26.000). <Ex>Features</Ex> = Die einzelnen Zahlenwerte pro Bild. 224x224 Pixel mal 3 Farbwerte = 150.528. <Ex>Resizing</Ex> = Alle Bilder auf gleiche Groesse bringen.</>},
+      {t:"Wichtigste Features",l:<>RGB-Pixelwerte im Format JPEG, Werte [0,255] pro Kanal.</>,r:<><Ex>RGB</Ex> = Rot, Gruen, Blau — die drei Farbkanaele jedes Bildes. 0 = kein Anteil, 255 = maximum.</>},
+      {t:"Verteilung der Zielklassen",l:<>Klassenverteilung ist <Hl>imbalanced</Hl>. Haeufige Klassen (Hund, Katze) haben deutlich mehr Samples als seltene (Schmetterling).</>,r:<><Ex>Imbalanced</Ex> = Ungleich verteilt. Wenn 5.000 Hundebilder aber nur 800 Schmetterlingsbilder vorhanden, lernt das Modell Hunde besser.</>},
+    ]},
+    {nr:3,name:"Explorative Datenanalyse (EDA)",emoji:"🔍",subs:[
+      {t:"Visualisierung der Datenverteilung",l:<><Hl>Bar Chart</Hl> der Klassenfrequenzen, Beispielbilder pro Klasse als Image Grid, Histogramme der Bilddimensionen.</>,r:<><Ex>Bar Chart</Ex> = Balkendiagramm (ein Balken pro Tierart). <Ex>Image Grid</Ex> = Galerie mit je 5 Beispielfotos pro Tier. <Ex>Histogramm</Ex> = Zeigt wie haeufig bestimmte Werte vorkommen.</>},
+      {t:"Korrelationsanalyse",l:<>Mittlere <Hl>Farbverteilung</Hl> (RGB-Kanalwerte) pro Klasse berechnen. Unterschiede deuten auf <Hl>Color Bias</Hl> hin.</>,r:<>Haben bestimmte Tierarten systematisch andere Farben? Wenn alle Fischbilder sehr blau sind, koennte das Modell die Farbe Blau mit Fisch verwechseln.</>},
+      {t:"Muster und Auffaelligkeiten",l:<>Pruefung auf korrupte Dateien, falsch gelabelte Samples, ungewoehnliches <Hl>Aspect Ratio</Hl> und Duplikate.</>,r:<><Ex>Korrupte Dateien</Ex> = Kaputte Bilder. <Ex>Falsch gelabelt</Ex> = Katzenbild im Hunde-Ordner. <Ex>Aspect Ratio</Ex> = Seitenverhaeltnis (16:9 vs. 1:1).</>},
+      {t:"Class Imbalance Analyse",l:<><Hl>Imbalance Ratio</Hl> quantifizieren. Bei Ratio &gt; 3:1: Weighted Loss und Oversampling evaluieren.</>,r:<><Ex>Imbalance Ratio</Ex> = Groesste Klasse / Kleinste Klasse. <Ex>Weighted Loss</Ex> = Seltene Tiere zaehlen mehr. <Ex>Oversampling</Ex> = Bilder seltener Tiere kuenstlich vervielfaeltigen.</>},
+    ]},
+    {nr:4,name:"Datenvorverarbeitung",emoji:"⚙️",subs:[
+      {t:"Fehlende Werte (NaN, Inf)",l:<>Korrupte Bilddateien entfernen. Alle Bilder auf valide <Hl>Tensor</Hl>-Dimensionen pruefen.</>,r:<><Ex>NaN</Ex> = "Not a Number" — Platzhalter fuer fehlende Werte. Bei Bildern: kaputte Dateien sind das Aequivalent. <Ex>Tensor</Ex> = Mehrdimensionales Zahlenfeld.</>},
+      {t:"Outlier-Behandlung",l:<><Hl>Outlier</Hl>: Bilder mit extremer Helligkeit (&lt; 10 oder &gt; 245), extrem niedrige Aufloesung (&lt; 50x50), falsch gelabelt.</>,r:<><Ex>Outlier</Ex> = Ausreisser. Ein fast schwarzes Foto oder ein 20-Pixel-Bild bringt dem Modell nichts.</>},
+      {t:"Normalisierung",l:<>Normalisierung mit <Hl>ImageNet-Statistiken</Hl>: Mean=[0.485,0.456,0.406], Std=[0.229,0.224,0.225].</>,r:<><Ex>Normalisierung</Ex> = Pixelwerte (0-255) in kleine Zahlen nahe Null umrechnen. Weil unser Netz mit bestimmten Mittelwerten trainiert wurde, muessen wir EXAKT dieselben verwenden.</>},
+      {t:"Feature Engineering",l:<>Entfaellt, da <Hl>CNNs</Hl> relevante Merkmale automatisch aus Rohpixeln extrahieren.</>,r:<><Ex>Feature Engineering</Ex> = Manuell neue Eigenschaften berechnen. Bei Bildern macht das neuronale Netz das fuer uns. <Ex>CNN</Ex> = Netz-Typ speziell fuer Bilder.</>},
+      {t:"Encoding",l:<>Zielklassen als Integer-Labels: 0=butterfly, 1=cat, ..., 9=squirrel (<Hl>Label Encoding</Hl>).</>,r:<><Ex>Label Encoding</Ex> = Einfach durchnummerieren: Katze=1, Hund=2 etc. Macht die Software automatisch.</>},
+    ]},
+    {nr:5,name:"Data Augmentation (optional)",emoji:"🎨",subs:[
+      {t:"Augmentation-Techniken",l:<><Hl>RandomHorizontalFlip</Hl> (p=0.5), <Hl>RandomRotation</Hl> (15 Grad), <Hl>ColorJitter</Hl> (Brightness/Contrast/Saturation=0.2), <Hl>RandomResizedCrop</Hl> (224, Scale 0.8-1.0).</>,r:<><Ex>Data Augmentation</Ex> = Kuenstliche Datenvermehrung. Bild spiegeln, leicht drehen, Farben aendern, zufaelligen Ausschnitt nehmen. So sieht das Modell mehr Variation ohne neue Fotos.</>},
+      {t:"Auswirkung auf Datenmenge",l:<>Pro <Hl>Epoch</Hl> sieht das Modell verschiedene Varianten. Vertikale Spiegelung ausgeschlossen. <Hl>Ablationsvergleich</Hl>: mit/ohne Augmentation.</>,r:<><Ex>Epoch</Ex> = Ein Durchlauf durch alle Bilder. <Ex>Ablationsvergleich</Ex> = Zweimal trainieren: MIT und OHNE Augmentation, dann vergleichen.</>},
+    ]},
+    {nr:6,name:"Modellauswahl und -architektur",emoji:"🧠",subs:[
+      {t:"Begruendung Modellauswahl",l:<>Vergleich: (1) <Hl>ResNet-18</Hl> (18 Schichten, vortrainiert auf ImageNet), (2) <Hl>MobileNetV2</Hl> (leichtgewichtig, optimiert fuer Effizienz).</>,r:<><Ex>ResNet-18</Ex> = Netz mit 18 Schichten, vortrainiert auf 14 Mio. Bildern. Der Klassiker. <Ex>MobileNet</Ex> = Leichtere Alternative, laeuft auch auf Handys. Wir vergleichen beide.</>},
+      {t:"Finale Architektur",l:<>ResNet-18 mit <Hl>Frozen Backbone</Hl>. Finaler <Hl>FC-Layer</Hl> (1000 Klassen) wird durch 10-Output-Layer ersetzt. Optional <Hl>Dropout</Hl> (p=0.3).</>,r:<><Ex>Frozen</Ex> = Eingefroren, diese Schichten bleiben unveraendert. <Ex>FC-Layer</Ex> = Letzte Schicht die die Entscheidung trifft. NUR diese trainieren wir auf unsere 10 Tiere. <Ex>Dropout</Ex> = 30% Verbindungen zufaellig abschalten gegen Auswendiglernen.</>},
+      {t:"Hyperparameter",l:<><Hl>Learning Rate</Hl>: 0.001 (Adam). <Hl>Batch Size</Hl>: 32. Epochs: 25 mit <Hl>Early Stopping</Hl> (Patience=5). Loss: CrossEntropyLoss. <Hl>StepLR</Hl>: Faktor 0.1 alle 10 Epochs.</>,r:<><Ex>Learning Rate</Ex> = Schrittgroesse beim Lernen. <Ex>Adam</Ex> = Algorithmus der die Rate automatisch anpasst. <Ex>Batch Size</Ex> = 32 Bilder gleichzeitig. <Ex>Early Stopping</Ex> = Aufhoeren wenn 5 Runden nichts besser wird. <Ex>StepLR</Ex> = Lernrate wird kleiner ueber die Zeit.</>},
+    ]},
+    {nr:7,name:"Training und Optimierung",emoji:"🏋️",subs:[
+      {t:"Training (Epochs, Batch, Optimizer)",l:<>Max. 25 Epochs, Batch Size 32, <Hl>Adam</Hl> mit LR 0.001. <Hl>StepLR-Scheduler</Hl> reduziert LR alle 10 Epochs. Training auf <Hl>GPU</Hl> (Google Colab).</>,r:<>Das Modell schaut sich 25-mal alle Bilder an, jeweils 32 auf einmal. <Ex>GPU</Ex> = Grafikkarte fuer schnelles Rechnen. Ohne GPU: Stunden statt Minuten.</>},
+      {t:"Loss-Funktion",l:<><Hl>CrossEntropyLoss</Hl> — Standard fuer Multi-Class-Klassifikation. Optional <Hl>Weighted</Hl> bei Class Imbalance.</>,r:<><Ex>Loss-Funktion</Ex> = Misst wie falsch das Modell liegt. "Katze mit 10% Sicherheit" bei echtem Katzenbild = hoher Loss. <Ex>Weighted</Ex> = Seltene Tiere zaehlen mehr.</>},
+      {t:"Overfitting-Analyse",l:<><Hl>Train-Loss</Hl> vs. <Hl>Validation-Loss</Hl> pro Epoch als Loss-Kurven-Plot. Divergenz = Overfitting. Gegenmassnahmen: Dropout, Early Stopping, Augmentation.</>,r:<><Ex>Overfitting</Ex> = Auswendiglernen statt Verstehen. Trainings-Linie faellt weiter, Validierungs-Linie steigt = Alarm! <Ex>Early Stopping</Ex> = Automatisch aufhoeren.</>},
+      {t:"Regularisierung",l:<><Hl>Dropout</Hl> (p=0.3), <Hl>Weight Decay</Hl> (L2, Lambda=1e-4). Frozen Backbone wirkt als implizite Regularisierung.</>,r:<><Ex>Regularisierung</Ex> = Techniken gegen Overfitting. <Ex>Dropout</Ex> = Zufaellig 30% Verbindungen aus. <Ex>Weight Decay</Ex> = Grosse Gewichte bestrafen. Frozen Backbone = Nur wenige Parameter trainieren = weniger Overfitting.</>},
+    ]},
+    {nr:8,name:"Evaluation und Ergebnisse",emoji:"📊",subs:[
+      {t:"Metriken",l:<><Hl>Accuracy</Hl>, <Hl>Precision</Hl>, <Hl>Recall</Hl>, <Hl>F1-Score</Hl>. Sowohl Macro- als auch Weighted-Average.</>,r:<><Ex>Accuracy</Ex> = "89 von 100 richtig" = 89%. <Ex>Precision</Ex> = Von allen als Hund markierten waren X% wirklich Hunde. <Ex>Recall</Ex> = Von allen echten Hunden hat es X% erkannt. <Ex>F1</Ex> = Kombination aus beiden.</>},
+      {t:"Darstellung (Confusion Matrix etc.)",l:<><Hl>Confusion Matrix</Hl> als Heatmap, Classification Report, Loss/Accuracy-Kurven, <Hl>Grad-CAM-Heatmaps</Hl> fuer korrekte und falsche Vorhersagen.</>,r:<><Ex>Confusion Matrix</Ex> = Tabelle: welche Tiere mit welchen verwechselt. Zeile = echt, Spalte = Vorhersage. <Ex>Grad-CAM</Ex> = Heatmap UEBER dem Bild: Rot = Modell schaut hier hin.</>},
+      {t:"Modellvergleich",l:<>3 Konfigurationen: (1) ResNet-18 + Augmentation, (2) ResNet-18 ohne Augmentation, (3) MobileNetV2 + Augmentation.</>,r:"Wir trainieren DREI Varianten und vergleichen fair: Hilft Augmentation? Ist das groessere Netz besser?"},
+      {t:"Interpretation / Grad-CAM",l:<>Klassenweise Performance, <Hl>Grad-CAM-Analyse</Hl> (Tier oder Hintergrund?), Fehleranalyse der am haeufigsten verwechselten Klassen.</>,r:<>Unser <Ex>Alleinstellungsmerkmal</Ex>: Mit Grad-CAM SEHEN wir ob das Modell betruegt. Fisch-Bilder: Schaut es auf Wasser statt Fisch? Das ist wissenschaftlicher als nur "Accuracy: 90%, fertig."</>},
+    ]},
+    {nr:9,name:"Diskussion und Ausblick",emoji:"💬",subs:[
+      {t:"Zusammenfassung",l:<>Erreichte Accuracy vs. <Hl>Baseline</Hl> (Random Guess = 10%). Unterschiede zwischen den 3 Modellkonfigurationen. Erkenntnisse aus Grad-CAM.</>,r:<><Ex>Baseline</Ex> = Duemmster Ansatz zum Vergleich. Zufaelliges Raten = 10%. Alles darueber = besser als Zufall. Der Prof will sehen dass wir VERSTEHEN was wir gemacht haben.</>},
+      {t:"Bewertung",l:<>Staerken (z.B. hohe Accuracy bei distinktiven Klassen) und Schwaechen (z.B. Verwechslung aehnlicher Arten).</>,r:<>Ehrliche Einschaetzung. Prof-Zitat: "Eine Projektarbeit ist nicht gescheitert wenn die Performance nicht erreicht wird." Es geht um die ANALYSE.</>},
+      {t:"Limitationen",l:<>(1) <Hl>Datensatz-Bias</Hl> — nur 10 Arten. (2) Domainabhaengigkeit. (3) Frozen Backbone vs. volles Fine-Tuning.</>,r:<><Ex>Limitationen</Ex> = Grenzen der Arbeit. Das ist KEIN Schwaeche-Eingestaendnis sondern wissenschaftliche Reife. Der Prof WILL das sehen.</>},
+      {t:"Verbesserungen und Ausblick",l:<>Fine-Tuning der letzten ResNet-Bloecke, mehr Klassen, <Hl>Ensemble-Methoden</Hl>, Deployment als Web-App.</>,r:<><Ex>Fine-Tuning</Ex> = Mehr Schichten trainieren. <Ex>Ensemble</Ex> = Mehrere Modelle abstimmen. Das sind Ideen fuer die ZUKUNFT, nicht fuer unsere PA.</>},
+    ]},
+  ];
+
+  const tabSections=()=><div>
+    <P>Alle 9 Pflicht-Sektionen der Projektarbeit mit Zwei-Spalten-Erklaerung. Links der offizielle PA-Text, rechts was das fuer euch bedeutet.</P>
+    {SECS.map(sec=><Section key={sec.nr} id={`sec-${sec.nr}`} title={`${sec.nr}. ${sec.name}`} emoji={sec.emoji} defaultOpen={sec.nr===1}>
+      {sec.subs.map((sub,si)=><div key={si}>
+        <SubH>{sub.t}</SubH>
+        <TwoCol leftLabel="SO STEHT ES IN DER PA" rightLabel="WAS DAS HEISST" left={sub.l} right={sub.r}/>
+      </div>)}
+    </Section>)}
+
+    <Section id="sec-zusatz" title="Zusaetzliche Anforderungen" emoji="📦">
+      <SubH>requirements.txt</SubH>
+      <TwoCol leftLabel="SO STEHT ES IN DER PA" rightLabel="WAS DAS HEISST"
+        left={<>Alle Python-Pakete mit Versionsangaben: torch, torchvision, matplotlib, scikit-learn, Pillow, grad-cam, numpy, pandas</>}
+        right={<><Ex>requirements.txt</Ex> = Textdatei mit allen Zutaten. Damit kann jeder unsere Umgebung nachbauen. Erstellen mit: pip freeze &gt; requirements.txt</>}
+      />
+      <SubH>README.md</SubH>
+      <TwoCol leftLabel="SO STEHT ES IN DER PA" rightLabel="WAS DAS HEISST"
+        left="Projekttitel, Kurzbeschreibung, Installationsanleitung, Ausfuehrungsanleitung, Projektstruktur, Hardware-Angaben."
+        right={<><Ex>README.md</Ex> = Die "Bedienungsanleitung" die auf der Git-Startseite angezeigt wird. Jeder soll sofort verstehen: Was ist das? Wie starte ich es?</>}
+      />
+      <SubH>Code Quality</SubH>
+      <TwoCol leftLabel="SO STEHT ES IN DER PA" rightLabel="WAS DAS HEISST"
+        left="Kommentierung, Modularisierung (data_loading.py, model.py, train.py, evaluate.py), PEP 8 Style."
+        right={<><Ex>Code Quality</Ex> = Sauberer, lesbarer Code. Aufteilen in Dateien, Kommentare schreiben. <Ex>PEP 8</Ex> = Python Style-Guide (4 Leerzeichen Einrueckung, snake_case).</>}
+      />
+    </Section>
+  </div>;
+
+  // ════════════════════════════════════════════
+  // TAB 3: BEGINNER GUIDE (1-12, static)
+  // ════════════════════════════════════════════
+  const GLOSSAR=[
+    {term:"Accuracy",def:"\"Von 100 Bildern hat es 89 richtig erkannt\" = 89% Accuracy. Die einfachste Metrik."},
+    {term:"Ablationsstudie",def:"Gezielt eine Zutat weglassen und schauen was passiert. Wir trainieren mit und ohne Augmentation und vergleichen."},
+    {term:"Adam (Optimizer)",def:"Ein Algorithmus der die Lerngeschwindigkeit automatisch anpasst. Wie ein Fahrschueler der langsamer wird wenn die Kurve kommt."},
+    {term:"Augmentation",def:"Kuenstliche Datenvermehrung: Bilder spiegeln, drehen, Farben aendern. Aus 1.000 Bildern werden quasi 5.000."},
+    {term:"Background Bias",def:"Das Modell lernt den Hintergrund statt das Tier. Alle Fischbilder haben Wasser → es lernt: Wasser = Fisch."},
+    {term:"Baseline",def:"Der duemmste Ansatz zum Vergleich. Zufaelliges Raten bei 10 Klassen = 10% Accuracy."},
+    {term:"Batch Size",def:"Wie viele Bilder gleichzeitig verarbeitet werden. 32 = 32 Bilder, dann Gewichte anpassen."},
+    {term:"Class Imbalance",def:"Ungleiche Verteilung: 5.000 Hundebilder aber nur 800 Schmetterlingsbilder."},
+    {term:"CNN (Convolutional Neural Network)",def:"Netz-Typ speziell fuer Bilder. Erkennt Muster schichtweise: erst Kanten, dann Formen, dann Objekte."},
+    {term:"Confusion Matrix",def:"Tabelle die zeigt welche Tiere mit welchen verwechselt werden. Zeile = echtes Tier, Spalte = Vorhersage."},
+    {term:"CrossEntropyLoss",def:"Misst wie falsch die Vorhersage ist. \"10% Katze\" bei echtem Katzenbild = hoher Loss, \"95% Katze\" = niedriger Loss."},
+    {term:"Data Augmentation",def:"Siehe Augmentation."},
+    {term:"Deep Learning",def:"Neuronale Netze mit vielen Schichten. Kann automatisch Muster lernen, braucht aber viele Daten und Rechenpower."},
+    {term:"Dropout",def:"Zufaellig 30% der Verbindungen im Netz abschalten — verhindert Auswendiglernen."},
+    {term:"Early Stopping",def:"Aufhoeren zu trainieren wenn 5 Runden lang keine Verbesserung. Spart Zeit und verhindert Overfitting."},
+    {term:"EDA (Explorative Datenanalyse)",def:"Die Daten genau anschauen bevor man loslegt: Wie viele Bilder pro Klasse? Gibt es kaputte Dateien?"},
+    {term:"Epoch",def:"Ein kompletter Durchlauf durch ALLE Trainingsbilder. 25 Epochs = das Modell sieht jedes Bild 25 mal."},
+    {term:"Explainability",def:"Erklaerbarkeit: WARUM trifft das Modell welche Entscheidung? Grad-CAM macht das sichtbar."},
+    {term:"F1-Score",def:"Kombination aus Precision und Recall. Gut wenn beide gut sind, schlecht wenn eines schlecht ist."},
+    {term:"Feature",def:"Ein einzelner Zahlenwert den das Modell als Eingabe bekommt. Bei Bildern: jeder Pixelfarbwert."},
+    {term:"Feature Engineering",def:"Manuell neue Eigenschaften berechnen. Bei Bildern macht das CNN das automatisch."},
+    {term:"Fine-Tuning",def:"Nicht nur die letzte Schicht trainieren, sondern auch einige davor. Kann besser werden, braucht aber mehr Rechenpower."},
+    {term:"Frozen Backbone",def:"Den Hauptteil des vortrainierten Netzes einfrieren = nicht veraendern. Nur die letzte Schicht wird trainiert."},
+    {term:"GPU",def:"Grafikkarte. Kann viele Berechnungen parallel machen. Ohne GPU: Training dauert Stunden statt Minuten."},
+    {term:"Grad-CAM",def:"Farbige Heatmap ueber dem Bild: Rot = \"hier schaut das Modell hin\". Unser Alleinstellungsmerkmal!"},
+    {term:"Hyperparameter",def:"Einstellungen die man VOR dem Training festlegt: Lernrate, Batch Size, Anzahl Epochs. Wie Backrezept-Einstellungen."},
+    {term:"ImageNet",def:"Riesiger Datensatz mit 14 Mio. Bildern und 1.000 Kategorien. Darauf wurde ResNet-18 vortrainiert."},
+    {term:"Imbalance Ratio",def:"Verhaeltnis groesste/kleinste Klasse. 5000:800 = 6.25:1. Ab 3:1 sollte man Gegenmassnahmen ergreifen."},
+    {term:"Kaggle",def:"Plattform auf der Datensaetze geteilt werden. Unser Animals-10 Datensatz kommt von dort."},
+    {term:"Label Encoding",def:"Text in Zahlen umwandeln: Katze=1, Hund=2. Computer rechnen nur mit Zahlen."},
+    {term:"Learning Rate",def:"Schrittgroesse beim Lernen. Zu gross = springt ueber die Loesung. Zu klein = braucht ewig. 0.001 ist Standard."},
+    {term:"Loss",def:"Zahl die angibt wie falsch das Modell liegt. Ziel: Loss so klein wie moeglich machen."},
+    {term:"MobileNetV2",def:"Leichtgewichtiges Netz fuer Handys. Vergleichen wir mit ResNet-18 um zu sehen ob groesser = besser."},
+    {term:"Normalisierung",def:"Pixelwerte (0-255) in kleine Zahlen nahe Null umrechnen. Modell lernt besser mit kleinen Zahlen."},
+    {term:"Outlier",def:"Ausreisser: fast schwarze Fotos, winzige Bilder, falsch sortierte Bilder. Muessen raus."},
+    {term:"Overfitting",def:"Das Modell lernt Trainingsbilder auswendig statt allgemeine Muster. Wie Schueler der Loesungen memoriert."},
+    {term:"Precision",def:"Von allen als Hund markierten: Wie viel Prozent waren WIRKLICH Hunde?"},
+    {term:"PyTorch",def:"Die Programmier-Bibliothek mit der wir das neuronale Netz bauen. Alternative: TensorFlow."},
+    {term:"Recall",def:"Von allen echten Hunden: Wie viel Prozent hat das Modell auch als Hund erkannt?"},
+    {term:"Regularisierung",def:"Techniken die verhindern dass das Modell zu komplex wird: Dropout, Weight Decay, Early Stopping."},
+    {term:"ResNet-18",def:"Ein Netz mit 18 Schichten, vortrainiert auf 14 Mio. Bildern (ImageNet). Unser Hauptmodell."},
+    {term:"RGB",def:"Rot, Gruen, Blau — die drei Farbkanaele jedes digitalen Bildes."},
+    {term:"Tensor",def:"Mehrdimensionales Zahlenfeld. Ein Bild als 3D-Block: Hoehe x Breite x 3 Farbkanaele."},
+    {term:"Transfer Learning",def:"Vortrainiertes Netz (z.B. auf 14 Mio. Bildern) nehmen und fuer eigene Aufgabe anpassen. Spart enorm viel Training."},
+    {term:"Weighted Loss",def:"Seltene Klassen zaehlen bei der Fehlermessung mehr. Verhindert dass das Modell nur haeufige Klassen lernt."},
+  ];
+
+  const tabGuide=()=>{
+    const filtered=GLOSSAR.filter(g=>!glossarFilter||g.term.toLowerCase().includes(glossarFilter.toLowerCase())||g.def.toLowerCase().includes(glossarFilter.toLowerCase()));
+    return <div>
+
+    <Section id="bg-1" title="1. Was die PA eigentlich von euch will" emoji="🎯" defaultOpen>
+      <div style={{padding:"14px 16px",background:t.okBg,border:`1px solid ${t.ok}30`,borderRadius:t.term?6:10,marginBottom:12}}>
+        <div style={{fontSize:13,color:t.txB,lineHeight:1.8}}>
+          Die Projektarbeit ist <Hl>KEIN Hexenwerk</Hl>. Im Kern sollt ihr zeigen, dass ihr:<br/>
+          (1) Ein <Ex>Problem</Ex> erkannt habt (Tiere auf Fotos erkennen),<br/>
+          (2) passende <Ex>Daten</Ex> gefunden habt (Animals-10 von Kaggle),<br/>
+          (3) ein <Ex>Modell</Ex> gewaehlt habt (ResNet-18 mit Transfer Learning),<br/>
+          (4) es <Ex>trainiert</Ex> und <Ex>ausgewertet</Ex> habt (Accuracy, Confusion Matrix),<br/>
+          (5) und <Ex>ehrlich reflektiert</Ex> habt was gut und schlecht lief.
+        </div>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
+        {[["Machbar","Die meiste Arbeit ist Copy-Paste aus Tutorials + Anpassung","🟢"],["Analyse > Performance","Der Prof will VERSTEHEN sehen, nicht perfekte Zahlen","🟡"],["Grad-CAM = USP","DAS macht euer Projekt besonders","🔴"]].map(([title,desc,icon],i)=>
+          <div key={i} style={{padding:"12px",background:t.bgC,border:`1px solid ${t.bd}`,borderRadius:t.term?6:8,textAlign:"center"}}>
+            <div style={{fontSize:20,marginBottom:6}}>{icon}</div>
+            <div style={{fontSize:12,fontWeight:700,color:t.tx,marginBottom:4}}>{title}</div>
+            <div style={{fontSize:11,color:t.txM,lineHeight:1.5}}>{desc}</div>
+          </div>
+        )}
+      </div>
+    </Section>
+
+    <Section id="bg-2" title="2. ML als Student erklaert" emoji="🎓">
+      <div style={{padding:"14px 16px",background:t.infBg,border:`1px solid ${t.inf}30`,borderRadius:t.term?6:10}}>
+        <div style={{fontSize:13,color:t.txB,lineHeight:1.8}}>
+          Stellt euch <Hl>Machine Learning als Studenten</Hl> vor:<br/><br/>
+          <Ex>Trainingsphase</Ex> = Der Student lernt mit Karteikarten. Jede Karte hat ein Tierfoto (Vorderseite) und den Namen (Rueckseite). Er schaut sich 25-mal ALLE Karten an (= 25 Epochs).<br/><br/>
+          <Ex>Validierung</Ex> = Nach jeder Runde wird er mit neuen Bildern getestet, die er noch nie gesehen hat. Werden die Ergebnisse 5 Runden lang nicht besser, hoert er auf (= Early Stopping).<br/><br/>
+          <Ex>Transfer Learning</Ex> = Der Student hat vorher schon 14 Mio. andere Bilder gesehen (ImageNet) und weiss was Kanten, Formen und Texturen sind. Jetzt muss er nur noch lernen: "Diese Kombination aus Mustern = Katze".<br/><br/>
+          <Ex>Overfitting</Ex> = Der Student lernt die Antworten auswendig statt zu verstehen. Er erkennt GENAU die Trainingsbilder, versagt aber bei neuen.<br/><br/>
+          <Ex>Grad-CAM</Ex> = Wir fragen den Studenten: "WARUM sagst du Katze?" und er zeigt auf die Stelle im Bild die ihn ueberzeugt hat.
+        </div>
+      </div>
+    </Section>
+
+    <Section id="bg-3" title="3. Glossar A-Z (durchsuchbar)" emoji="📖">
+      <input value={glossarFilter} onChange={e=>setGlossarFilter(e.target.value)} placeholder="Begriff suchen..." style={{width:"100%",boxSizing:"border-box",padding:"10px 14px",borderRadius:t.term?6:8,border:`1px solid ${t.bd}`,background:t.bgI,fontFamily:t.sf,fontSize:13,color:t.tx,outline:"none",marginBottom:12}}/>
+      <div style={{fontSize:11,color:t.txM,marginBottom:12}}>{filtered.length} von {GLOSSAR.length} Begriffen</div>
+      <div style={{maxHeight:400,overflowY:"auto",paddingRight:8}}>
+        {filtered.map((g,i)=><div key={i} style={{padding:"8px 12px",background:i%2===0?t.bgC:"transparent",borderRadius:t.term?4:6,marginBottom:2}}>
+          <span style={{fontWeight:700,color:t.ac,fontSize:13}}>{g.term}</span>
+          <span style={{color:t.txM,fontSize:12}}> — </span>
+          <span style={{color:t.txB,fontSize:12,lineHeight:1.6}}>{g.def}</span>
+        </div>)}
+      </div>
+    </Section>
+
+    <Section id="bg-4" title="4. Die 9 Sektionen — kurz und knapp" emoji="📝">
+      <div style={{fontSize:13,color:t.txB,lineHeight:1.8,marginBottom:12}}>Jede Sektion in einem Satz — was sie WIRKLICH von euch will:</div>
+      {[
+        ["1. Problembeschreibung","Erklaert WAS ihr macht und WARUM es wichtig ist.","Man muss es einer fachfremden Person erklaeren koennen."],
+        ["2. Datenquelle","Woher kommen die Daten, wie gross, wie verteilt?","Link zum Datensatz + Grundstatistiken reichen."],
+        ["3. EDA","Schaut euch die Daten AN bevor ihr loslegt.","5-6 Plots mit kurzer Beschreibung."],
+        ["4. Vorverarbeitung","Macht die Daten fit fuers Modell.","Normalisierung + kaputte Bilder rauswerfen."],
+        ["5. Augmentation","Kuenstlich mehr Daten erzeugen.","3-4 Zeilen Code, Vorher/Nachher-Bild zeigen."],
+        ["6. Modellarchitektur","Welches Netz und warum genau dieses?","ResNet-18 weil bewaehrt + Transfer Learning."],
+        ["7. Training","WIE habt ihr trainiert?","Hyperparameter auflisten + Loss-Kurven zeigen."],
+        ["8. Evaluation","Wie GUT ist das Ergebnis?","Confusion Matrix + Grad-CAM Heatmaps."],
+        ["9. Diskussion","Ehrliche Reflexion: Was lief gut, was nicht?","Limitationen nennen = Staerke, nicht Schwaeche!"],
+      ].map(([title,what,tip],i)=><div key={i} style={{display:"grid",gridTemplateColumns:"200px 1fr 1fr",gap:0,border:`1px solid ${t.bd}`,borderRadius:t.term?4:6,overflow:"hidden",marginBottom:4}}>
+        <div style={{padding:"8px 12px",background:t.ac+"12",fontWeight:700,fontSize:12,color:t.ac}}>{title}</div>
+        <div style={{padding:"8px 12px",fontSize:12,color:t.txB,borderLeft:`1px solid ${t.bd}`}}>{what}</div>
+        <div style={{padding:"8px 12px",fontSize:12,color:t.txM,fontStyle:"italic",borderLeft:`1px solid ${t.bd}`}}>{tip}</div>
+      </div>)}
+    </Section>
+
+    <Section id="bg-5" title="5. Unser Projekt in einem Bild" emoji="🗺️">
+      <div style={{display:"grid",gridTemplateColumns:"1fr",gap:8}}>
+        {[
+          {step:"EINGABE",desc:"26.000 Tierfotos (Animals-10 Datensatz von Kaggle)",color:t.inf},
+          {step:"VORBEREITUNG",desc:"Bilder auf 224x224 zuschneiden, Farben normalisieren, kaputte rauswerfen",color:t.math},
+          {step:"AUGMENTATION",desc:"Spiegeln, Drehen, Farben aendern → kuenstlich mehr Daten",color:t.ac},
+          {step:"MODELL",desc:"ResNet-18 (vortrainiert auf ImageNet) → nur letzte Schicht auf 10 Tiere trainieren",color:"#7c3aed"},
+          {step:"TRAINING",desc:"25 Epochs, Batch Size 32, Adam Optimizer, Early Stopping",color:t.ok},
+          {step:"ERGEBNIS",desc:"Accuracy ~85-92%, Confusion Matrix, Grad-CAM Heatmaps",color:t.err},
+        ].map((s,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:12}}>
+          <div style={{width:8,height:8,borderRadius:"50%",background:s.color,flexShrink:0}}/>
+          <div style={{flex:1,display:"flex",alignItems:"center",gap:12,padding:"10px 14px",background:s.color+"10",border:`1px solid ${s.color}30`,borderRadius:t.term?4:8}}>
+            <span style={{fontWeight:700,fontSize:11,color:s.color,width:120,flexShrink:0}}>{s.step}</span>
+            <span style={{fontSize:12,color:t.txB}}>{s.desc}</span>
+          </div>
+          {i<5&&<div style={{position:"absolute",left:20,width:2,height:8,background:t.bd}}/>}
+        </div>)}
+      </div>
+    </Section>
+
+    <Section id="bg-6" title="6. Das NASA-Beispiel des Profs erklaert" emoji="🚀">
+      <TwoCol leftLabel="DAS PROF-BEISPIEL (NASA CMAPSS)" rightLabel="UNSER PROJEKT IM VERGLEICH"
+        left={<>Der Prof zeigt als Beispiel ein Projekt zur <Hl>Vorhersage der Restlebensdauer</Hl> von Flugzeugturbinen. Das ist ein <Ex>Regressionsproblem</Ex> (eine Zahl vorhersagen: "Noch 42 Zyklen bis zum Ausfall"). Er verwendet dafuer ein <Hl>LSTM-Netz</Hl> (gut fuer Zeitreihen) auf dem NASA CMAPSS-Datensatz (Sensordaten von Turbinen).</>}
+        right={<>Unser Projekt ist ein <Ex>Klassifikationsproblem</Ex> (eine Kategorie vorhersagen: "Das ist ein Hund"). Wir verwenden ein <Ex>CNN</Ex> (gut fuer Bilder) statt LSTM (gut fuer Zeitreihen). Anderer Datentyp, anderes Netz, andere Metrik — aber die 9 Sektionen der Doku sind IDENTISCH. Das ist der Witz: Die Struktur passt fuer JEDES ML-Projekt.</>}
+      />
+    </Section>
+
+    <Section id="bg-7" title="7. Ehrliche Einschaetzung fuer Anfaenger" emoji="💪">
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+        <div style={{padding:"14px 16px",background:t.okBg,border:`1px solid ${t.ok}30`,borderRadius:t.term?6:8}}>
+          <div style={{fontSize:12,fontWeight:700,color:t.ok,marginBottom:8}}>DAS SCHAFFT IHR</div>
+          <div style={{fontSize:12,color:t.txB,lineHeight:1.8}}>
+            • Datensatz runterladen und anschauen<br/>
+            • EDA-Plots erstellen (5-6 Diagramme)<br/>
+            • Fertigen Code aus Tutorials anpassen<br/>
+            • Training laufen lassen (Colab)<br/>
+            • Ergebnisse dokumentieren<br/>
+            • 9 Sektionen schreiben (mit diesem Guide!)
+          </div>
+        </div>
+        <div style={{padding:"14px 16px",background:t.errBg,border:`1px solid ${t.err}30`,borderRadius:t.term?6:8}}>
+          <div style={{fontSize:12,fontWeight:700,color:t.err,marginBottom:8}}>DAS WIRD KNIFFLIG</div>
+          <div style={{fontSize:12,color:t.txB,lineHeight:1.8}}>
+            • Grad-CAM einbauen (braucht pytorch-grad-cam Bibliothek)<br/>
+            • Hyperparameter-Tuning verstehen<br/>
+            • Overfitting erkennen und bekaempfen<br/>
+            • Wissenschaftlich formulieren<br/>
+            • Alles rechtzeitig fertig haben
+          </div>
+        </div>
+      </div>
+      <div style={{marginTop:12,padding:"12px 14px",background:t.infBg,border:`1px solid ${t.inf}30`,borderRadius:t.term?6:8}}>
+        <div style={{fontSize:12,fontWeight:700,color:t.inf,marginBottom:6}}>WICHTIGSTER SATZ VOM PROF</div>
+        <div style={{fontSize:14,color:t.tx,fontWeight:600,fontStyle:"italic",lineHeight:1.6}}>"Eine Projektarbeit ist nicht gescheitert, wenn die gewuenschte Performance nicht erreicht wird."</div>
+        <div style={{fontSize:12,color:t.txM,marginTop:6}}>Heisst: Auch wenn das Modell nur 75% Accuracy erreicht, koennt ihr eine gute Note bekommen — wenn die Analyse stimmt!</div>
+      </div>
+    </Section>
+
+    <Section id="bg-8" title="8. Warum Grad-CAM uns besonders macht" emoji="🔥">
+      <div style={{fontSize:13,color:t.txB,lineHeight:1.8,marginBottom:12}}>
+        Die meisten Studenten-Projekte enden bei: <Ex>"Accuracy: 89%, fertig."</Ex> Wir gehen weiter und fragen: <Hl>"WARUM sagt das Modell Katze?"</Hl>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
+        {[
+          ["Ohne Grad-CAM","\"Accuracy: 89%\" — Blackbox. Keiner weiss warum.","😐"],
+          ["Mit Grad-CAM","\"Das Modell schaut auf die Ohrenform\" — nachvollziehbar!","🎯"],
+          ["Bonus","\"Es schaut aufs Wasser statt den Fisch\" — Bias aufgedeckt!","🔍"],
+        ].map(([title,desc,emoji],i)=><div key={i} style={{padding:"12px",background:t.bgC,border:`1px solid ${t.bd}`,borderRadius:t.term?6:8,textAlign:"center"}}>
+          <div style={{fontSize:24,marginBottom:8}}>{emoji}</div>
+          <div style={{fontSize:12,fontWeight:700,color:t.tx,marginBottom:6}}>{title}</div>
+          <div style={{fontSize:11,color:t.txM,lineHeight:1.5}}>{desc}</div>
+        </div>)}
+      </div>
+    </Section>
+
+    <Section id="bg-9" title="9. Schritt-fuer-Schritt Fahrplan" emoji="🗓️">
+      {[
+        {kw:"KW 14-15",title:"Setup + Daten",tasks:"Kaggle-Account, Datensatz runterladen, Google Colab einrichten, Git-Repo erstellen",status:"🟢 Machbar"},
+        {kw:"KW 16-17",title:"EDA + Vorverarbeitung",tasks:"5-6 Plots erstellen, Daten normalisieren, Train/Val/Test aufteilen, kaputte Bilder entfernen",status:"🟢 Machbar"},
+        {kw:"KW 18-19",title:"Modell + Training",tasks:"ResNet-18 laden, FC-Layer anpassen, Training laufen lassen, Loss-Kurven plotten",status:"🟡 Etwas knifflig"},
+        {kw:"KW 20-21",title:"Evaluation + Grad-CAM",tasks:"Metriken berechnen, Confusion Matrix, Grad-CAM Heatmaps generieren, MobileNet zum Vergleich",status:"🟡 Etwas knifflig"},
+        {kw:"KW 22-23",title:"Ablationsstudie",tasks:"Mit/ohne Augmentation vergleichen, ResNet vs. MobileNet Tabelle erstellen",status:"🟢 Machbar"},
+        {kw:"KW 24-25",title:"Doku schreiben",tasks:"9 Sektionen ausfuellen (diesen Guide als Vorlage!), README.md, requirements.txt, Code aufraeumen",status:"🟢 Machbar"},
+        {kw:"KW 26",title:"Abgabe 30.06.",tasks:"Alles pruefen, Git pushen, PDF/Markdown exportieren",status:"🟢 Machbar"},
+      ].map((w,i)=><div key={i} style={{display:"flex",gap:12,marginBottom:8,alignItems:"flex-start"}}>
+        <div style={{width:80,flexShrink:0,padding:"8px 0",textAlign:"center"}}>
+          <div style={{fontSize:12,fontWeight:700,color:t.ac}}>{w.kw}</div>
+          <div style={{fontSize:10,color:t.txM}}>{w.status}</div>
+        </div>
+        <div style={{flex:1,padding:"10px 14px",background:t.bgC,border:`1px solid ${t.bd}`,borderRadius:t.term?4:8,borderLeft:`3px solid ${t.ac}`}}>
+          <div style={{fontSize:13,fontWeight:700,color:t.tx,marginBottom:4}}>{w.title}</div>
+          <div style={{fontSize:12,color:t.txM,lineHeight:1.6}}>{w.tasks}</div>
+        </div>
+      </div>)}
+    </Section>
+
+    <Section id="bg-10" title="10. Typische Fehler vermeiden" emoji="⚠️">
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+        {[
+          ["❌ Nur Accuracy berichten","✅ Auch Precision, Recall, F1, Confusion Matrix"],
+          ["❌ Keine Augmentation","✅ Mit UND ohne Augmentation vergleichen"],
+          ["❌ Nur ein Modell testen","✅ ResNet-18 vs. MobileNet vergleichen"],
+          ["❌ Ergebnis ohne Analyse","✅ Grad-CAM: WARUM entscheidet das Modell so?"],
+          ["❌ Schlechtes Ergebnis = Versagen","✅ Schlechtes Ergebnis + gute Analyse = gute Note"],
+          ["❌ requirements.txt vergessen","✅ pip freeze > requirements.txt"],
+          ["❌ Kein README","✅ README mit Setup-Anleitung und Projektstruktur"],
+          ["❌ Alles in einer Datei","✅ Aufteilen: data.py, model.py, train.py, evaluate.py"],
+        ].map(([dont,doIt],i)=><div key={i} style={{padding:"8px 12px",background:i%2===0?t.bgC:"transparent",borderRadius:t.term?4:6,border:`1px solid ${t.bd}`}}>
+          <div style={{fontSize:11,color:t.err,marginBottom:4}}>{dont}</div>
+          <div style={{fontSize:11,color:t.ok}}>{doIt}</div>
+        </div>)}
+      </div>
+    </Section>
+
+    <Section id="bg-11" title="11. Satzbausteine zum Kopieren" emoji="📋">
+      <div style={{fontSize:12,color:t.txM,marginBottom:12}}>Fertige Saetze die ihr in der Doku verwenden koennt — einfach anpassen!</div>
+      {[
+        {cat:"Problembeschreibung",text:"Das vorliegende Projekt adressiert ein Klassifikationsproblem im Bereich der Bildverarbeitung. Ziel ist die automatisierte Zuordnung von Tierbildern zu einer von [X] vordefinierten Klassen."},
+        {cat:"Datenquelle",text:"Verwendet wird der [Name]-Datensatz, verfuegbar auf der Plattform Kaggle. Der Datensatz umfasst [X] Bilder in [Y] Klassen und ist unter einer offenen Lizenz frei verfuegbar."},
+        {cat:"EDA",text:"Die explorative Datenanalyse zeigt, dass die Klassenverteilung nicht gleichmaessig ist (Imbalance Ratio: [X]:1). Die haeufigste Klasse ([Name]) enthaelt [X] Samples, die seltenste ([Name]) nur [Y]."},
+        {cat:"Modellwahl",text:"Als Basismodell wird [Modell] eingesetzt, vortrainiert auf ImageNet. Die Wahl begruendet sich durch [Grund]. Zum Vergleich wird [Alternativmodell] herangezogen."},
+        {cat:"Training",text:"Das Training erfolgt ueber [X] Epochs mit einer Batch Size von [Y] und dem [Optimizer]-Optimizer (initiale Learning Rate: [Z]). Early Stopping mit Patience=[P] verhindert Overfitting."},
+        {cat:"Evaluation",text:"Das beste Modell erreicht eine Test-Accuracy von [X]% bei einem F1-Score von [Y]. Die Confusion Matrix zeigt, dass insbesondere die Klassen [A] und [B] haeufig verwechselt werden."},
+        {cat:"Grad-CAM",text:"Die Grad-CAM-Analyse zeigt, dass das Modell bei korrekten Vorhersagen primaer auf [relevante Merkmale] fokussiert. Bei Fehlklassifikationen von [Klasse] wird haeufig [irrelevanter Bereich] aktiviert."},
+        {cat:"Diskussion",text:"Die Ergebnisse zeigen, dass Transfer Learning mit [Modell] fuer die gegebene Aufgabe [gut/maessig/bedingt] geeignet ist. Die Hauptlimitation liegt in [Limitation]."},
+      ].map((s,i)=><div key={i} style={{marginBottom:8,padding:"12px 14px",background:t.bgC,border:`1px solid ${t.bd}`,borderRadius:t.term?6:8}}>
+        <div style={{fontSize:11,fontWeight:700,color:t.ac,marginBottom:6}}>{s.cat}</div>
+        <div style={{fontSize:12,color:t.txB,lineHeight:1.6,fontFamily:t.term?t.mf:"monospace",whiteSpace:"pre-wrap"}}>{s.text}</div>
+      </div>)}
+    </Section>
+
+    <Section id="bg-12" title="12. Die wichtigste Erkenntnis" emoji="💡">
+      <div style={{padding:"20px",background:`linear-gradient(135deg, ${t.ac}12, ${t.inf}12)`,border:`2px solid ${t.ac}40`,borderRadius:t.term?8:14,textAlign:"center"}}>
+        <div style={{fontSize:22,fontWeight:800,color:t.tx,marginBottom:12,fontFamily:t.hf}}>Ihr baut kein perfektes Produkt.</div>
+        <div style={{fontSize:22,fontWeight:800,color:t.ac,marginBottom:16,fontFamily:t.hf}}>Ihr zeigt, dass ihr den Prozess verstanden habt.</div>
+        <div style={{fontSize:14,color:t.txB,lineHeight:1.8,maxWidth:500,margin:"0 auto"}}>
+          Der Prof will nicht "95% Accuracy". Er will sehen:<br/>
+          Habt ihr das <Hl>Problem</Hl> verstanden?<br/>
+          Habt ihr die <Hl>Daten</Hl> analysiert?<br/>
+          Koennt ihr eure <Hl>Entscheidungen</Hl> begruenden?<br/>
+          Reflektiert ihr <Hl>ehrlich</Hl> was nicht geklappt hat?
+        </div>
+      </div>
+    </Section>
+
+  </div>;};
+
+  // ════════════════════════════════════════════
+  // TAB 4: AI-ANALYSE (dynamic, two-column)
+  // ════════════════════════════════════════════
+  const aiPrompt=`Du bist ein ML-Projektberater fuer eine Uni-Projektarbeit (Angewandtes Machine Learning, SS2026, Prof. Bugra Turan).
+Erstelle fuer die genannte Projektidee eine KOMPLETTE Analyse im Zwei-Spalten-Format:
+- Linke Spalte: Professioneller Text wie er in der PA stehen koennte
+- Rechte Spalte: Einfache Erklaerung fuer Anfaenger (was heisst das, was muss das Team tun)
+
+KEINE Abkuerzungen oder Fachbegriffe ohne Erklaerung in der rechten Spalte!
+
+Antworte IMMER exakt in diesem JSON-Format:
+{
+  "titel": "Projekttitel",
+  "typ": "Klassifikation" oder "Regression",
+  "score": Zahl 1-10,
+  "vorschlag": [
+    {"punkt": "a", "name": "Titel", "pa_text": "...", "erklaerung": "..."},
+    {"punkt": "b", "name": "Ziel", "pa_text": "...", "erklaerung": "..."},
+    {"punkt": "c", "name": "Daten", "pa_text": "...", "erklaerung": "..."},
+    {"punkt": "d", "name": "Methoden", "pa_text": "...", "erklaerung": "..."},
+    {"punkt": "e", "name": "Erwartete Ergebnisse", "pa_text": "...", "erklaerung": "..."},
+    {"punkt": "f", "name": "Zeitplan", "pa_text": "...", "erklaerung": "..."}
+  ],
+  "sektionen": [
+    {"nr": 1, "name": "Problembeschreibung", "unterpunkte": [
+      {"titel": "...", "pa_text": "...", "erklaerung": "..."}
+    ]},
+    {"nr": 2, "name": "Datenquelle und Datenbeschreibung", "unterpunkte": [...]},
+    {"nr": 3, "name": "Explorative Datenanalyse (EDA)", "unterpunkte": [...]},
+    {"nr": 4, "name": "Datenvorverarbeitung", "unterpunkte": [...]},
+    {"nr": 5, "name": "Data Augmentation (optional)", "unterpunkte": [...]},
+    {"nr": 6, "name": "Modellauswahl und -architektur", "unterpunkte": [...]},
+    {"nr": 7, "name": "Training und Optimierung", "unterpunkte": [...]},
+    {"nr": 8, "name": "Evaluation und Ergebnisse", "unterpunkte": [...]},
+    {"nr": 9, "name": "Diskussion und Fazit", "unterpunkte": [...]}
+  ]
+}`;
+
+  const runAi=async()=>{
+    if(!aiIdea.trim()||!ak||aiLd)return;
+    setAiLd(true);setAiResult(null);
+    try{
+      let text="";
+      if(prov==="openai"){
+        const r=await fetch("https://api.openai.com/v1/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":`Bearer ${ak}`},body:JSON.stringify({model:"gpt-4o-mini",messages:[{role:"system",content:aiPrompt},{role:"user",content:aiIdea}],max_tokens:6000})});
+        const d=await r.json();if(d.error)throw new Error(d.error.message);text=d.choices[0].message.content;
+      } else {
+        const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":ak,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:6000,system:aiPrompt,messages:[{role:"user",content:aiIdea}]})});
+        const d=await r.json();if(d.error)throw new Error(d.error.message);text=d.content[0].text;
+      }
+      const clean=text.replace(/```json\n?/g,"").replace(/```\n?/g,"").trim();
+      setAiResult(JSON.parse(clean));
+    }catch(err){setAiResult({error:err.message});}finally{setAiLd(false);}
+  };
+
+  const tabAi=()=><div>
+    <P>Gib eine beliebige Projektidee ein und erhalte automatisch den kompletten Projektvorschlag (a-f) und alle 9 Sektionen im Zwei-Spalten-Format — PA-Text links, Erklaerung rechts.</P>
+
+    <button onClick={()=>setAiSS(!aiSS)} style={{fontFamily:t.sf,fontSize:12,color:t.txM,background:"none",border:"none",cursor:"pointer",marginBottom:12}}>API-Einstellungen {aiSS?"\u25B4":"\u25BE"}</button>
+    {aiSS&&<Cd style={{marginBottom:16}}>
+      <div style={{display:"flex",gap:8,marginBottom:12}}>{[["openai","OpenAI"],["anthropic","Anthropic"]].map(([id,l])=><Bt key={id} primary={prov===id} onClick={()=>setProv(id)} style={{fontSize:12,padding:"6px 14px"}}>{l}</Bt>)}</div>
+      <input type="password" value={ak} onChange={e=>setAk(e.target.value)} placeholder={prov==="openai"?"sk-...":"sk-ant-..."} style={{width:"100%",boxSizing:"border-box",padding:"8px 12px",borderRadius:t.term?6:8,border:`1px solid ${t.bd}`,background:t.bgI,fontFamily:t.term?t.mf:t.sf,fontSize:13,color:t.tx,outline:"none"}}/>
+    </Cd>}
+
+    <div style={{marginBottom:20}}>
+      <textarea value={aiIdea} onChange={e=>setAiIdea(e.target.value)} placeholder="z.B. Sentiment-Analyse von Amazon-Reviews mit BERT" rows={3} style={{width:"100%",boxSizing:"border-box",padding:"12px 14px",borderRadius:t.term?6:8,border:`1px solid ${t.bd}`,background:t.bgI,fontFamily:t.sf,fontSize:13,color:t.tx,outline:"none",resize:"vertical",lineHeight:1.6}}/>
+      <div style={{display:"flex",gap:8,marginTop:12}}>
+        <Bt primary onClick={runAi} disabled={!ak||!aiIdea.trim()||aiLd}>{aiLd?"Wird analysiert ...":"Projekt analysieren"}</Bt>
+        {aiResult&&!aiResult.error&&<Bt onClick={()=>{setAiResult(null);setAiIdea("");}}>Neue Analyse</Bt>}
+        {!ak&&<span style={{fontSize:12,color:t.txM,alignSelf:"center"}}>Zuerst API-Key eingeben</span>}
+      </div>
+    </div>
+
+    {aiResult&&aiResult.error&&<Info title="Fehler" type="warning">{aiResult.error}</Info>}
+
+    {aiResult&&!aiResult.error&&<>
+      <div style={{background:`linear-gradient(135deg, ${t.ac}12, ${t.inf}12)`,border:`2px solid ${t.ac}40`,borderRadius:t.term?8:14,padding:"20px",marginBottom:20}}>
+        <div style={{fontFamily:t.hf,fontSize:22,fontWeight:800,color:t.tx}}>{aiResult.titel}</div>
+        <div style={{display:"flex",gap:8,marginTop:8}}>
+          <span style={{fontSize:11,padding:"2px 8px",borderRadius:10,background:t.inf+"18",color:t.inf,fontWeight:600}}>{aiResult.typ}</span>
+          <span style={{fontSize:11,padding:"2px 8px",borderRadius:10,background:(aiResult.score>=7?t.ok:aiResult.score>=4?t.ac:t.err)+"18",color:aiResult.score>=7?t.ok:aiResult.score>=4?t.ac:t.err,fontWeight:600}}>{aiResult.score}/10 DL-Eignung</span>
+        </div>
+      </div>
+
+      {aiResult.vorschlag&&<>
+        <div style={{fontFamily:t.hf,fontSize:18,fontWeight:700,color:t.tx,marginBottom:12}}>Projektvorschlag (a-f)</div>
+        {aiResult.vorschlag.map((v,i)=><Section key={i} id={`ai-af-${v.punkt}`} title={`${v.punkt}) ${v.name}`} emoji={["🏷️","🎯","📦","🔧","📊","📅"][i]} defaultOpen={i===0}>
+          <TwoCol leftLabel="SO STEHT ES IN DER PA" rightLabel="WAS DAS HEISST" left={v.pa_text} right={v.erklaerung}/>
+        </Section>)}
+      </>}
+
+      {aiResult.sektionen&&<>
+        <div style={{fontFamily:t.hf,fontSize:18,fontWeight:700,color:t.tx,marginBottom:12,marginTop:20}}>Die 9 Sektionen</div>
+        {aiResult.sektionen.map((s,i)=><Section key={i} id={`ai-sec-${s.nr}`} title={`${s.nr}. ${s.name}`} emoji={["📋","📦","🔍","⚙️","🎨","🧠","🏋️","📊","💬"][i]}>
+          {s.unterpunkte&&s.unterpunkte.map((up,ui)=><div key={ui}>
+            <SubH>{up.titel}</SubH>
+            <TwoCol leftLabel="SO STEHT ES IN DER PA" rightLabel="WAS DAS HEISST" left={up.pa_text} right={up.erklaerung}/>
+          </div>)}
+        </Section>)}
+      </>}
+    </>}
+  </div>;
+
+  // ════════════════════════════════════════════
+  // MAIN RENDER
+  // ════════════════════════════════════════════
+  const TABS=[
+    {id:"af",label:"Vorschlag a-f",emoji:"🏷️"},
+    {id:"sek",label:"9 Sektionen",emoji:"📝"},
+    {id:"guide",label:"Starter-Guide",emoji:"🎓"},
+    {id:"ai",label:"Projekt analysieren",emoji:"🤖"},
+  ];
+
+  return <div>
+    <CL num="📚"/><H1>PA-Komplett-Guide</H1>
+    <P>Alles was ihr fuer die Projektarbeit braucht — Vorschlag, Sektionen, Anfaenger-Guide und AI-Analyse im Zwei-Spalten-Format.</P>
+
+    <div style={{display:"flex",gap:4,marginBottom:24,borderBottom:`2px solid ${t.bd}`,paddingBottom:0}}>
+      {TABS.map(tb=><button key={tb.id} onClick={()=>setTab(tb.id)} style={{padding:"10px 16px",background:tab===tb.id?t.ac+"15":"transparent",border:"none",borderBottom:tab===tb.id?`2px solid ${t.ac}`:"2px solid transparent",cursor:"pointer",fontFamily:t.sf,fontSize:13,fontWeight:tab===tb.id?700:400,color:tab===tb.id?t.ac:t.txM,display:"flex",alignItems:"center",gap:6,transition:"all .15s",marginBottom:-2}}>
+        <span style={{fontSize:14}}>{tb.emoji}</span> {tb.label}
+      </button>)}
+    </div>
+
+    {tab==="af"&&tabAF()}
+    {tab==="sek"&&tabSections()}
+    {tab==="guide"&&tabGuide()}
+    {tab==="ai"&&tabAi()}
+  </div>;
+};
+
 // ── MODULE: Projektbegleiter ──
 const MGuide = () => {
   const t=useT();
@@ -1998,7 +2578,7 @@ export default function MLLernApp(){
     case"welcome":return <M1/>;case"data":return <M2/>;case"supervised":return <M3/>;
     case"gradient":return <M4/>;case"neural":return <M5/>;case"deep":return <M6/>;
     case"quiz":return <M7/>;case"tutor":return <M8/>;
-    case"compass":return <MCompass/>;case"guide":return <MGuide/>;case"ideas":return <MIdea/>;case"simulation":return <MSimulation/>;
+    case"compass":return <MCompass/>;case"guide":return <MGuide/>;case"ideas":return <MIdea/>;case"simulation":return <MSimulation/>;case"komplett":return <MKomplettGuide/>;
     default:return <M1/>;
   }};
 

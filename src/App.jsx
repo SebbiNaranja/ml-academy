@@ -66,6 +66,7 @@ const MODS_PROJ = [
 // Sebbi-exklusiv: PA-Kompass erscheint nur fuer Sebbi in der Sidebar
 const MODS_SEBBI = [
   {id:"compass",title:"Sebbis Hyperfokus-HQ",n:"🧠",tt:"hyperfokus_hq"},
+  {id:"simulation",title:"PA-Simulation",n:"📄",tt:"pa_simulation"},
 ];
 const ALL_MODS_FOR=(author)=>[...MODS_LEARN,...MODS_PROJ,...(author==="Sebbi"?MODS_SEBBI:[])];
 
@@ -1283,11 +1284,14 @@ const MIdea = () => {
   };
 
   const sysPrompt=`Du bist ein ML-Projektberater fuer eine Uni-Projektarbeit (Angewandtes Machine Learning, SS2026, Prof. Bugra Turan).
-Das Team besteht aus 3 Personen (Sebbi, Lukas, Achim), jeder praesentiert 10 Minuten. Anforderungen: Deep Learning mit PyTorch oder TensorFlow/Keras (KEIN klassisches ML/Scikit-learn), Git-Repository, Jupyter Notebook mit 9 Sektionen.
+Das Team besteht aus 3 Personen (Sebbi, Lukas, Achim), jeder praesentiert 10 Minuten.
+Anforderungen laut Prof: Deep Learning mit PyTorch oder TensorFlow/Keras bevorzugt. Doku als Markdown/PDF oder integriert in Jupyter Notebook. Git-Repository mit requirements.txt und README.md.
 
-${dataFiles.length>0?"Der Nutzer hat echte Datasets hochgeladen. Analysiere die Spalten, Datentypen und Beispielwerte GENAU. Empfehle konkret, welche Spalte als Zielvariable geeignet ist, welche Features relevant sind, und welche Vorverarbeitungsschritte noetig sind. Wenn mehrere Datasets hochgeladen wurden, bewerte jedes einzeln und empfehle das beste (oder eine sinnvolle Kombination).":""}
+WICHTIGER HINWEIS VOM PROF: "Eine Projektarbeit ist nicht gescheitert, wenn die gewuenschte Performance nicht erreicht wird. Entscheidend ist die wissenschaftlich fundierte Analyse und Diskussion der Hintergruende und Ergebnisse. Ein sauberer Vergleich verschiedener Ansaetze mit kritischer Reflexion ist genauso wertvoll wie das Erreichen hoher Metriken."
 
-WICHTIG: Simuliere fuer die Idee eine KOMPLETTE Mini-Projektarbeit. Fuer jede der 9 Pflicht-Sektionen: Schreibe einen konkreten Entwurf (so wie es in der fertigen Doku stehen koennte) UND bewerte die Machbarkeit.
+${dataFiles.length>0?"Der Nutzer hat echte Datasets hochgeladen. Analysiere die Spalten, Datentypen und Beispielwerte GENAU. Empfehle konkret, welche Spalte als Zielvariable geeignet ist, welche Features relevant sind, und welche Vorverarbeitungsschritte noetig sind.":""}
+
+WICHTIG: Simuliere fuer die Idee eine KOMPLETTE Mini-Projektarbeit. Fuer jede der 9 Pflicht-Sektionen: Schreibe einen konkreten Entwurf mit ALLEN Unterpunkten die der Prof verlangt UND bewerte die Machbarkeit.
 
 Antworte IMMER exakt in diesem JSON-Format (kein Markdown, kein Text drumherum):
 {
@@ -1302,47 +1306,53 @@ Antworte IMMER exakt in diesem JSON-Format (kein Markdown, kein Text drumherum):
     {
       "name": "Problembeschreibung",
       "nr": 1,
-      "entwurf": "2-4 Saetze: So koennte die Problembeschreibung in der Doku lauten. Konkret mit Fragestellung und Relevanz.",
-      "aufwand": "Leicht" oder "Mittel" oder "Schwer",
-      "braucht_ihr": "Was muss das Team tun/haben fuer diesen Abschnitt?",
-      "tipp": "Ein konkreter Tipp fuer diesen Abschnitt"
+      "anforderungen": ["Klare Definition des Problems (Klassifikation oder Regression)","Relevanz und Anwendungskontext","Formulierung der Zielsetzung: Was soll das System konkret leisten?","Erwartete Herausforderungen und deren Bedeutung"],
+      "entwurf": "Konkreter Entwurf mit allen 4 Unterpunkten. So wie es in der fertigen Doku stehen koennte.",
+      "aufwand": "Leicht/Mittel/Schwer",
+      "braucht_ihr": "Was muss das Team konkret tun?",
+      "tipp": "Ein konkreter Tipp"
     },
     {
-      "name": "Datenquelle",
+      "name": "Datenquelle und Datenbeschreibung",
       "nr": 2,
-      "entwurf": "Konkreter Datensatz mit Name, Quelle (z.B. Kaggle-Link), Groesse, Anzahl Klassen/Samples. Wenn eigene Daten: Sammlungsstrategie.",
+      "anforderungen": ["Herkunft der Daten (Link/Referenz zum Dataset)","Lizenz und Verfuegbarkeit der Daten","Anzahl der Datenpunkte und Features","Beschreibung der wichtigsten Features (inkl. Datentypen)","Verteilung der Zielklassen (Klassifikation) bzw. Wertebereich (Regression)"],
+      "entwurf": "Konkreter Entwurf mit allen 5 Unterpunkten. Echte Datensaetze mit Links nennen.",
       "aufwand": "Leicht/Mittel/Schwer",
       "braucht_ihr": "Was muss das Team tun?",
       "tipp": "Konkreter Tipp"
     },
     {
-      "name": "EDA (Explorative Datenanalyse)",
+      "name": "Explorative Datenanalyse (EDA)",
       "nr": 3,
-      "entwurf": "Welche Plots und Analysen wuerdet ihr zeigen? Klassenverteilung, Beispielbilder, Bildgroessen-Verteilung, etc. Konkret!",
+      "anforderungen": ["Visualisierung der Datenverteilung (Histogramme, Boxplots etc.)","Korrelationsanalyse zwischen Features und Zielvariable","Identifikation von Mustern, Trends und Auffaelligkeiten","Analyse von Class Imbalance (falls vorhanden)"],
+      "entwurf": "Konkreter Entwurf: Welche Plots, welche Analysen, was erwartet ihr zu finden?",
       "aufwand": "Leicht/Mittel/Schwer",
       "braucht_ihr": "Was muss das Team tun?",
       "tipp": "Konkreter Tipp"
     },
     {
-      "name": "Vorverarbeitung",
+      "name": "Datenvorverarbeitung",
       "nr": 4,
-      "entwurf": "Konkrete Pipeline: Resize auf welche Groesse? Normalisierung mit welchen Werten? Train/Val/Test-Split mit welchen Anteilen? Code-Skizze wenn moeglich.",
+      "anforderungen": ["Behandlung fehlender Werte (NaN, Inf)","Erkennung und Behandlung von Outliers","Normalisierung/Standardisierung","Feature Engineering: Erstellung neuer Features (falls durchgefuehrt)","Encoding kategorialer Variablen (One-Hot, Label Encoding etc.)"],
+      "entwurf": "Konkreter Entwurf mit allen 5 Unterpunkten. Konkrete Werte und Methoden.",
       "aufwand": "Leicht/Mittel/Schwer",
       "braucht_ihr": "Was muss das Team tun?",
       "tipp": "Konkreter Tipp"
     },
     {
-      "name": "Data Augmentation",
+      "name": "Data Augmentation (optional)",
       "nr": 5,
-      "entwurf": "Welche Augmentierungen und warum? RandomHorizontalFlip, RandomRotation, ColorJitter, etc. Was bringt es konkret bei diesem Datensatz?",
+      "anforderungen": ["Beschreibung der Augmentation-Techniken","Auswirkung auf die Datenmenge und -qualitaet"],
+      "entwurf": "Konkreter Entwurf: Welche Techniken, warum, und wie wirkt sich das aus?",
       "aufwand": "Leicht/Mittel/Schwer",
       "braucht_ihr": "Was muss das Team tun?",
       "tipp": "Konkreter Tipp"
     },
     {
-      "name": "Modellauswahl",
+      "name": "Modellauswahl und -architektur",
       "nr": 6,
-      "entwurf": "Welches Modell und warum? z.B. ResNet-18 pretrained auf ImageNet, letzte FC-Schicht angepasst auf N Klassen. Vergleichsmodell? Warum Transfer Learning statt from scratch?",
+      "anforderungen": ["Begruendung fuer die Auswahl der Modelle","Detaillierte Beschreibung der finalen Modellarchitektur","Hyperparameter und deren Wahl"],
+      "entwurf": "Konkreter Entwurf mit allen 3 Unterpunkten. Welche Modelle verglichen, warum genau dieses?",
       "aufwand": "Leicht/Mittel/Schwer",
       "braucht_ihr": "Was muss das Team tun?",
       "tipp": "Konkreter Tipp"
@@ -1350,28 +1360,36 @@ Antworte IMMER exakt in diesem JSON-Format (kein Markdown, kein Text drumherum):
     {
       "name": "Training",
       "nr": 7,
-      "entwurf": "Konkrete Hyperparameter: Batch Size (z.B. 32), Learning Rate (z.B. 0.001), Epochs (z.B. 25), Loss-Funktion (CrossEntropyLoss), Optimizer (Adam), Dropout (0.3), Early Stopping (Patience 5). Wie sehen die erwarteten Loss-Kurven aus?",
+      "anforderungen": ["Aufteilung der Daten (Train/Validation/Test-Split)","Training-Konfiguration (Batch Size, Learning Rate, Epochs etc.)","Verwendete Loss-Function und Optimizer","Techniken zur Vermeidung von Overfitting (Regularisierung, Dropout, Early Stopping etc.)","Visualisierung des Trainingsverlaufs (Loss- und Metrik-Kurven)"],
+      "entwurf": "Konkreter Entwurf mit allen 5 Unterpunkten. Echte Werte vorschlagen.",
       "aufwand": "Leicht/Mittel/Schwer",
-      "braucht_ihr": "Was muss das Team tun? (GPU noetig? Google Colab?)",
+      "braucht_ihr": "Was muss das Team tun? (GPU, Colab etc.)",
       "tipp": "Konkreter Tipp"
     },
     {
-      "name": "Evaluation",
+      "name": "Evaluation und Ergebnisse",
       "nr": 8,
-      "entwurf": "Welche Metriken? Accuracy, Precision, Recall, F1-Score, Confusion Matrix. Wo wird das Modell vermutlich Fehler machen? Grad-CAM fuer Erklaerbarkeit?",
+      "anforderungen": ["Definition und Begruendung der Evaluation-Metriken","Quantitative Ergebnisse aller getesteten Modelle (Vergleichstabelle)","Detaillierte Analyse des besten Modells (Confusion Matrix, Classification Report etc.)","Fehleranalyse: Wo macht das Modell Fehler und warum?","Visualisierung der Ergebnisse (Predictions vs. Ground Truth)"],
+      "entwurf": "Konkreter Entwurf mit allen 5 Unterpunkten. Welche Metriken, welche Visualisierungen?",
       "aufwand": "Leicht/Mittel/Schwer",
       "braucht_ihr": "Was muss das Team tun?",
       "tipp": "Konkreter Tipp"
     },
     {
-      "name": "Diskussion & Fazit",
+      "name": "Diskussion und Fazit",
       "nr": 9,
-      "entwurf": "Was koennte man diskutieren? Limitationen, Verbesserungsmoeglichkeiten, Praxisrelevanz, was hat funktioniert und was nicht?",
+      "anforderungen": ["Interpretation der Ergebnisse: Wurden die Ziele erreicht?","Kritische Reflexion: Was hat gut funktioniert, was nicht?","Limitationen der gewaehlten Ansaetze","Moegliche Verbesserungen und Ausblick"],
+      "entwurf": "Konkreter Entwurf mit allen 4 Unterpunkten.",
       "aufwand": "Leicht/Mittel/Schwer",
       "braucht_ihr": "Was muss das Team tun?",
       "tipp": "Konkreter Tipp"
     }
-  ]
+  ],
+  "zusatz": {
+    "packages": ["paket1","paket2","paket3"],
+    "readme_entwurf": "Konkreter README.md-Entwurf fuer dieses Projekt (Titel, Beschreibung, Setup, Ausfuehrung)",
+    "code_tipp": "Konkreter Tipp fuer Code-Qualitaet bei diesem Projekt"
+  }
 }`;
   const evaluate=async()=>{
     if(!idea.trim()||!ak||ld||!author)return;
@@ -1505,66 +1523,6 @@ Antworte IMMER exakt in diesem JSON-Format (kein Markdown, kein Text drumherum):
         <div style={{fontSize:13,color:t.txB,lineHeight:1.6}}>{result.verbesserung}</div>
       </div>
     </Cd>}
-    {result&&!result.error&&result.sektionen&&<div style={{marginBottom:24}}>
-      <div style={{background:`linear-gradient(135deg, ${t.ac}12, ${t.inf}12)`,border:`2px solid ${t.ac}40`,borderRadius:t.term?8:14,padding:"24px 20px",marginBottom:16}}>
-        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
-          <span style={{fontSize:24}}>📄</span>
-          <div style={{fontFamily:t.hf,fontSize:22,fontWeight:800,color:t.tx}}>Mini-Projektarbeit</div>
-        </div>
-        <div style={{fontSize:13,color:t.txB,lineHeight:1.6,marginBottom:16}}>So koennte eure fertige Doku fuer <strong style={{color:t.ac}}>"{result.titel}"</strong> aussehen — alle 9 Pflicht-Sektionen durchsimuliert.</div>
-        {(()=>{const aufwandColor=(a)=>a==="Leicht"?t.ok:a==="Mittel"?t.ac:t.err;const SEC_EMOJI=["📋","📦","🔍","⚙️","🎨","🧠","🏋️","📊","💬"];const leicht=result.sektionen.filter(s=>s.aufwand==="Leicht").length;const mittel=result.sektionen.filter(s=>s.aufwand==="Mittel").length;const schwer=result.sektionen.filter(s=>s.aufwand==="Schwer").length;
-        return <>
-          <div style={{display:"flex",gap:12,marginBottom:16,flexWrap:"wrap"}}>
-            <div style={{display:"flex",alignItems:"center",gap:6,padding:"6px 12px",borderRadius:20,background:t.ok+"18",border:`1px solid ${t.ok}30`}}>
-              <div style={{width:8,height:8,borderRadius:"50%",background:t.ok}}/>
-              <span style={{fontSize:12,fontWeight:600,color:t.ok}}>{leicht}x Leicht</span>
-            </div>
-            <div style={{display:"flex",alignItems:"center",gap:6,padding:"6px 12px",borderRadius:20,background:t.ac+"18",border:`1px solid ${t.ac}30`}}>
-              <div style={{width:8,height:8,borderRadius:"50%",background:t.ac}}/>
-              <span style={{fontSize:12,fontWeight:600,color:t.ac}}>{mittel}x Mittel</span>
-            </div>
-            {schwer>0&&<div style={{display:"flex",alignItems:"center",gap:6,padding:"6px 12px",borderRadius:20,background:t.err+"18",border:`1px solid ${t.err}30`}}>
-              <div style={{width:8,height:8,borderRadius:"50%",background:t.err}}/>
-              <span style={{fontSize:12,fontWeight:600,color:t.err}}>{schwer}x Schwer</span>
-            </div>}
-          </div>
-          <div style={{display:"flex",gap:4,marginBottom:8}}>
-            {result.sektionen.map((s,i)=><div key={i} style={{flex:1,height:6,borderRadius:3,background:aufwandColor(s.aufwand)+"60"}} title={`${s.nr}. ${s.name}: ${s.aufwand}`}/>)}
-          </div>
-        </>;})()}
-      </div>
-      {(()=>{const aufwandColor=(a)=>a==="Leicht"?t.ok:a==="Mittel"?t.ac:t.err;const SEC_EMOJI=["📋","📦","🔍","⚙️","🎨","🧠","🏋️","📊","💬"];return result.sektionen.map((s,i)=><div key={i} style={{marginBottom:12,background:t.bgC,border:`1px solid ${t.bd}`,borderRadius:t.term?6:12,overflow:"hidden"}}>
-        <button onClick={(e)=>{const det=e.currentTarget.nextElementSibling;det.style.display=det.style.display==="none"?"block":"none";}} style={{width:"100%",textAlign:"left",cursor:"pointer",padding:"14px 16px",background:"transparent",border:"none",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-          <div style={{display:"flex",alignItems:"center",gap:10}}>
-            <span style={{width:32,height:32,borderRadius:t.term?4:8,background:aufwandColor(s.aufwand)+"15",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>{SEC_EMOJI[i]||"📄"}</span>
-            <div>
-              <div style={{fontSize:14,fontWeight:700,color:t.tx}}>{s.nr}. {s.name}</div>
-              <div style={{fontSize:11,color:t.txM,marginTop:1}}>Aufwand: {s.aufwand}</div>
-            </div>
-          </div>
-          <div style={{display:"flex",alignItems:"center",gap:8}}>
-            <Tag color={aufwandColor(s.aufwand)}>{s.aufwand}</Tag>
-            <span style={{color:t.txM,fontSize:12}}>▾</span>
-          </div>
-        </button>
-        <div style={{display:i===0?"block":"none",padding:"0 16px 16px",borderTop:`1px solid ${t.bd}`}}>
-          <div style={{marginTop:14,padding:"14px 16px",background:t.bgAS,border:`1px solid ${t.bdA}`,borderRadius:t.term?6:10,marginBottom:12}}>
-            <div style={{fontSize:11,fontWeight:700,color:t.ac,marginBottom:8,letterSpacing:".5px"}}>ENTWURF — SO KOENNTE ES IN DER DOKU STEHEN</div>
-            <div style={{fontSize:13,color:t.txB,lineHeight:1.8}}>{s.entwurf}</div>
-          </div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-            <div style={{padding:"12px 14px",background:t.infBg,border:`1px solid ${t.inf}30`,borderRadius:t.term?6:8}}>
-              <div style={{fontSize:11,fontWeight:700,color:t.inf,marginBottom:6}}>DAS BRAUCHT IHR</div>
-              <div style={{fontSize:12,color:t.txB,lineHeight:1.6}}>{s.braucht_ihr}</div>
-            </div>
-            <div style={{padding:"12px 14px",background:t.mathBg,border:`1px solid ${t.math}30`,borderRadius:t.term?6:8}}>
-              <div style={{fontSize:11,fontWeight:700,color:t.math,marginBottom:6}}>PROFI-TIPP</div>
-              <div style={{fontSize:12,color:t.txB,lineHeight:1.6}}>{s.tipp}</div>
-            </div>
-          </div>
-        </div>
-      </div>);})()}
-    </div>}
     {result&&result.error&&<Info title="Fehler" type="warning">{result.error}</Info>}
     {history.length>0&&<>{(()=>{const active=history.filter(h=>!h.result?._archived);const archived=history.filter(h=>h.result?._archived);return <><ST>Alle Team-Bewertungen ({active.length})</ST>
       <div style={{display:"flex",flexDirection:"column",gap:10}}>
@@ -1636,6 +1594,261 @@ Antworte IMMER exakt in diesem JSON-Format (kein Markdown, kein Text drumherum):
         </div>
       </details>}
     </>;})()}</>}
+  </div>;
+};
+
+// ── MODULE: PA-Simulation (Sebbi-exklusiv) ──
+const MSimulation = () => {
+  const t=useT();const {ak,setAk,prov,setProv,author}=useApp();
+  const [idea,setIdea]=useState("");
+  const [ld,setLd]=useState(false);
+  const [result,setResult]=useState(null);
+  const [ss,setSs]=useState(true);
+
+  const simPrompt=`Du bist ein ML-Projektberater fuer eine Uni-Projektarbeit (Angewandtes Machine Learning, SS2026, Prof. Bugra Turan).
+Das Team besteht aus 3 Personen (Sebbi, Lukas, Achim), jeder praesentiert 10 Minuten.
+Anforderungen laut Prof: Deep Learning mit PyTorch oder TensorFlow/Keras bevorzugt. Doku als Markdown/PDF oder integriert in Jupyter Notebook. Git-Repository mit requirements.txt und README.md.
+
+WICHTIGER HINWEIS VOM PROF: "Eine Projektarbeit ist nicht gescheitert, wenn die gewuenschte Performance nicht erreicht wird. Entscheidend ist die wissenschaftlich fundierte Analyse und Diskussion der Hintergruende und Ergebnisse. Ein sauberer Vergleich verschiedener Ansaetze mit kritischer Reflexion ist genauso wertvoll wie das Erreichen hoher Metriken."
+
+AUFGABE: Simuliere fuer die genannte Projektidee eine KOMPLETTE Mini-Projektarbeit. Fuer jede der 9 Pflicht-Sektionen: Schreibe einen AUSFUEHRLICHEN konkreten Entwurf mit ALLEN Unterpunkten die der Prof verlangt UND bewerte die Machbarkeit. Sei so konkret wie moeglich — echte Datensaetze, echte Hyperparameter, echte Code-Fragmente.
+
+Antworte IMMER exakt in diesem JSON-Format (kein Markdown, kein Text drumherum):
+{
+  "titel": "Kurzer Projekttitel",
+  "typ": "Klassifikation" oder "Regression",
+  "score": Zahl 1-10,
+  "machbarkeit": "Leicht" oder "Mittel" oder "Anspruchsvoll",
+  "zusammenfassung": "3-4 Saetze: Kurze Zusammenfassung des gesamten Projekts",
+  "sektionen": [
+    {
+      "name": "Problembeschreibung",
+      "nr": 1,
+      "anforderungen": ["Klare Definition des Problems (Klassifikation oder Regression)","Relevanz und Anwendungskontext","Formulierung der Zielsetzung: Was soll das System konkret leisten?","Erwartete Herausforderungen und deren Bedeutung"],
+      "entwurf": "AUSFUEHRLICHER Entwurf mit ALLEN 4 Unterpunkten. Mehrere Saetze pro Unterpunkt. So wie es in der fertigen Doku stehen koennte.",
+      "aufwand": "Leicht/Mittel/Schwer",
+      "braucht_ihr": "Was muss das Team konkret tun?",
+      "tipp": "Ein konkreter Tipp"
+    },
+    {
+      "name": "Datenquelle und Datenbeschreibung",
+      "nr": 2,
+      "anforderungen": ["Herkunft der Daten (Link/Referenz zum Dataset)","Lizenz und Verfuegbarkeit der Daten","Anzahl der Datenpunkte und Features","Beschreibung der wichtigsten Features (inkl. Datentypen)","Verteilung der Zielklassen (Klassifikation) bzw. Wertebereich (Regression)"],
+      "entwurf": "AUSFUEHRLICH mit allen 5 Unterpunkten. Echte Datensaetze mit echten Links.",
+      "aufwand": "Leicht/Mittel/Schwer",
+      "braucht_ihr": "Was muss das Team tun?",
+      "tipp": "Konkreter Tipp"
+    },
+    {
+      "name": "Explorative Datenanalyse (EDA)",
+      "nr": 3,
+      "anforderungen": ["Visualisierung der Datenverteilung (Histogramme, Boxplots etc.)","Korrelationsanalyse zwischen Features und Zielvariable","Identifikation von Mustern, Trends und Auffaelligkeiten","Analyse von Class Imbalance (falls vorhanden)"],
+      "entwurf": "AUSFUEHRLICH: Welche konkreten Plots mit welchen Libraries? Was erwartet ihr zu finden?",
+      "aufwand": "Leicht/Mittel/Schwer",
+      "braucht_ihr": "Was muss das Team tun?",
+      "tipp": "Konkreter Tipp"
+    },
+    {
+      "name": "Datenvorverarbeitung",
+      "nr": 4,
+      "anforderungen": ["Behandlung fehlender Werte (NaN, Inf)","Erkennung und Behandlung von Outliers","Normalisierung/Standardisierung","Feature Engineering: Erstellung neuer Features (falls durchgefuehrt)","Encoding kategorialer Variablen (One-Hot, Label Encoding etc.)"],
+      "entwurf": "AUSFUEHRLICH mit allen 5 Unterpunkten. Konkrete Werte, Methoden, Code-Fragmente.",
+      "aufwand": "Leicht/Mittel/Schwer",
+      "braucht_ihr": "Was muss das Team tun?",
+      "tipp": "Konkreter Tipp"
+    },
+    {
+      "name": "Data Augmentation (optional)",
+      "nr": 5,
+      "anforderungen": ["Beschreibung der Augmentation-Techniken","Auswirkung auf die Datenmenge und -qualitaet"],
+      "entwurf": "AUSFUEHRLICH: Welche Techniken, warum, konkrete Auswirkungen mit Zahlen.",
+      "aufwand": "Leicht/Mittel/Schwer",
+      "braucht_ihr": "Was muss das Team tun?",
+      "tipp": "Konkreter Tipp"
+    },
+    {
+      "name": "Modellauswahl und -architektur",
+      "nr": 6,
+      "anforderungen": ["Begruendung fuer die Auswahl der Modelle","Detaillierte Beschreibung der finalen Modellarchitektur","Hyperparameter und deren Wahl"],
+      "entwurf": "AUSFUEHRLICH: Welche Modelle verglichen, warum genau dieses? Layer-Aufbau beschreiben.",
+      "aufwand": "Leicht/Mittel/Schwer",
+      "braucht_ihr": "Was muss das Team tun?",
+      "tipp": "Konkreter Tipp"
+    },
+    {
+      "name": "Training",
+      "nr": 7,
+      "anforderungen": ["Aufteilung der Daten (Train/Validation/Test-Split)","Training-Konfiguration (Batch Size, Learning Rate, Epochs etc.)","Verwendete Loss-Function und Optimizer","Techniken zur Vermeidung von Overfitting (Regularisierung, Dropout, Early Stopping etc.)","Visualisierung des Trainingsverlaufs (Loss- und Metrik-Kurven)"],
+      "entwurf": "AUSFUEHRLICH mit allen 5 Unterpunkten. Echte Werte, erwarteter Trainingsverlauf.",
+      "aufwand": "Leicht/Mittel/Schwer",
+      "braucht_ihr": "Was muss das Team tun? (GPU, Colab etc.)",
+      "tipp": "Konkreter Tipp"
+    },
+    {
+      "name": "Evaluation und Ergebnisse",
+      "nr": 8,
+      "anforderungen": ["Definition und Begruendung der Evaluation-Metriken","Quantitative Ergebnisse aller getesteten Modelle (Vergleichstabelle)","Detaillierte Analyse des besten Modells (Confusion Matrix, Classification Report etc.)","Fehleranalyse: Wo macht das Modell Fehler und warum?","Visualisierung der Ergebnisse (Predictions vs. Ground Truth)"],
+      "entwurf": "AUSFUEHRLICH mit allen 5 Unterpunkten. Erwartete Metriken, typische Fehler.",
+      "aufwand": "Leicht/Mittel/Schwer",
+      "braucht_ihr": "Was muss das Team tun?",
+      "tipp": "Konkreter Tipp"
+    },
+    {
+      "name": "Diskussion und Fazit",
+      "nr": 9,
+      "anforderungen": ["Interpretation der Ergebnisse: Wurden die Ziele erreicht?","Kritische Reflexion: Was hat gut funktioniert, was nicht?","Limitationen der gewaehlten Ansaetze","Moegliche Verbesserungen und Ausblick"],
+      "entwurf": "AUSFUEHRLICH mit allen 4 Unterpunkten. Ehrliche Reflexion.",
+      "aufwand": "Leicht/Mittel/Schwer",
+      "braucht_ihr": "Was muss das Team tun?",
+      "tipp": "Konkreter Tipp"
+    }
+  ],
+  "zusatz": {
+    "packages": ["paket1","paket2","paket3"],
+    "readme_entwurf": "Konkreter README.md-Entwurf (Titel, Beschreibung, Setup, Ausfuehrung)",
+    "code_tipp": "Konkreter Tipp fuer Code-Qualitaet bei diesem Projekt"
+  }
+}`;
+
+  const runSim=async()=>{
+    if(!idea.trim()||!ak||ld)return;
+    setLd(true);setResult(null);
+    try{
+      let text="";
+      if(prov==="openai"){
+        const r=await fetch("https://api.openai.com/v1/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":`Bearer ${ak}`},body:JSON.stringify({model:"gpt-4o-mini",messages:[{role:"system",content:simPrompt},{role:"user",content:idea}],max_tokens:4000})});
+        const d=await r.json();if(d.error)throw new Error(d.error.message);text=d.choices[0].message.content;
+      } else {
+        const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":ak,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:4000,system:simPrompt,messages:[{role:"user",content:idea}]})});
+        const d=await r.json();if(d.error)throw new Error(d.error.message);text=d.content[0].text;
+      }
+      setResult(JSON.parse(text));
+    }catch(err){setResult({error:err.message});}finally{setLd(false);}
+  };
+
+  const scoreColor=(s)=>s>=8?t.ok:s>=5?t.ac:t.err;
+  const aufwandColor=(a)=>a==="Leicht"?t.ok:a==="Mittel"?t.ac:t.err;
+  const SEC_EMOJI=["📋","📦","🔍","⚙️","🎨","🧠","🏋️","📊","💬"];
+  const Tag=({children,color})=><span style={{fontSize:11,padding:"2px 8px",borderRadius:10,background:(color||t.ac)+"18",color:color||t.ac,fontWeight:600,whiteSpace:"nowrap"}}>{children}</span>;
+
+  return <div>
+    <CL num="📄"/><H1>PA-Simulation</H1>
+    <P>Gib eine Projektidee ein und sieh sofort, wie die komplette Projektarbeit mit allen 9 Pflicht-Sektionen aussehen koennte — inklusive Anforderungen vom Prof, Entwuerfen und Machbarkeits-Check.</P>
+
+    <button onClick={()=>setSs(!ss)} style={{fontFamily:t.sf,fontSize:12,color:t.txM,background:"none",border:"none",cursor:"pointer",marginBottom:12}}>API-Einstellungen {ss?"▴":"▾"}</button>
+    {ss&&<Cd style={{marginBottom:16}}>
+      <div style={{display:"flex",gap:8,marginBottom:12}}>{[["openai","OpenAI"],["anthropic","Anthropic"]].map(([id,l])=><Bt key={id} primary={prov===id} onClick={()=>setProv(id)} style={{fontSize:12,padding:"6px 14px"}}>{l}</Bt>)}</div>
+      <input type="password" value={ak} onChange={e=>setAk(e.target.value)} placeholder={prov==="openai"?"sk-...":"sk-ant-..."} style={{width:"100%",boxSizing:"border-box",padding:"8px 12px",borderRadius:t.term?6:8,border:`1px solid ${t.bd}`,background:t.bgI,fontFamily:t.term?t.mf:t.sf,fontSize:13,color:t.tx,outline:"none"}}/>
+      <div style={{fontSize:11,color:t.txF,marginTop:6}}>{ak?"Key gesetzt ✓":"Key wird nur in deinem Browser gespeichert."}</div>
+    </Cd>}
+
+    <div style={{marginBottom:20}}>
+      <textarea value={idea} onChange={e=>setIdea(e.target.value)} placeholder={"z.B. Zootier-Klassifikation mit Transfer Learning (ResNet-18) und Grad-CAM Analyse"} rows={3} style={{width:"100%",boxSizing:"border-box",padding:"12px 14px",borderRadius:t.term?6:8,border:`1px solid ${t.bd}`,background:t.bgI,fontFamily:t.sf,fontSize:13,color:t.tx,outline:"none",resize:"vertical",lineHeight:1.6}}/>
+      <div style={{display:"flex",gap:8,marginTop:12}}>
+        <Bt primary onClick={runSim} disabled={!ak||!idea.trim()||ld}>{ld?"Wird simuliert ...":"PA simulieren"}</Bt>
+        {result&&!result.error&&<Bt onClick={()=>{setResult(null);setIdea("");}}>Neue Simulation</Bt>}
+        {!ak&&<span style={{fontSize:12,color:t.txM,alignSelf:"center"}}>Zuerst API-Key eingeben</span>}
+      </div>
+    </div>
+
+    {result&&result.error&&<Info title="Fehler" type="warning">{result.error}</Info>}
+
+    {result&&!result.error&&<>
+      <div style={{background:`linear-gradient(135deg, ${t.ac}12, ${t.inf}12)`,border:`2px solid ${t.ac}40`,borderRadius:t.term?8:14,padding:"24px 20px",marginBottom:20}}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
+          <div>
+            <div style={{fontFamily:t.hf,fontSize:22,fontWeight:800,color:t.tx}}>{result.titel}</div>
+            <div style={{display:"flex",gap:6,flexWrap:"wrap",marginTop:8}}>
+              <Tag color={result.typ==="Klassifikation"?t.inf:"#7c3aed"}>{result.typ}</Tag>
+              <Tag color={aufwandColor(result.machbarkeit)}>{result.machbarkeit}</Tag>
+            </div>
+          </div>
+          <div style={{display:"flex",alignItems:"center",gap:6}}>
+            <div style={{width:52,height:52,borderRadius:"50%",background:scoreColor(result.score)+"18",border:`3px solid ${scoreColor(result.score)}`,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:800,fontSize:22,color:scoreColor(result.score),fontFamily:t.hf}}>{result.score}</div>
+            <span style={{fontSize:11,color:t.txM}}>/10</span>
+          </div>
+        </div>
+        {result.zusammenfassung&&<div style={{fontSize:13,color:t.txB,lineHeight:1.7,padding:"12px 14px",background:t.bg+"80",borderRadius:t.term?6:8}}>{result.zusammenfassung}</div>}
+        {result.sektionen&&<>
+          <div style={{display:"flex",gap:12,marginTop:16,flexWrap:"wrap"}}>
+            {(()=>{const leicht=result.sektionen.filter(s=>s.aufwand==="Leicht").length;const mittel=result.sektionen.filter(s=>s.aufwand==="Mittel").length;const schwer=result.sektionen.filter(s=>s.aufwand==="Schwer").length;return <>
+              <div style={{display:"flex",alignItems:"center",gap:6,padding:"6px 12px",borderRadius:20,background:t.ok+"18",border:`1px solid ${t.ok}30`}}>
+                <div style={{width:8,height:8,borderRadius:"50%",background:t.ok}}/><span style={{fontSize:12,fontWeight:600,color:t.ok}}>{leicht}x Leicht</span>
+              </div>
+              <div style={{display:"flex",alignItems:"center",gap:6,padding:"6px 12px",borderRadius:20,background:t.ac+"18",border:`1px solid ${t.ac}30`}}>
+                <div style={{width:8,height:8,borderRadius:"50%",background:t.ac}}/><span style={{fontSize:12,fontWeight:600,color:t.ac}}>{mittel}x Mittel</span>
+              </div>
+              {schwer>0&&<div style={{display:"flex",alignItems:"center",gap:6,padding:"6px 12px",borderRadius:20,background:t.err+"18",border:`1px solid ${t.err}30`}}>
+                <div style={{width:8,height:8,borderRadius:"50%",background:t.err}}/><span style={{fontSize:12,fontWeight:600,color:t.err}}>{schwer}x Schwer</span>
+              </div>}
+            </>;})()}
+          </div>
+          <div style={{display:"flex",gap:4,marginTop:12}}>
+            {result.sektionen.map((s,i)=><div key={i} style={{flex:1,height:6,borderRadius:3,background:aufwandColor(s.aufwand)+"60"}} title={`${s.nr}. ${s.name}: ${s.aufwand}`}/>)}
+          </div>
+        </>}
+      </div>
+
+      {result.sektionen&&result.sektionen.map((s,i)=><div key={i} style={{marginBottom:12,background:t.bgC,border:`1px solid ${t.bd}`,borderRadius:t.term?6:12,overflow:"hidden"}}>
+        <button onClick={(e)=>{const det=e.currentTarget.nextElementSibling;det.style.display=det.style.display==="none"?"block":"none";}} style={{width:"100%",textAlign:"left",cursor:"pointer",padding:"14px 16px",background:"transparent",border:"none",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+          <div style={{display:"flex",alignItems:"center",gap:10}}>
+            <span style={{width:32,height:32,borderRadius:t.term?4:8,background:aufwandColor(s.aufwand)+"15",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>{SEC_EMOJI[i]||"📄"}</span>
+            <div>
+              <div style={{fontSize:14,fontWeight:700,color:t.tx}}>{s.nr}. {s.name}</div>
+              <div style={{fontSize:11,color:t.txM,marginTop:1}}>Aufwand: {s.aufwand}</div>
+            </div>
+          </div>
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
+            <Tag color={aufwandColor(s.aufwand)}>{s.aufwand}</Tag>
+            <span style={{color:t.txM,fontSize:12}}>▾</span>
+          </div>
+        </button>
+        <div style={{display:i===0?"block":"none",padding:"0 16px 16px",borderTop:`1px solid ${t.bd}`}}>
+          {s.anforderungen&&<div style={{marginTop:12,padding:"12px 14px",background:t.errBg,border:`1px solid ${t.err}20`,borderRadius:t.term?6:8,marginBottom:10}}>
+            <div style={{fontSize:11,fontWeight:700,color:t.err,marginBottom:8,letterSpacing:".5px"}}>ANFORDERUNGEN VOM PROF</div>
+            {s.anforderungen.map((a,ai)=><div key={ai} style={{display:"flex",gap:8,alignItems:"flex-start",marginBottom:4}}>
+              <span style={{color:t.err,fontSize:11,marginTop:2,flexShrink:0}}>●</span>
+              <span style={{fontSize:12,color:t.txB,lineHeight:1.5}}>{a}</span>
+            </div>)}
+          </div>}
+          <div style={{padding:"14px 16px",background:t.bgAS,border:`1px solid ${t.bdA}`,borderRadius:t.term?6:10,marginBottom:12}}>
+            <div style={{fontSize:11,fontWeight:700,color:t.ac,marginBottom:8,letterSpacing:".5px"}}>ENTWURF — SO KOENNTE ES IN DER DOKU STEHEN</div>
+            <div style={{fontSize:13,color:t.txB,lineHeight:1.8}}>{s.entwurf}</div>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+            <div style={{padding:"12px 14px",background:t.infBg,border:`1px solid ${t.inf}30`,borderRadius:t.term?6:8}}>
+              <div style={{fontSize:11,fontWeight:700,color:t.inf,marginBottom:6}}>DAS BRAUCHT IHR</div>
+              <div style={{fontSize:12,color:t.txB,lineHeight:1.6}}>{s.braucht_ihr}</div>
+            </div>
+            <div style={{padding:"12px 14px",background:t.mathBg,border:`1px solid ${t.math}30`,borderRadius:t.term?6:8}}>
+              <div style={{fontSize:11,fontWeight:700,color:t.math,marginBottom:6}}>PROFI-TIPP</div>
+              <div style={{fontSize:12,color:t.txB,lineHeight:1.6}}>{s.tipp}</div>
+            </div>
+          </div>
+        </div>
+      </div>)}
+
+      {result.zusatz&&<div style={{marginTop:16,background:`linear-gradient(135deg, ${t.ok}08, ${t.inf}08)`,border:`2px solid ${t.ok}30`,borderRadius:t.term?8:14,padding:"20px 18px"}}>
+        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14}}>
+          <span style={{fontSize:18}}>📦</span>
+          <div style={{fontFamily:t.hf,fontSize:16,fontWeight:700,color:t.tx}}>Zusaetzliche Anforderungen</div>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
+          <div style={{padding:"12px 14px",background:t.bgC,border:`1px solid ${t.bd}`,borderRadius:t.term?6:8}}>
+            <div style={{fontSize:11,fontWeight:700,color:t.inf,marginBottom:6}}>REQUIREMENTS.TXT</div>
+            <div style={{fontSize:12,color:t.txB,lineHeight:1.6,fontFamily:t.term?t.mf:"monospace"}}>{(result.zusatz.packages||[]).join(", ")}</div>
+          </div>
+          <div style={{padding:"12px 14px",background:t.bgC,border:`1px solid ${t.bd}`,borderRadius:t.term?6:8}}>
+            <div style={{fontSize:11,fontWeight:700,color:t.math,marginBottom:6}}>CODE-QUALITAET</div>
+            <div style={{fontSize:12,color:t.txB,lineHeight:1.6}}>{result.zusatz.code_tipp}</div>
+          </div>
+        </div>
+        <div style={{padding:"12px 14px",background:t.bgC,border:`1px solid ${t.bd}`,borderRadius:t.term?6:8}}>
+          <div style={{fontSize:11,fontWeight:700,color:t.ok,marginBottom:6}}>README.MD ENTWURF</div>
+          <div style={{fontSize:12,color:t.txB,lineHeight:1.6,whiteSpace:"pre-wrap"}}>{result.zusatz.readme_entwurf}</div>
+        </div>
+      </div>}
+    </>}
   </div>;
 };
 
@@ -1785,7 +1998,7 @@ export default function MLLernApp(){
     case"welcome":return <M1/>;case"data":return <M2/>;case"supervised":return <M3/>;
     case"gradient":return <M4/>;case"neural":return <M5/>;case"deep":return <M6/>;
     case"quiz":return <M7/>;case"tutor":return <M8/>;
-    case"compass":return <MCompass/>;case"guide":return <MGuide/>;case"ideas":return <MIdea/>;
+    case"compass":return <MCompass/>;case"guide":return <MGuide/>;case"ideas":return <MIdea/>;case"simulation":return <MSimulation/>;
     default:return <M1/>;
   }};
 

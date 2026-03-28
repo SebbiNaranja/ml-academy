@@ -61,9 +61,9 @@ const MODS_LEARN = [
 ];
 const MODS_PROJ = [
   {id:"compass",title:"Mein PA-Kompass",n:"🧭",tt:"pa_kompass"},
-  {id:"dashboard",title:"Dashboard",n:"P1",tt:"p1_dashboard"},
-  {id:"guide",title:"Projektbegleiter",n:"P2",tt:"p2_guide"},
-  {id:"ideas",title:"Ideenbewertung",n:"P3",tt:"p3_ideen"},
+  {id:"guide",title:"Projektbegleiter",n:"P1",tt:"p1_guide"},
+  {id:"ideas",title:"Ideenbewertung",n:"P2",tt:"p2_ideen"},
+  {id:"dashboard",title:"Sebbis Hyperfokus-HQ",n:"🧠",tt:"hyperfokus_hq"},
 ];
 const ALL_MODS = [...MODS_LEARN,...MODS_PROJ];
 
@@ -827,13 +827,28 @@ const PA_PHASES=[
     done:"Abgegeben! Jetzt nur noch praesentieren."},
 ];
 
+// Shared collapsible section (outside components to avoid re-mount)
+const InfoBox=({emoji,title,children,color})=>{const t=useT();return <div style={{background:(color||t.ac)+"10",border:`1px solid ${(color||t.ac)}25`,borderRadius:t.term?6:10,padding:"14px 16px",marginBottom:12}}>
+  <div style={{fontSize:12,fontWeight:700,color:color||t.ac,marginBottom:6}}>{emoji} {title}</div>
+  <div style={{fontSize:13,color:t.txB,lineHeight:1.7}}>{children}</div>
+</div>;};
+const Section=({title,emoji,children,defaultOpen})=>{
+  const t=useT();
+  const [open,setOpen]=useState(defaultOpen||false);
+  return <div style={{marginBottom:16}}>
+    <button onClick={()=>setOpen(!open)} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 18px",background:open?t.ac+"10":t.bgC,border:`1px solid ${open?t.ac+"30":t.bd}`,borderRadius:t.term?6:10,cursor:"pointer",fontFamily:t.sf}}>
+      <span style={{fontSize:14,fontWeight:700,color:open?t.ac:t.tx}}>{emoji} {title}</span>
+      <span style={{fontSize:12,color:t.txM}}>{open?"▲":"▼"}</span>
+    </button>
+    {open&&<div style={{padding:"16px 18px",border:`1px solid ${t.bd}`,borderTop:"none",borderRadius:`0 0 ${t.term?6:10}px ${t.term?6:10}px`}}>{children}</div>}
+  </div>;
+};
+
 const MCompass = () => {
   const t=useT();const {author}=useApp();
   const [phase,setPhase]=useState(0);
   const [checks,setChecks]=useState(()=>{try{const s=localStorage.getItem("ml_compass_"+author);return s?JSON.parse(s):{};}catch(e){return {};}});
   const [expanded,setExpanded]=useState(null);
-  const [showGlossar,setShowGlossar]=useState(false);
-  const [showPhasen,setShowPhasen]=useState(false);
   const [openProject,setOpenProject]=useState(null);
   const [glossarFilter,setGlossarFilter]=useState("");
   useEffect(()=>{try{localStorage.setItem("ml_compass_"+author,JSON.stringify(checks));}catch(e){}},[checks,author]);
@@ -845,22 +860,6 @@ const MCompass = () => {
   const daysUntil=(dateStr)=>{const d=new Date(dateStr);return Math.ceil((d-today)/(1000*60*60*24));};
   const p=PA_PHASES[phase];
   const filteredGlossar=PA_GLOSSAR.filter(g=>!glossarFilter||g.term.toLowerCase().includes(glossarFilter.toLowerCase())||g.simple.toLowerCase().includes(glossarFilter.toLowerCase()));
-
-  const InfoBox=({emoji,title,children,color})=><div style={{background:(color||t.ac)+"10",border:`1px solid ${(color||t.ac)}25`,borderRadius:t.term?6:10,padding:"14px 16px",marginBottom:12}}>
-    <div style={{fontSize:12,fontWeight:700,color:color||t.ac,marginBottom:6}}>{emoji} {title}</div>
-    <div style={{fontSize:13,color:t.txB,lineHeight:1.7}}>{children}</div>
-  </div>;
-
-  const Section=({title,emoji,children,defaultOpen})=>{
-    const [open,setOpen]=useState(defaultOpen||false);
-    return <div style={{marginBottom:16}}>
-      <button onClick={()=>setOpen(!open)} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 18px",background:open?t.ac+"10":t.bgC,border:`1px solid ${open?t.ac+"30":t.bd}`,borderRadius:t.term?6:10,cursor:"pointer",fontFamily:t.sf}}>
-        <span style={{fontSize:14,fontWeight:700,color:open?t.ac:t.tx}}>{emoji} {title}</span>
-        <span style={{fontSize:12,color:t.txM}}>{open?"▲":"▼"}</span>
-      </button>
-      {open&&<div style={{padding:"16px 18px",border:`1px solid ${t.bd}`,borderTop:"none",borderRadius:`0 0 ${t.term?6:10}px ${t.term?6:10}px`}}>{children}</div>}
-    </div>;
-  };
 
   return <div>
     <CL num="🧭"/><H1>Mein PA-Kompass</H1>
@@ -1156,8 +1155,8 @@ const MDash = () => {
   const pct=Math.round(cnt/MILES.length*100);
   const deadlines=[{d:"31. März 2026",task:"PPTX per E-Mail (1-2 Folien)",u:true},{d:"30. Juni 2026",task:"Git-Repository Abgabe"},{d:"7. Juli 2026",task:"10-Min-Präsentation (Vor Ort!)"}];
   return <div>
-    <CL num="P1"/><H1>Projekt-Dashboard</H1>
-    <P>Dein Überblick über den Fortschritt der Projektarbeit.</P>
+    <CL num="🧠"/><H1>Sebbis Hyperfokus-HQ</H1>
+    <P>Meilensteine, Deadlines, Dopamin-Kicks — alles auf einen Blick. Wenn der Hyperfokus kickt, bist du hier richtig.</P>
     {justDone&&<div style={{background:`linear-gradient(135deg,${t.ok}15,${t.ac}15)`,border:`1px solid ${t.ok}40`,borderRadius:t.term?8:12,padding:"16px 20px",marginBottom:20,textAlign:"center",animation:"fadeIn .3s ease"}}>
       <div style={{fontSize:32,marginBottom:4}}>{MILES.find(m=>m.id===justDone)?.e}</div>
       <div style={{fontFamily:t.hf,fontWeight:700,color:t.tx,fontSize:16}}>Meilenstein erreicht!</div>

@@ -1854,7 +1854,7 @@ Antworte IMMER exakt in diesem JSON-Format (kein Markdown, kein Text drumherum):
 };
 
 const MKomplettGuide = () => {
-  const t=useT();const {ak,prov,setProv,setAk}=useApp();
+  const t=useT();const {ak,prov,setProv,setAk,author}=useApp();
   const [tab,setTab]=useState("af");
   const [openSec,setOpenSec]=useState({});
   const [glossarFilter,setGlossarFilter]=useState("");
@@ -1862,6 +1862,43 @@ const MKomplettGuide = () => {
   const [aiLd,setAiLd]=useState(false);
   const [aiResult,setAiResult]=useState(null);
   const [aiSS,setAiSS]=useState(false);
+  // ── Supabase History for Tab 4 ──
+  const [aiHistory,setAiHistory]=useState([]);
+  const [aiDbReady,setAiDbReady]=useState(false);
+
+  const aiMapRow=(r)=>({id:r.id,idea:r.idea,result:r.result,author:r.author,ts:new Date(r.created_at).toLocaleString("de-DE",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})});
+  useEffect(()=>{
+    sbFetch("ideas?select=*&result->>_type=eq.analyse&order=created_at.desc").then(data=>{
+      if(Array.isArray(data)){setAiHistory(data.map(aiMapRow));setAiDbReady(true);}
+    }).catch(()=>setAiDbReady(false));
+    const iv=setInterval(()=>{
+      sbFetch("ideas?select=*&result->>_type=eq.analyse&order=created_at.desc").then(data=>{
+        if(Array.isArray(data))setAiHistory(data.map(aiMapRow));
+      }).catch(()=>{});
+    },8000);
+    return ()=>clearInterval(iv);
+  },[]);
+
+  const saveAnalyse=async(idea,result)=>{
+    const tagged={...result,_type:"analyse"};
+    try{
+      const saved=await sbFetch("ideas",{method:"POST",body:JSON.stringify({author,idea,result:tagged,ratings:{}})});
+      if(Array.isArray(saved)&&saved[0])setAiHistory(p=>[aiMapRow(saved[0]),...p]);
+    }catch(e){}
+  };
+  const archiveAnalyse=async(id)=>{
+    const item=aiHistory.find(h=>h.id===id);if(!item)return;
+    const patched={...item.result,_archived:true};
+    await sbFetch(`ideas?id=eq.${id}`,{method:"PATCH",body:JSON.stringify({result:patched}),prefer:"return=minimal"}).catch(()=>{});
+    setAiHistory(p=>p.map(h=>h.id===id?{...h,result:patched}:h));
+    if(aiResult&&item.result.titel===aiResult.titel){setAiResult(null);setAiIdea("");}
+  };
+  const restoreAnalyse=async(id)=>{
+    const item=aiHistory.find(h=>h.id===id);if(!item)return;
+    const {_archived,...cleaned}=item.result;
+    await sbFetch(`ideas?id=eq.${id}`,{method:"PATCH",body:JSON.stringify({result:cleaned}),prefer:"return=minimal"}).catch(()=>{});
+    setAiHistory(p=>p.map(h=>h.id===id?{...h,result:cleaned}:h));
+  };
 
   const toggle=(key)=>setOpenSec(p=>({...p,[key]:!p[key]}));
 
@@ -2360,12 +2397,18 @@ Antworte IMMER exakt in diesem JSON-Format:
         const d=await r.json();if(d.error)throw new Error(d.error.message);text=d.content[0].text;
       }
       const clean=text.replace(/```json\n?/g,"").replace(/```\n?/g,"").trim();
-      setAiResult(JSON.parse(clean));
+      const parsed=JSON.parse(clean);
+      setAiResult(parsed);
+      saveAnalyse(aiIdea,parsed);
     }catch(err){setAiResult({error:err.message});}finally{setAiLd(false);}
   };
 
+  const scoreColor=(s)=>s>=7?t.ok:s>=4?t.ac:t.err;
+  const activeAnalyses=aiHistory.filter(h=>!h.result._archived);
+  const archivedAnalyses=aiHistory.filter(h=>h.result._archived);
+
   const tabAi=()=><div>
-    <P>Gib eine beliebige Projektidee ein und erhalte automatisch den kompletten Projektvorschlag (a-f) und alle 9 Sektionen im Zwei-Spalten-Format — PA-Text links, Erklaerung rechts.</P>
+    <P>Gib eine beliebige Projektidee ein und erhalte automatisch den kompletten Projektvorschlag (a-f) und alle 9 Sektionen im Zwei-Spalten-Format. Alle Analysen werden automatisch gespeichert.</P>
 
     <button onClick={()=>setAiSS(!aiSS)} style={{fontFamily:t.sf,fontSize:12,color:t.txM,background:"none",border:"none",cursor:"pointer",marginBottom:12}}>API-Einstellungen {aiSS?"\u25B4":"\u25BE"}</button>
     {aiSS&&<Cd style={{marginBottom:16}}>
@@ -2382,6 +2425,30 @@ Antworte IMMER exakt in diesem JSON-Format:
       </div>
     </div>
 
+    {/* ── History-Liste ── */}
+    {activeAnalyses.length>0&&!aiResult&&<div style={{marginBottom:20}}>
+      <div style={{fontSize:13,fontWeight:700,color:t.tx,marginBottom:10}}>Gespeicherte Analysen ({activeAnalyses.length})</div>
+      {activeAnalyses.map(h=><div key={h.id} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",background:t.bgC,border:`1px solid ${t.bd}`,borderRadius:t.term?6:8,marginBottom:6,cursor:"pointer",transition:"all .15s"}} onClick={()=>{setAiResult(h.result);setAiIdea(h.idea);window.scrollTo({top:0,behavior:"smooth"});}}>
+        <div style={{width:36,height:36,borderRadius:"50%",background:scoreColor(h.result.score)+"18",border:`2px solid ${scoreColor(h.result.score)}`,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:800,fontSize:14,color:scoreColor(h.result.score),flexShrink:0}}>{h.result.score}</div>
+        <div style={{flex:1,minWidth:0}}>
+          <div style={{fontSize:13,fontWeight:600,color:t.tx,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{h.result.titel||h.idea}</div>
+          <div style={{fontSize:11,color:t.txM}}>{h.ts} — {h.author} — {h.result.typ}</div>
+        </div>
+        <button onClick={(e)=>{e.stopPropagation();archiveAnalyse(h.id);}} title="Archivieren" style={{background:"none",border:"none",cursor:"pointer",fontSize:14,color:t.txF,padding:4}}>{"🗑"}</button>
+      </div>)}
+      {archivedAnalyses.length>0&&<details style={{marginTop:8}}>
+        <summary style={{fontSize:12,color:t.txM,cursor:"pointer"}}>Archiv ({archivedAnalyses.length})</summary>
+        <div style={{marginTop:6}}>
+          {archivedAnalyses.map(h=><div key={h.id} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 14px",background:t.bgC,border:`1px solid ${t.bd}`,borderRadius:t.term?4:6,marginBottom:4,opacity:0.6}}>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontSize:12,color:t.txM,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{h.result.titel||h.idea}</div>
+            </div>
+            <button onClick={()=>restoreAnalyse(h.id)} style={{background:"none",border:"none",cursor:"pointer",fontSize:11,color:t.ac,padding:4}}>Wiederherstellen</button>
+          </div>)}
+        </div>
+      </details>}
+    </div>}
+
     {aiResult&&aiResult.error&&<Info title="Fehler" type="warning">{aiResult.error}</Info>}
 
     {aiResult&&!aiResult.error&&<>
@@ -2389,7 +2456,7 @@ Antworte IMMER exakt in diesem JSON-Format:
         <div style={{fontFamily:t.hf,fontSize:22,fontWeight:800,color:t.tx}}>{aiResult.titel}</div>
         <div style={{display:"flex",gap:8,marginTop:8}}>
           <span style={{fontSize:11,padding:"2px 8px",borderRadius:10,background:t.inf+"18",color:t.inf,fontWeight:600}}>{aiResult.typ}</span>
-          <span style={{fontSize:11,padding:"2px 8px",borderRadius:10,background:(aiResult.score>=7?t.ok:aiResult.score>=4?t.ac:t.err)+"18",color:aiResult.score>=7?t.ok:aiResult.score>=4?t.ac:t.err,fontWeight:600}}>{aiResult.score}/10 DL-Eignung</span>
+          <span style={{fontSize:11,padding:"2px 8px",borderRadius:10,background:scoreColor(aiResult.score)+"18",color:scoreColor(aiResult.score),fontWeight:600}}>{aiResult.score}/10 DL-Eignung</span>
         </div>
       </div>
 
@@ -2409,6 +2476,11 @@ Antworte IMMER exakt in diesem JSON-Format:
           </div>)}
         </Section>)}
       </>}
+
+      {/* Zurueck-Button wenn History existiert */}
+      {activeAnalyses.length>0&&<div style={{marginTop:20,textAlign:"center"}}>
+        <Bt onClick={()=>{setAiResult(null);setAiIdea("");}}>Zurueck zur Uebersicht</Bt>
+      </div>}
     </>}
   </div>;
 

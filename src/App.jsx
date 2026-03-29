@@ -1902,7 +1902,7 @@ const MKomplettGuide = () => {
   // TAB 1: PROJEKTVORSCHLAG a-f (static)
   // ════════════════════════════════════════════
   const tabAF=()=><div>
-    <P>Der Projektvorschlag beantwortet die 6 Grundfragen (a-f), die der Prof fuer jedes Projekt sehen will. Links steht der offizielle Text, rechts was das fuer euch bedeutet.</P>
+    <P>Der Projektvorschlag beantwortet die 6 Grundfragen (a-f), die der Prof fuer jedes Projekt sehen will. Links steht der offizielle Text, rechts was das fuer uns bedeutet.</P>
 
     <Section id="af-a" title="a) Titel der Projektarbeit" emoji="🏷️" defaultOpen>
       <TwoCol leftLabel="SO STEHT ES IN DER PA" rightLabel="WAS DAS HEISST"
@@ -2007,7 +2007,7 @@ const MKomplettGuide = () => {
   ];
 
   const tabSections=()=><div>
-    <P>Alle 9 Pflicht-Sektionen der Projektarbeit mit Zwei-Spalten-Erklaerung. Links der offizielle PA-Text, rechts was das fuer euch bedeutet.</P>
+    <P>Alle 9 Pflicht-Sektionen der Projektarbeit mit Zwei-Spalten-Erklaerung. Links der offizielle PA-Text, rechts was das fuer uns bedeutet.</P>
     {SECS.map(sec=><Section key={sec.nr} id={`sec-${sec.nr}`} title={`${sec.nr}. ${sec.name}`} emoji={sec.emoji} defaultOpen={sec.nr===1}>
       {sec.subs.map((sub,si)=><div key={si}>
         <SubH>{sub.t}</SubH>
@@ -2089,10 +2089,10 @@ const MKomplettGuide = () => {
     const filtered=GLOSSAR.filter(g=>!glossarFilter||g.term.toLowerCase().includes(glossarFilter.toLowerCase())||g.def.toLowerCase().includes(glossarFilter.toLowerCase()));
     return <div>
 
-    <Section id="bg-1" title="1. Was die PA eigentlich von euch will" emoji="🎯" defaultOpen>
+    <Section id="bg-1" title="1. Was die PA eigentlich von uns will" emoji="🎯" defaultOpen>
       <div style={{padding:"14px 16px",background:t.okBg,border:`1px solid ${t.ok}30`,borderRadius:t.term?6:10,marginBottom:12}}>
         <div style={{fontSize:13,color:t.txB,lineHeight:1.8}}>
-          Die Projektarbeit ist <Hl>KEIN Hexenwerk</Hl>. Im Kern sollt ihr zeigen, dass ihr:<br/>
+          Die Projektarbeit ist <Hl>KEIN Hexenwerk</Hl>. Im Kern sollen wir zeigen, dass wir:<br/>
           (1) Ein <Ex>Problem</Ex> erkannt habt (Tiere auf Fotos erkennen),<br/>
           (2) passende <Ex>Daten</Ex> gefunden habt (Animals-10 von Kaggle),<br/>
           (3) ein <Ex>Modell</Ex> gewaehlt habt (ResNet-18 mit Transfer Learning),<br/>
@@ -2114,7 +2114,7 @@ const MKomplettGuide = () => {
     <Section id="bg-2" title="2. ML als Student erklaert" emoji="🎓">
       <div style={{padding:"14px 16px",background:t.infBg,border:`1px solid ${t.inf}30`,borderRadius:t.term?6:10}}>
         <div style={{fontSize:13,color:t.txB,lineHeight:1.8}}>
-          Stellt euch <Hl>Machine Learning als Studenten</Hl> vor:<br/><br/>
+          Stellt uns <Hl>Machine Learning als Studenten</Hl> vor:<br/><br/>
           <Ex>Trainingsphase</Ex> = Der Student lernt mit Karteikarten. Jede Karte hat ein Tierfoto (Vorderseite) und den Namen (Rueckseite). Er schaut sich 25-mal ALLE Karten an (= 25 Epochs).<br/><br/>
           <Ex>Validierung</Ex> = Nach jeder Runde wird er mit neuen Bildern getestet, die er noch nie gesehen hat. Werden die Ergebnisse 5 Runden lang nicht besser, hoert er auf (= Early Stopping).<br/><br/>
           <Ex>Transfer Learning</Ex> = Der Student hat vorher schon 14 Mio. andere Bilder gesehen (ImageNet) und weiss was Kanten, Formen und Texturen sind. Jetzt muss er nur noch lernen: "Diese Kombination aus Mustern = Katze".<br/><br/>
@@ -2137,15 +2137,15 @@ const MKomplettGuide = () => {
     </Section>
 
     <Section id="bg-4" title="4. Die 9 Sektionen — kurz und knapp" emoji="📝">
-      <div style={{fontSize:13,color:t.txB,lineHeight:1.8,marginBottom:12}}>Jede Sektion in einem Satz — was sie WIRKLICH von euch will:</div>
+      <div style={{fontSize:13,color:t.txB,lineHeight:1.8,marginBottom:12}}>Jede Sektion in einem Satz — was sie WIRKLICH von uns will:</div>
       {[
-        ["1. Problembeschreibung","Erklaert WAS ihr macht und WARUM es wichtig ist.","Man muss es einer fachfremden Person erklaeren koennen."],
+        ["1. Problembeschreibung","Erklaert WAS wir machen und WARUM es wichtig ist.","Man muss es einer fachfremden Person erklaeren koennen."],
         ["2. Datenquelle","Woher kommen die Daten, wie gross, wie verteilt?","Link zum Datensatz + Grundstatistiken reichen."],
-        ["3. EDA","Schaut euch die Daten AN bevor ihr loslegt.","5-6 Plots mit kurzer Beschreibung."],
+        ["3. EDA","Daten anschauen BEVOR wir loslegen.","5-6 Plots mit kurzer Beschreibung."],
         ["4. Vorverarbeitung","Macht die Daten fit fuers Modell.","Normalisierung + kaputte Bilder rauswerfen."],
         ["5. Augmentation","Kuenstlich mehr Daten erzeugen.","3-4 Zeilen Code, Vorher/Nachher-Bild zeigen."],
         ["6. Modellarchitektur","Welches Netz und warum genau dieses?","ResNet-18 weil bewaehrt + Transfer Learning."],
-        ["7. Training","WIE habt ihr trainiert?","Hyperparameter auflisten + Loss-Kurven zeigen."],
+        ["7. Training","WIE haben wir trainiert?","Hyperparameter auflisten + Loss-Kurven zeigen."],
         ["8. Evaluation","Wie GUT ist das Ergebnis?","Confusion Matrix + Grad-CAM Heatmaps."],
         ["9. Diskussion","Ehrliche Reflexion: Was lief gut, was nicht?","Limitationen nennen = Staerke, nicht Schwaeche!"],
       ].map(([title,what,tip],i)=><div key={i} style={{display:"grid",gridTemplateColumns:"200px 1fr 1fr",gap:0,border:`1px solid ${t.bd}`,borderRadius:t.term?4:6,overflow:"hidden",marginBottom:4}}>
@@ -2185,7 +2185,7 @@ const MKomplettGuide = () => {
     <Section id="bg-7" title="7. Ehrliche Einschaetzung fuer Anfaenger" emoji="💪">
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
         <div style={{padding:"14px 16px",background:t.okBg,border:`1px solid ${t.ok}30`,borderRadius:t.term?6:8}}>
-          <div style={{fontSize:12,fontWeight:700,color:t.ok,marginBottom:8}}>DAS SCHAFFT IHR</div>
+          <div style={{fontSize:12,fontWeight:700,color:t.ok,marginBottom:8}}>DAS SCHAFFEN WIR</div>
           <div style={{fontSize:12,color:t.txB,lineHeight:1.8}}>
             • Datensatz runterladen und anschauen<br/>
             • EDA-Plots erstellen (5-6 Diagramme)<br/>
@@ -2209,7 +2209,7 @@ const MKomplettGuide = () => {
       <div style={{marginTop:12,padding:"12px 14px",background:t.infBg,border:`1px solid ${t.inf}30`,borderRadius:t.term?6:8}}>
         <div style={{fontSize:12,fontWeight:700,color:t.inf,marginBottom:6}}>WICHTIGSTER SATZ VOM PROF</div>
         <div style={{fontSize:14,color:t.tx,fontWeight:600,fontStyle:"italic",lineHeight:1.6}}>"Eine Projektarbeit ist nicht gescheitert, wenn die gewuenschte Performance nicht erreicht wird."</div>
-        <div style={{fontSize:12,color:t.txM,marginTop:6}}>Heisst: Auch wenn das Modell nur 75% Accuracy erreicht, koennt ihr eine gute Note bekommen — wenn die Analyse stimmt!</div>
+        <div style={{fontSize:12,color:t.txM,marginTop:6}}>Heisst: Auch wenn das Modell nur 75% Accuracy erreicht, koennen wir eine gute Note bekommen — wenn die Analyse stimmt!</div>
       </div>
     </Section>
 
@@ -2270,7 +2270,7 @@ const MKomplettGuide = () => {
     </Section>
 
     <Section id="bg-11" title="11. Satzbausteine zum Kopieren" emoji="📋">
-      <div style={{fontSize:12,color:t.txM,marginBottom:12}}>Fertige Saetze die ihr in der Doku verwenden koennt — einfach anpassen!</div>
+      <div style={{fontSize:12,color:t.txM,marginBottom:12}}>Fertige Saetze die wir in der Doku verwenden koennen — einfach anpassen!</div>
       {[
         {cat:"Problembeschreibung",text:"Das vorliegende Projekt adressiert ein Klassifikationsproblem im Bereich der Bildverarbeitung. Ziel ist die automatisierte Zuordnung von Tierbildern zu einer von [X] vordefinierten Klassen."},
         {cat:"Datenquelle",text:"Verwendet wird der [Name]-Datensatz, verfuegbar auf der Plattform Kaggle. Der Datensatz umfasst [X] Bilder in [Y] Klassen und ist unter einer offenen Lizenz frei verfuegbar."},
@@ -2289,13 +2289,13 @@ const MKomplettGuide = () => {
     <Section id="bg-12" title="12. Die wichtigste Erkenntnis" emoji="💡">
       <div style={{padding:"20px",background:`linear-gradient(135deg, ${t.ac}12, ${t.inf}12)`,border:`2px solid ${t.ac}40`,borderRadius:t.term?8:14,textAlign:"center"}}>
         <div style={{fontSize:22,fontWeight:800,color:t.tx,marginBottom:12,fontFamily:t.hf}}>Ihr baut kein perfektes Produkt.</div>
-        <div style={{fontSize:22,fontWeight:800,color:t.ac,marginBottom:16,fontFamily:t.hf}}>Ihr zeigt, dass ihr den Prozess verstanden habt.</div>
+        <div style={{fontSize:22,fontWeight:800,color:t.ac,marginBottom:16,fontFamily:t.hf}}>Wir zeigen, dass wir den Prozess verstanden haben.</div>
         <div style={{fontSize:14,color:t.txB,lineHeight:1.8,maxWidth:500,margin:"0 auto"}}>
           Der Prof will nicht "95% Accuracy". Er will sehen:<br/>
-          Habt ihr das <Hl>Problem</Hl> verstanden?<br/>
-          Habt ihr die <Hl>Daten</Hl> analysiert?<br/>
-          Koennt ihr eure <Hl>Entscheidungen</Hl> begruenden?<br/>
-          Reflektiert ihr <Hl>ehrlich</Hl> was nicht geklappt hat?
+          Haben wir das <Hl>Problem</Hl> verstanden?<br/>
+          Haben wir die <Hl>Daten</Hl> analysiert?<br/>
+          Koennen wir unsere <Hl>Entscheidungen</Hl> begruenden?<br/>
+          Reflektieren wir <Hl>ehrlich</Hl> was nicht geklappt hat?
         </div>
       </div>
     </Section>
@@ -2417,7 +2417,7 @@ Antworte IMMER exakt in diesem JSON-Format:
 
   return <div>
     <CL num="📚"/><H1>PA-Komplett-Guide</H1>
-    <P>Alles was ihr fuer die Projektarbeit braucht — Vorschlag, Sektionen, Anfaenger-Guide und AI-Analyse im Zwei-Spalten-Format.</P>
+    <P>Alles was wir fuer die Projektarbeit brauchen — Vorschlag, Sektionen, Anfaenger-Guide und AI-Analyse im Zwei-Spalten-Format.</P>
 
     <div style={{display:"flex",gap:4,marginBottom:24,borderBottom:`2px solid ${t.bd}`,paddingBottom:0}}>
       {TABS.map(tb=><button key={tb.id} onClick={()=>setTab(tb.id)} style={{padding:"10px 16px",background:tab===tb.id?t.ac+"15":"transparent",border:"none",borderBottom:tab===tb.id?`2px solid ${t.ac}`:"2px solid transparent",cursor:"pointer",fontFamily:t.sf,fontSize:13,fontWeight:tab===tb.id?700:400,color:tab===tb.id?t.ac:t.txM,display:"flex",alignItems:"center",gap:6,transition:"all .15s",marginBottom:-2}}>

@@ -1987,16 +1987,18 @@ const MKomplettGuide = () => {
       {t:"Hyperparameter",l:<><Hl>Learning Rate</Hl>: 0.001 (Adam). <Hl>Batch Size</Hl>: 32. Epochs: 25 mit <Hl>Early Stopping</Hl> (Patience=5). Loss: CrossEntropyLoss. <Hl>StepLR</Hl>: Faktor 0.1 alle 10 Epochs.</>,r:<><Ex>Learning Rate</Ex> = Schrittgroesse beim Lernen. <Ex>Adam</Ex> = Algorithmus der die Rate automatisch anpasst. <Ex>Batch Size</Ex> = 32 Bilder gleichzeitig. <Ex>Early Stopping</Ex> = Aufhoeren wenn 5 Runden nichts besser wird. <Ex>StepLR</Ex> = Lernrate wird kleiner ueber die Zeit.</>},
     ]},
     {nr:7,name:"Training",emoji:"🏋️",subs:[
-      {t:"Training (Epochs, Batch, Optimizer)",l:<>Max. 25 Epochs, Batch Size 32, <Hl>Adam</Hl> mit LR 0.001. <Hl>StepLR-Scheduler</Hl> reduziert LR alle 10 Epochs. Training auf <Hl>GPU</Hl> (Google Colab).</>,r:<>Das Modell schaut sich 25-mal alle Bilder an, jeweils 32 auf einmal. <Ex>GPU</Ex> = Grafikkarte fuer schnelles Rechnen. Ohne GPU: Stunden statt Minuten.</>},
-      {t:"Loss-Funktion",l:<><Hl>CrossEntropyLoss</Hl> — Standard fuer Multi-Class-Klassifikation. Optional <Hl>Weighted</Hl> bei Class Imbalance.</>,r:<><Ex>Loss-Funktion</Ex> = Misst wie falsch das Modell liegt. "Katze mit 10% Sicherheit" bei echtem Katzenbild = hoher Loss. <Ex>Weighted</Ex> = Seltene Tiere zaehlen mehr.</>},
-      {t:"Overfitting-Analyse",l:<><Hl>Train-Loss</Hl> vs. <Hl>Validation-Loss</Hl> pro Epoch als Loss-Kurven-Plot. Divergenz = Overfitting. Gegenmassnahmen: Dropout, Early Stopping, Augmentation.</>,r:<><Ex>Overfitting</Ex> = Auswendiglernen statt Verstehen. Trainings-Linie faellt weiter, Validierungs-Linie steigt = Alarm! <Ex>Early Stopping</Ex> = Automatisch aufhoeren.</>},
-      {t:"Regularisierung",l:<><Hl>Dropout</Hl> (p=0.3), <Hl>Weight Decay</Hl> (L2, Lambda=1e-4). Frozen Backbone wirkt als implizite Regularisierung.</>,r:<><Ex>Regularisierung</Ex> = Techniken gegen Overfitting. <Ex>Dropout</Ex> = Zufaellig 30% Verbindungen aus. <Ex>Weight Decay</Ex> = Grosse Gewichte bestrafen. Frozen Backbone = Nur wenige Parameter trainieren = weniger Overfitting.</>},
+      {t:"Aufteilung der Daten (Train/Validation/Test-Split)",l:<>Die Daten werden in drei Teile aufgeteilt: <Hl>70% Training</Hl>, <Hl>15% Validation</Hl>, <Hl>15% Test</Hl>. Die Aufteilung erfolgt stratifiziert, d.h. jede Klasse ist in allen drei Splits proportional vertreten.</>,r:<><Ex>Train</Ex> = Damit lernt das Modell. <Ex>Validation</Ex> = Damit pruefen wir WAEHREND des Trainings ob es besser wird (fuer Early Stopping). <Ex>Test</Ex> = Damit pruefen wir am ENDE wie gut es wirklich ist. Wichtig: Das Modell sieht die Testdaten NIE vorher!</>},
+      {t:"Training-Konfiguration (Batch Size, Learning Rate, Epochs etc.)",l:<>Max. 25 Epochs, Batch Size 32, <Hl>Adam</Hl> mit LR 0.001. <Hl>StepLR-Scheduler</Hl> reduziert LR alle 10 Epochs um Faktor 0.1. Training auf <Hl>GPU</Hl> (Google Colab).</>,r:<>Das Modell schaut sich 25-mal alle Bilder an, jeweils 32 auf einmal. <Ex>GPU</Ex> = Grafikkarte fuer schnelles Rechnen. Ohne GPU: Stunden statt Minuten.</>},
+      {t:"Verwendete Loss-Function und Optimizer",l:<><Hl>CrossEntropyLoss</Hl> — Standard fuer Multi-Class-Klassifikation. Optimizer: <Hl>Adam</Hl> (adaptive Learning Rate). Optional <Hl>Weighted CrossEntropyLoss</Hl> bei Class Imbalance.</>,r:<><Ex>Loss-Funktion</Ex> = Misst wie falsch das Modell liegt. "Katze mit 10% Sicherheit" bei echtem Katzenbild = hoher Loss. <Ex>Optimizer</Ex> = Der Algorithmus der die Gewichte anpasst. <Ex>Adam</Ex> = Passt die Lernrate automatisch an. <Ex>Weighted</Ex> = Seltene Tiere zaehlen mehr.</>},
+      {t:"Techniken zur Vermeidung von Overfitting (Regularisierung, Dropout, Early Stopping etc.)",l:<><Hl>Dropout</Hl> (p=0.3) vor dem FC-Layer, <Hl>Weight Decay</Hl> (L2, Lambda=1e-4), <Hl>Early Stopping</Hl> (Patience=5). Frozen Backbone wirkt als implizite Regularisierung, da nur wenige Parameter trainiert werden.</>,r:<><Ex>Overfitting</Ex> = Auswendiglernen statt Verstehen. <Ex>Dropout</Ex> = Zufaellig 30% Verbindungen aus. <Ex>Weight Decay</Ex> = Grosse Gewichte bestrafen. <Ex>Early Stopping</Ex> = Aufhoeren wenn 5 Runden nichts besser wird. Frozen Backbone = Nur wenige Parameter trainieren = weniger Overfitting.</>},
+      {t:"Visualisierung des Trainingsverlaufs (Loss- und Metrik-Kurven)",l:<><Hl>Train-Loss</Hl> vs. <Hl>Validation-Loss</Hl> pro Epoch als Liniendiagramm. Ebenso <Hl>Train-Accuracy</Hl> vs. <Hl>Validation-Accuracy</Hl>. Eine divergierende Schere (Train-Loss sinkt, Val-Loss steigt) zeigt Overfitting an.</>,r:<>Zwei Diagramme: (1) Loss-Kurven — zwei Linien die zeigen wie der Fehler pro Runde sinkt. (2) Accuracy-Kurven — wie die Trefferquote steigt. Wenn die Trainings-Linie weiter faellt aber die Validierungs-Linie steigt, ist das <Ex>Overfitting</Ex> = Alarm!</>},
     ]},
     {nr:8,name:"Evaluation und Ergebnisse",emoji:"📊",subs:[
-      {t:"Metriken",l:<><Hl>Accuracy</Hl>, <Hl>Precision</Hl>, <Hl>Recall</Hl>, <Hl>F1-Score</Hl>. Sowohl Macro- als auch Weighted-Average.</>,r:<><Ex>Accuracy</Ex> = "89 von 100 richtig" = 89%. <Ex>Precision</Ex> = Von allen als Hund markierten waren X% wirklich Hunde. <Ex>Recall</Ex> = Von allen echten Hunden hat es X% erkannt. <Ex>F1</Ex> = Kombination aus beiden.</>},
-      {t:"Darstellung (Confusion Matrix etc.)",l:<><Hl>Confusion Matrix</Hl> als Heatmap, Classification Report, Loss/Accuracy-Kurven, <Hl>Grad-CAM-Heatmaps</Hl> fuer korrekte und falsche Vorhersagen.</>,r:<><Ex>Confusion Matrix</Ex> = Tabelle: welche Tiere mit welchen verwechselt. Zeile = echt, Spalte = Vorhersage. <Ex>Grad-CAM</Ex> = Heatmap UEBER dem Bild: Rot = Modell schaut hier hin.</>},
-      {t:"Modellvergleich",l:<>3 Konfigurationen: (1) ResNet-18 + Augmentation, (2) ResNet-18 ohne Augmentation, (3) MobileNetV2 + Augmentation.</>,r:"Wir trainieren DREI Varianten und vergleichen fair: Hilft Augmentation? Ist das groessere Netz besser?"},
-      {t:"Interpretation / Grad-CAM",l:<>Klassenweise Performance, <Hl>Grad-CAM-Analyse</Hl> (Tier oder Hintergrund?), Fehleranalyse der am haeufigsten verwechselten Klassen.</>,r:<>Unser <Ex>Alleinstellungsmerkmal</Ex>: Mit Grad-CAM SEHEN wir ob das Modell betruegt. Fisch-Bilder: Schaut es auf Wasser statt Fisch? Das ist wissenschaftlicher als nur "Accuracy: 90%, fertig."</>},
+      {t:"Definition und Begruendung der verwendeten Evaluation-Metriken",l:<><Hl>Accuracy</Hl> (Gesamtanteil korrekter Vorhersagen), <Hl>Precision</Hl> (Anteil korrekt positiver pro Klasse), <Hl>Recall</Hl> (Anteil erkannter Samples pro Klasse), <Hl>F1-Score</Hl> (harmonisches Mittel). Sowohl <Hl>Macro-</Hl> als auch <Hl>Weighted-Average</Hl>.</>,r:<><Ex>Accuracy</Ex> = "89 von 100 richtig" = 89%. <Ex>Precision</Ex> = Von allen als Hund markierten waren X% wirklich Hunde. <Ex>Recall</Ex> = Von allen echten Hunden hat es X% erkannt. <Ex>F1</Ex> = Kombination aus beiden. <Ex>Macro</Ex> = Jede Tierart zaehlt gleich. <Ex>Weighted</Ex> = Gewichtet nach Anzahl Bilder.</>},
+      {t:"Quantitative Ergebnisse aller getesteten Modelle (Vergleichstabelle)",l:<>Vergleichstabelle mit 3 Konfigurationen: (1) <Hl>ResNet-18 + Augmentation</Hl> (Hauptmodell), (2) <Hl>ResNet-18 ohne Augmentation</Hl> (Ablation), (3) <Hl>MobileNetV2 + Augmentation</Hl> (Architekturvergleich). Verglichen werden Accuracy, F1-Score und Inference Time.</>,r:<>Eine Tabelle in der alle drei Varianten nebeneinander stehen mit ihren Zahlen. So sieht man auf einen Blick: Hilft Augmentation? Ist das groessere Netz besser? <Ex>Inference Time</Ex> = Wie lange braucht das Modell fuer ein einzelnes Bild?</>},
+      {t:"Detaillierte Analyse des besten Modells (Confusion Matrix, Classification Report etc.)",l:<><Hl>Confusion Matrix</Hl> als Heatmap fuer das beste Modell. <Hl>Classification Report</Hl> mit Precision/Recall/F1 pro Klasse. <Hl>Grad-CAM-Heatmaps</Hl> fuer repraesentative korrekte und falsche Vorhersagen.</>,r:<><Ex>Confusion Matrix</Ex> = Tabelle die zeigt welche Tiere mit welchen verwechselt werden. Zeile = echtes Tier, Spalte = Vorhersage. <Ex>Classification Report</Ex> = Tabelle mit allen Metriken pro Tierart. <Ex>Grad-CAM</Ex> = Heatmap UEBER dem Bild: Rot = hier schaut das Modell hin.</>},
+      {t:"Fehleranalyse: Wo macht das Modell Fehler und warum?",l:<>Analyse der am haeufigsten verwechselten Klassen. <Hl>Grad-CAM-Vergleich</Hl>: Fokussiert das Modell bei Fehlern auf das Tier oder auf den Hintergrund (<Hl>Background Bias</Hl>)? Beispielbilder fuer typische Fehler dokumentieren.</>,r:<>Unser <Ex>Alleinstellungsmerkmal</Ex>: Mit Grad-CAM SEHEN wir ob das Modell betruegt. Fisch-Bilder: Schaut es auf Wasser statt Fisch? Katze vs. Hund: Welche Merkmale verwechselt es? Das ist wissenschaftlicher als nur "Accuracy: 90%, fertig."</>},
+      {t:"Visualisierung der Ergebnisse (z.B. Predictions vs. Ground Truth)",l:<>Visualisierungen: (1) <Hl>Predictions vs. Ground Truth</Hl> als Bildergalerie (korrekte und falsche Vorhersagen nebeneinander), (2) Grad-CAM-Overlay auf Beispielbildern, (3) Konfidenz-Histogramm fuer korrekte vs. falsche Vorhersagen.</>,r:<><Ex>Predictions vs. Ground Truth</Ex> = Wir zeigen echte Bilder und schreiben drunter was das Modell sagt vs. was es wirklich ist. So sieht der Prof sofort: "Ah, Katzen erkennt es gut, aber Spinnen verwechselt es mit Schmetterlingen."</>},
     ]},
     {nr:9,name:"Diskussion und Fazit",emoji:"💬",subs:[
       {t:"Zusammenfassung",l:<>Erreichte Accuracy vs. <Hl>Baseline</Hl> (Random Guess = 10%). Unterschiede zwischen den 3 Modellkonfigurationen. Erkenntnisse aus Grad-CAM.</>,r:<><Ex>Baseline</Ex> = Duemmster Ansatz zum Vergleich. Zufaelliges Raten = 10%. Alles darueber = besser als Zufall. Der Prof will sehen dass wir VERSTEHEN was wir gemacht haben.</>},
@@ -2016,20 +2018,25 @@ const MKomplettGuide = () => {
     </Section>)}
 
     <Section id="sec-zusatz" title="Zusaetzliche Anforderungen" emoji="📦">
-      <SubH>requirements.txt</SubH>
+      <SubH>Code-Qualitaet</SubH>
       <TwoCol leftLabel="SO STEHT ES IN DER PA" rightLabel="WAS DAS HEISST"
-        left={<>Alle Python-Pakete mit Versionsangaben: torch, torchvision, matplotlib, scikit-learn, Pillow, grad-cam, numpy, pandas</>}
-        right={<><Ex>requirements.txt</Ex> = Textdatei mit allen Zutaten. Damit kann jeder unsere Umgebung nachbauen. Erstellen mit: pip freeze &gt; requirements.txt</>}
+        left="Der Code muss gut strukturiert, kommentiert und nachvollziehbar sein. Modularisierung in separate Dateien (data_loading.py, model.py, train.py, evaluate.py). Konsistenter Code Style nach PEP 8."
+        right={<><Ex>Code-Qualitaet</Ex> = Sauberer, lesbarer Code. Nicht alles in eine Datei stopfen. Kommentare schreiben, damit der Prof versteht was passiert. <Ex>PEP 8</Ex> = Python Style-Guide (4 Leerzeichen Einrueckung, snake_case).</>}
       />
-      <SubH>README.md</SubH>
+      <SubH>Reproduzierbarkeit</SubH>
       <TwoCol leftLabel="SO STEHT ES IN DER PA" rightLabel="WAS DAS HEISST"
-        left="Projekttitel, Kurzbeschreibung, Installationsanleitung, Ausfuehrungsanleitung, Projektstruktur, Hardware-Angaben."
-        right={<><Ex>README.md</Ex> = Die "Bedienungsanleitung" die auf der Git-Startseite angezeigt wird. Jeder soll sofort verstehen: Was ist das? Wie starte ich es?</>}
+        left="Alle Schritte muessen im GIT Repository reproduzierbar dokumentiert sein. Jeder soll das Projekt klonen und die Ergebnisse nachstellen koennen."
+        right={<><Ex>Reproduzierbarkeit</Ex> = Wenn jemand unser Git-Repo klont und die Anleitung befolgt, muss er zum gleichen Ergebnis kommen. Dafuer brauchen wir: alle Daten-Download-Links, alle Code-Dateien, feste Random Seeds, und eine klare Schritt-fuer-Schritt-Anleitung in der README.</>}
       />
-      <SubH>Code Quality</SubH>
+      <SubH>Requirements</SubH>
       <TwoCol leftLabel="SO STEHT ES IN DER PA" rightLabel="WAS DAS HEISST"
-        left="Kommentierung, Modularisierung (data_loading.py, model.py, train.py, evaluate.py), PEP 8 Style."
-        right={<><Ex>Code Quality</Ex> = Sauberer, lesbarer Code. Aufteilen in Dateien, Kommentare schreiben. <Ex>PEP 8</Ex> = Python Style-Guide (4 Leerzeichen Einrueckung, snake_case).</>}
+        left={<>Eine <Hl>requirements.txt</Hl> Datei muss vorhanden sein mit allen Python-Paketen und Versionsangaben: torch, torchvision, matplotlib, scikit-learn, Pillow, grad-cam, numpy, pandas.</>}
+        right={<><Ex>requirements.txt</Ex> = Textdatei mit allen Zutaten und Versionsnummern. Damit kann jeder unsere Umgebung exakt nachbauen. Erstellen mit: pip freeze &gt; requirements.txt</>}
+      />
+      <SubH>README</SubH>
+      <TwoCol leftLabel="SO STEHT ES IN DER PA" rightLabel="WAS DAS HEISST"
+        left="Das Repository muss eine README.md mit Anleitung zur Ausfuehrung enthalten: Projekttitel, Kurzbeschreibung, Installationsanleitung, Ausfuehrungsanleitung, Projektstruktur."
+        right={<><Ex>README.md</Ex> = Die "Bedienungsanleitung" die auf der Git-Startseite angezeigt wird. Jeder soll sofort verstehen: Was ist das? Wie installiere ich es? Wie starte ich es?</>}
       />
     </Section>
   </div>;
@@ -2140,15 +2147,15 @@ const MKomplettGuide = () => {
       <div style={{fontSize:13,color:t.txB,lineHeight:1.8,marginBottom:12}}>Jede Sektion in einem Satz — was sie WIRKLICH von uns will:</div>
       {[
         ["1. Problembeschreibung","Erklaert WAS wir machen und WARUM es wichtig ist.","Man muss es einer fachfremden Person erklaeren koennen."],
-        ["2. Datenquelle","Woher kommen die Daten, wie gross, wie verteilt?","Link zum Datensatz + Grundstatistiken reichen."],
-        ["3. EDA","Daten anschauen BEVOR wir loslegen.","5-6 Plots mit kurzer Beschreibung."],
-        ["4. Vorverarbeitung","Macht die Daten fit fuers Modell.","Normalisierung + kaputte Bilder rauswerfen."],
-        ["5. Augmentation","Kuenstlich mehr Daten erzeugen.","3-4 Zeilen Code, Vorher/Nachher-Bild zeigen."],
-        ["6. Modellarchitektur","Welches Netz und warum genau dieses?","ResNet-18 weil bewaehrt + Transfer Learning."],
+        ["2. Datenquelle und Datenbeschreibung","Woher kommen die Daten, wie gross, wie verteilt?","Link zum Datensatz + Grundstatistiken reichen."],
+        ["3. Explorative Datenanalyse (EDA)","Daten anschauen BEVOR wir loslegen.","5-6 Plots mit kurzer Beschreibung."],
+        ["4. Datenvorverarbeitung","Macht die Daten fit fuers Modell.","Normalisierung + kaputte Bilder rauswerfen."],
+        ["5. Data Augmentation (optional)","Kuenstlich mehr Daten erzeugen.","3-4 Zeilen Code, Vorher/Nachher-Bild zeigen."],
+        ["6. Modellauswahl und -architektur","Welches Netz und warum genau dieses?","ResNet-18 weil bewaehrt + Transfer Learning."],
         ["7. Training","WIE haben wir trainiert?","Hyperparameter auflisten + Loss-Kurven zeigen."],
-        ["8. Evaluation","Wie GUT ist das Ergebnis?","Confusion Matrix + Grad-CAM Heatmaps."],
-        ["9. Diskussion","Ehrliche Reflexion: Was lief gut, was nicht?","Limitationen nennen = Staerke, nicht Schwaeche!"],
-      ].map(([title,what,tip],i)=><div key={i} style={{display:"grid",gridTemplateColumns:"200px 1fr 1fr",gap:0,border:`1px solid ${t.bd}`,borderRadius:t.term?4:6,overflow:"hidden",marginBottom:4}}>
+        ["8. Evaluation und Ergebnisse","Wie GUT ist das Ergebnis?","Confusion Matrix + Grad-CAM Heatmaps."],
+        ["9. Diskussion und Fazit","Ehrliche Reflexion: Was lief gut, was nicht?","Limitationen nennen = Staerke, nicht Schwaeche!"],
+      ].map(([title,what,tip],i)=><div key={i} style={{display:"grid",gridTemplateColumns:"280px 1fr 1fr",gap:0,border:`1px solid ${t.bd}`,borderRadius:t.term?4:6,overflow:"hidden",marginBottom:4}}>
         <div style={{padding:"8px 12px",background:t.ac+"12",fontWeight:700,fontSize:12,color:t.ac}}>{title}</div>
         <div style={{padding:"8px 12px",fontSize:12,color:t.txB,borderLeft:`1px solid ${t.bd}`}}>{what}</div>
         <div style={{padding:"8px 12px",fontSize:12,color:t.txM,fontStyle:"italic",borderLeft:`1px solid ${t.bd}`}}>{tip}</div>
